@@ -1,0 +1,59 @@
+// Icon utility file to avoid Next.js barrel optimization issues
+// Import icons individually and re-export them
+
+export { FiHome } from 'react-icons/fi';
+// FiWallet doesn't exist, using FiShoppingBag as alternative
+export { FiShoppingBag as FiWallet } from 'react-icons/fi';
+export { FiCreditCard } from 'react-icons/fi';
+export { FiGift } from 'react-icons/fi';
+export { FiUsers } from 'react-icons/fi';
+export { FiSettings } from 'react-icons/fi';
+export { FiLogOut } from 'react-icons/fi';
+export { FiBell } from 'react-icons/fi';
+export { FiMenu } from 'react-icons/fi';
+export { FiX } from 'react-icons/fi';
+export { FiChevronLeft } from 'react-icons/fi';
+export { FiChevronRight } from 'react-icons/fi';
+// FiQrCode doesn't exist, using FiGrid as alternative (looks like QR pattern)
+export { FiGrid as FiQrCode } from 'react-icons/fi';
+export { FiShield } from 'react-icons/fi';
+export { FiDollarSign } from 'react-icons/fi';
+export { FiStar } from 'react-icons/fi';
+export { FiBarChart } from 'react-icons/fi';
+export { FiUser } from 'react-icons/fi';
+export { FiFileText } from 'react-icons/fi';
+export { FiLayers } from 'react-icons/fi';
+export { FiMail } from 'react-icons/fi';
+export { FiActivity } from 'react-icons/fi';
+export { FiTrendingUp } from 'react-icons/fi';
+export { FiTrendingDown } from 'react-icons/fi';
+export { FiArrowRight } from 'react-icons/fi';
+export { FiArrowLeft } from 'react-icons/fi';
+export { FiEye } from 'react-icons/fi';
+export { FiEyeOff } from 'react-icons/fi';
+export { FiKey } from 'react-icons/fi';
+export { FiPhone } from 'react-icons/fi';
+export { FiCheckCircle } from 'react-icons/fi';
+export { FiXCircle } from 'react-icons/fi';
+export { FiClock } from 'react-icons/fi';
+export { FiSmartphone } from 'react-icons/fi';
+export { FiZap } from 'react-icons/fi';
+export { FiLock } from 'react-icons/fi';
+export { FiEdit } from 'react-icons/fi';
+export { FiPlus } from 'react-icons/fi';
+export { FiCheck } from 'react-icons/fi';
+export { FiSearch } from 'react-icons/fi';
+export { FiMoreVertical } from 'react-icons/fi';
+export { FiFilter } from 'react-icons/fi';
+export { FiAward } from 'react-icons/fi';
+export { FiMessageSquare } from 'react-icons/fi';
+export { FiDownload } from 'react-icons/fi';
+export { FiDatabase } from 'react-icons/fi';
+export { FiSave } from 'react-icons/fi';
+export { FiTrash2 } from 'react-icons/fi';
+// FiRedeem doesn't exist, using FiGift as alternative
+export { FiGift as FiRedeem } from 'react-icons/fi';
+export { FiRefreshCw } from 'react-icons/fi';
+export { FiPieChart } from 'react-icons/fi';
+export { FiBarChart2 } from 'react-icons/fi';
+
