@@ -6,9 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell,
   BarChart, Bar,
-  ComposedChart, Line,
 } from 'recharts';
 import { adminService } from '@/services/admin.service';
 import { disputeService } from '@/services/dispute.service';
@@ -90,10 +89,10 @@ const LOYALTY_TIER_COLORS: Record<string, string> = {
 
 const TRANSACTION_TYPE_COLORS = ['#6366f1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
 
-// Custom pie chart label with connector lines
+// Custom pie chart label with connector lines colored to match each slice
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderOuterLabel = (props: any) => {
-  const { cx, cy, midAngle, outerRadius, percent, name } = props;
+  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
   const RADIAN = Math.PI / 180;
   const sin = Math.sin(-midAngle * RADIAN);
   const cos = Math.cos(-midAngle * RADIAN);
@@ -104,19 +103,32 @@ const renderOuterLabel = (props: any) => {
   const ex = mx + (cos >= 0 ? 1 : -1) * 20;
   const ey = my;
   const textAnchor = cos >= 0 ? 'start' : 'end';
+  const lineColor = fill || '#b0b8c4';
 
-  if (percent < 0.03) return null; // skip tiny slices
+  if (percent < 0.03) return null;
 
   return (
     <g>
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#b0b8c4" fill="none" strokeWidth={1} />
-      <circle cx={ex} cy={ey} r={2} fill="#b0b8c4" />
-      <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 1} textAnchor={textAnchor} fill="#374151" fontSize={11} fontWeight={600}>
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={lineColor} fill="none" strokeWidth={1.5} opacity={0.7} />
+      <circle cx={ex} cy={ey} r={3} fill={lineColor} />
+      <text x={ex + (cos >= 0 ? 8 : -8)} y={ey - 1} textAnchor={textAnchor} fill="#374151" fontSize={11} fontWeight={600}>
         {name}
       </text>
-      <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 13} textAnchor={textAnchor} fill="#9ca3af" fontSize={10}>
+      <text x={ex + (cos >= 0 ? 8 : -8)} y={ey + 13} textAnchor={textAnchor} fill={lineColor} fontSize={10} fontWeight={500}>
         {`${(percent * 100).toFixed(0)}%`}
       </text>
+    </g>
+  );
+};
+
+// Custom dot for revenue chart active points
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderActiveDot = (props: any) => {
+  const { cx, cy, fill } = props;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={8} fill={fill} opacity={0.15} />
+      <circle cx={cx} cy={cy} r={5} fill="white" stroke={fill} strokeWidth={2.5} />
     </g>
   );
 };
@@ -507,65 +519,118 @@ export default function AdminDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Trend Chart */}
-        <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg">
-                <FiActivity className="w-5 h-5" />
+        <motion.div variants={itemVariants} className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700/50">
+          {/* Decorative background glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <FiActivity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Revenue Trend</h2>
+                  <p className="text-sm text-gray-400">Daily revenue overview</p>
+                </div>
               </div>
+              <div className="flex gap-4 text-xs">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></div>
+                  <span className="text-emerald-300 font-medium">Revenue</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></div>
+                  <span className="text-amber-300 font-medium">Fees</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary stats row */}
+            <div className="flex gap-6 mb-5 mt-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Revenue Trend</h2>
-                <p className="text-sm text-gray-500">Daily revenue overview</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Revenue</p>
+                <p className="text-2xl font-bold text-white mt-0.5">
+                  ₦{revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="border-l border-gray-700 pl-6">
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Fees</p>
+                <p className="text-2xl font-bold text-amber-400 mt-0.5">
+                  ₦{revenueChartData.reduce((sum, d) => sum + (d.fees || 0), 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="border-l border-gray-700 pl-6">
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Avg/Day</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-0.5">
+                  ₦{Math.round(revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0) / (revenueChartData.length || 1)).toLocaleString()}
+                </p>
               </div>
             </div>
-            <div className="flex gap-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                <span className="text-gray-600">Revenue</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                <span className="text-gray-600">Fees</span>
-              </div>
+
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="feesGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    }}
+                    labelStyle={{ color: '#9ca3af', fontWeight: 600, marginBottom: 4 }}
+                    itemStyle={{ color: '#e5e7eb', fontSize: 13 }}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={((value: any, name: any) => [`₦${Number(value).toLocaleString()}`, name]) as any}
+                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fill="url(#revenueGradient)"
+                    name="Revenue"
+                    animationDuration={1500}
+                    dot={false}
+                    activeDot={renderActiveDot}
+                    filter="url(#glow)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="fees"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    fill="url(#feesGradient)"
+                    name="Fees"
+                    animationDuration={1800}
+                    dot={false}
+                    activeDot={renderActiveDot}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueChartData}>
-                <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="feesGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.warning} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={CHART_COLORS.warning} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke={CHART_COLORS.success}
-                  strokeWidth={2.5}
-                  fill="url(#revenueGradient)"
-                  name="Revenue"
-                  animationDuration={1500}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="fees"
-                  stroke={CHART_COLORS.warning}
-                  strokeWidth={2.5}
-                  fill="url(#feesGradient)"
-                  name="Fees"
-                  animationDuration={1500}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
           </div>
         </motion.div>
 
