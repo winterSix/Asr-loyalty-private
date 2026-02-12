@@ -22,13 +22,19 @@ export function useAuthGuard() {
     const storedUser = authService.getUser();
     const hasToken = authService.isAuthenticated();
 
+    // If authenticated in state but no actual token, clear stale state
+    if (isAuthenticated && !hasToken) {
+      checkAuth(); // This will reset state since no token exists
+      return;
+    }
+
     // If we have a user from persist or in state, we're good - don't call checkAuth
-    if ((storedUser || user) && isAuthenticated) {
+    if ((storedUser || user) && isAuthenticated && hasToken) {
       return; // User is already loaded, skip checkAuth
     }
 
     // If we have a stored user but no user in state, we still have the user - skip checkAuth
-    if (storedUser && !user) {
+    if (storedUser && !user && hasToken) {
       return; // We have stored user, no need to call API
     }
 

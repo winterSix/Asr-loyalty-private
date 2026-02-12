@@ -59,8 +59,8 @@ export default function LoginPage() {
       authLoading
     });
     
-    // Only redirect if we're definitely authenticated (have user and token)
-    if ((isAuthenticated || (storedUser && hasToken)) && !authLoading) {
+    // Only redirect if we're definitely authenticated (must have actual token)
+    if (hasToken && (isAuthenticated || storedUser) && !authLoading) {
       console.log('[Login] User is authenticated, redirecting to /dashboard');
       router.replace('/dashboard');
     } else {
@@ -173,10 +173,10 @@ export default function LoginPage() {
   ];
 
   // Don't render login form if already authenticated (will redirect)
-  // Check both state and localStorage to avoid flicker
+  // Must verify actual token exists, not just stale Zustand state
   const storedUser = authService.getUser();
   const hasToken = authService.isAuthenticated();
-  if (isAuthenticated || (storedUser && hasToken)) {
+  if (hasToken && (isAuthenticated || storedUser)) {
     return null; // Will redirect via useEffect
   }
 

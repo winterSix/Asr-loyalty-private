@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next build)",
+      "Bash(if exist .next rmdir /s /q .next)"
+    ]
+  }
+}

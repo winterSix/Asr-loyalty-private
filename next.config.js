@@ -15,21 +15,6 @@ const nextConfig = {
     ];
   },
   transpilePackages: ['react-icons'],
-  webpack: (config, { isServer }) => {
-    // Fix for react-icons barrel optimization issue
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    };
-    
-    // Disable barrel optimization for react-icons
-    if (!isServer) {
-      config.resolve.extensionAlias = {
-        '.js': ['.js', '.ts', '.tsx'],
-      };
-    }
-    
-    return config;
-  },
 };
 
 module.exports = nextConfig;

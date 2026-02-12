@@ -56,4 +56,17 @@ export { FiGift as FiRedeem } from 'react-icons/fi';
 export { FiRefreshCw } from 'react-icons/fi';
 export { FiPieChart } from 'react-icons/fi';
 export { FiBarChart2 } from 'react-icons/fi';
-
+export { FiHeart } from 'react-icons/fi';
+export { FiTarget } from 'react-icons/fi';
+export { FiGlobe } from 'react-icons/fi';
+export { FiChevronDown } from 'react-icons/fi';
+export { FiChevronUp } from 'react-icons/fi';
+export { FiExternalLink } from 'react-icons/fi';
+export { FiPlayCircle } from 'react-icons/fi';
+export { FiPlay } from 'react-icons/fi';
+export { FiSend } from 'react-icons/fi';
+export { FiMousePointer } from 'react-icons/fi';
+export { FiMinimize2 } from 'react-icons/fi';
+export { FiMaximize2 } from 'react-icons/fi';
+export { FiCopy } from 'react-icons/fi';
+export { FiCornerDownRight } from 'react-icons/fi';

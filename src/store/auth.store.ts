@@ -202,10 +202,23 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        // After rehydration, if we have a user, set loading to false
-        // This prevents unnecessary checkAuth calls after page reload
-        if (state?.user && state?.isAuthenticated) {
-          state.isLoading = false;
+        if (state) {
+          // Verify tokens actually exist - prevent stale auth state
+          const hasToken = typeof window !== 'undefined' &&
+            (!!localStorage.getItem('accessToken') || !!Cookies.get('accessToken'));
+
+          if (state.isAuthenticated && !hasToken) {
+            // Tokens are gone but Zustand still says authenticated - reset
+            state.isAuthenticated = false;
+            state.user = null;
+            state.isLoading = false;
+            return;
+          }
+
+          // After rehydration, if we have a user, set loading to false
+          if (state.user && state.isAuthenticated) {
+            state.isLoading = false;
+          }
         }
       },
     }
