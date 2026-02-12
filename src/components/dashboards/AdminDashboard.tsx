@@ -80,6 +80,47 @@ const CHART_COLORS = {
 
 const PIE_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
 
+// Dedicated color palettes
+const LOYALTY_TIER_COLORS: Record<string, string> = {
+  Bronze: '#CD7F32',
+  Silver: '#94A3B8',
+  Gold: '#F59E0B',
+  Platinum: '#6366f1',
+};
+
+const TRANSACTION_TYPE_COLORS = ['#6366f1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
+
+// Custom pie chart label with connector lines
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderOuterLabel = (props: any) => {
+  const { cx, cy, midAngle, outerRadius, percent, name } = props;
+  const RADIAN = Math.PI / 180;
+  const sin = Math.sin(-midAngle * RADIAN);
+  const cos = Math.cos(-midAngle * RADIAN);
+  const sx = cx + (outerRadius + 4) * cos;
+  const sy = cy + (outerRadius + 4) * sin;
+  const mx = cx + (outerRadius + 18) * cos;
+  const my = cy + (outerRadius + 18) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 20;
+  const ey = my;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  if (percent < 0.03) return null; // skip tiny slices
+
+  return (
+    <g>
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#b0b8c4" fill="none" strokeWidth={1} />
+      <circle cx={ex} cy={ey} r={2} fill="#b0b8c4" />
+      <text x={ex + (cos >= 0 ? 6 : -6)} y={ey - 1} textAnchor={textAnchor} fill="#374151" fontSize={11} fontWeight={600}>
+        {name}
+      </text>
+      <text x={ex + (cos >= 0 ? 6 : -6)} y={ey + 13} textAnchor={textAnchor} fill="#9ca3af" fontSize={10}>
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    </g>
+  );
+};
+
 // Demo data for visualization when API data is not available
 const DEMO_REVENUE_DATA = [
   { name: 'Jan 1', revenue: 45000, fees: 4500 },
@@ -548,22 +589,22 @@ export default function AdminDashboard() {
                   data={transactionTypeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={4}
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={3}
                   dataKey="value"
+                  label={renderOuterLabel}
+                  labelLine={false}
                   animationBegin={0}
                   animationDuration={1500}
                 >
                   {transactionTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={TRANSACTION_TYPE_COLORS[index % TRANSACTION_TYPE_COLORS.length]} strokeWidth={0} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  formatter={(value) => <span className="text-xs text-gray-600">{value}</span>}
+                <Tooltip
+                  formatter={(value) => [(value as number).toLocaleString(), 'Count']}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -613,24 +654,29 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-500">User distribution</p>
             </div>
           </div>
-          <div className="h-56">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={userTierData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
+                  innerRadius={40}
+                  outerRadius={68}
+                  paddingAngle={3}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={renderOuterLabel}
                   labelLine={false}
                   animationDuration={1500}
                 >
-                  {userTierData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  {userTierData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={LOYALTY_TIER_COLORS[entry.name] || PIE_COLORS[0]} strokeWidth={0} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} />
+                <Tooltip
+                  formatter={(value) => [(value as number).toLocaleString(), 'Users']}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
