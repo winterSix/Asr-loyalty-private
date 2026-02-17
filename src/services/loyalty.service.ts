@@ -137,6 +137,12 @@ class LoyaltyService {
     return this.updateTierConfig(tier.tier, data);
   }
 
+  // POST /loyalty-tiers/initialize (Admin) - seed default tier configs
+  async initializeDefaultTiers() {
+    const response = await apiClient.post<any>('/loyalty-tiers/initialize');
+    return unwrapResponse(response.data);
+  }
+
   async getUserTierHistory(userId: string) {
     // This endpoint doesn't exist directly, use my-history for current user
     // For admin, would need a different endpoint

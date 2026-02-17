@@ -9,26 +9,26 @@ export interface DashboardSummary {
     newThisMonth: number;
   };
   revenue: {
-    today: string;
-    thisMonth: string;
-    lastMonth: string;
+    today: number;
+    thisMonth: number;
+    lastMonth: number;
     growthPercentage: number;
   };
   pendingActions: {
     disputes: number;
     refunds: number;
   };
-  totalWalletBalance: string;
+  totalWalletBalance: number;
 }
 
 // Transaction Stats Types
 export interface TransactionStats {
   totalCount: number;
-  totalVolume: string;
-  successfulVolume: string;
-  totalRewardsGiven: string;
+  totalVolume: number;
+  successfulVolume: number;
+  totalRewardsGiven: number;
   byStatus: Record<string, number>;
-  byType: Record<string, number>;
+  byType: Record<string, { count: number; volume: number } | number>;
   successRate: number;
 }
 
@@ -45,18 +45,23 @@ export interface UserStats {
 // Revenue Report Types
 export interface RevenueReportItem {
   period: string;
-  revenue: string;
-  fees: string;
-  rewards: string;
+  revenue: number;
+  fees: number;
+  rewards: number;
   count: number;
 }
 
 export interface RevenueReport {
+  period?: {
+    start: string;
+    end: string;
+    groupBy: string;
+  };
   breakdown: RevenueReportItem[];
   totals: {
-    totalRevenue: string;
-    totalFees: string;
-    totalRewardsGiven: string;
+    totalRevenue: number;
+    totalFees: number;
+    totalRewardsGiven: number;
     transactionCount: number;
   };
 }
@@ -99,15 +104,27 @@ export interface AdminUser {
   role: string;
   status: string;
   tier?: string;
+  currentTier?: string;
   phoneVerified: boolean;
   emailVerified: boolean;
+  totalSpent?: number;
+  totalTransactions?: number;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
   wallets?: Array<{
     id: string;
     balance: string;
     currency: string;
+    type?: string;
+    isActive?: boolean;
   }>;
+  _count?: {
+    transactions: number;
+    disputes: number;
+    refunds: number;
+    notifications: number;
+  };
 }
 
 // Filter Types
@@ -142,14 +159,51 @@ export interface RevenueFilters {
   groupBy?: 'day' | 'week' | 'month';
 }
 
+/**
+ * Extract the actual payload from backend responses.
+ * After unwrapResponse removes the outer { success, statusCode, timestamp, data } wrapper,
+ * the inner data still has { success: true, [key]: actualData }.
+ * This helper extracts the named key.
+ */
+function extractInner<T>(data: any, key: string): T {
+  // If the data has the named key, return it
+  if (data && data[key] !== undefined) {
+    return data[key] as T;
+  }
+  // Fallback: return data as-is (in case backend returns flat structure)
+  return data as T;
+}
+
+/**
+ * Extract paginated response from backend.
+ * Backend returns { success, data: [...], pagination: { total, page, limit, totalPages } }
+ */
+function extractPaginated<T>(data: any): { data: T[]; total: number; page: number; limit: number } {
+  // If data is already an array (e.g. unwrapResponse stripped too aggressively), use it directly
+  if (Array.isArray(data)) {
+    return { data: data as T[], total: data.length, page: 1, limit: data.length || 10 };
+  }
+  const items = data?.data || [];
+  const pagination = data?.pagination || {};
+  return {
+    data: Array.isArray(items) ? items : [],
+    total: pagination.total ?? data?.total ?? 0,
+    page: pagination.page ?? data?.page ?? 1,
+    limit: pagination.limit ?? data?.limit ?? 10,
+  };
+}
+
 class AdminService {
   // GET /admin/dashboard - Get comprehensive dashboard summary
+  // Backend returns: { success, dashboard: { users, revenue, pendingActions, totalWalletBalance } }
   async getDashboardSummary(): Promise<DashboardSummary> {
     const response = await apiClient.get<any>('/admin/dashboard');
-    return unwrapResponse<DashboardSummary>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<DashboardSummary>(data, 'dashboard');
   }
 
   // GET /admin/transactions - Get all transactions with filters
+  // Backend returns: { success, data: [...], pagination: { total, page, limit, totalPages } }
   async getTransactions(filters?: TransactionFilters): Promise<{
     data: AdminTransaction[];
     total: number;
@@ -166,24 +220,32 @@ class AdminService {
     }
     const response = await apiClient.get<any>(`/admin/transactions?${params.toString()}`);
     const data = unwrapResponse<any>(response.data);
-    return {
-      data: data.data || data || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 10,
-    };
+    return extractPaginated<AdminTransaction>(data);
   }
 
   // GET /admin/transactions/stats - Get transaction statistics
+  // Backend returns: { success, stats: { totalTransactions, totalVolume, ... } }
   async getTransactionStats(startDate?: string, endDate?: string): Promise<TransactionStats> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     const response = await apiClient.get<any>(`/admin/transactions/stats?${params.toString()}`);
-    return unwrapResponse<TransactionStats>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    const stats = extractInner<any>(data, 'stats');
+    // Normalize field names: backend uses totalTransactions, frontend uses totalCount
+    return {
+      totalCount: stats.totalTransactions ?? stats.totalCount ?? 0,
+      totalVolume: stats.totalVolume ?? 0,
+      successfulVolume: stats.successfulVolume ?? 0,
+      totalRewardsGiven: stats.totalRewardsGiven ?? 0,
+      byStatus: stats.byStatus ?? {},
+      byType: stats.byType ?? {},
+      successRate: parseFloat(stats.successRate) || 0,
+    };
   }
 
   // GET /admin/transactions/:id - Get transaction details
+  // Backend returns: { success, transaction: { ...txData } }
   async getTransactionById(id: string): Promise<AdminTransaction & {
     ledgerEntries?: any[];
     rewards?: any[];
@@ -191,20 +253,24 @@ class AdminService {
     refund?: any;
   }> {
     const response = await apiClient.get<any>(`/admin/transactions/${id}`);
-    return unwrapResponse<any>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<any>(data, 'transaction');
   }
 
   // GET /admin/revenue - Get revenue report
+  // Backend returns: { success, report: { period, totals, breakdown } }
   async getRevenueReport(filters: RevenueFilters): Promise<RevenueReport> {
     const params = new URLSearchParams();
     params.append('startDate', filters.startDate);
     params.append('endDate', filters.endDate);
     if (filters.groupBy) params.append('groupBy', filters.groupBy);
     const response = await apiClient.get<any>(`/admin/revenue?${params.toString()}`);
-    return unwrapResponse<RevenueReport>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<RevenueReport>(data, 'report');
   }
 
   // GET /admin/users - Get all users with filters
+  // Backend returns: { success, data: [...], pagination: { total, page, limit, totalPages } }
   async getUsers(filters?: UserFilters): Promise<{
     data: AdminUser[];
     total: number;
@@ -221,35 +287,37 @@ class AdminService {
     }
     const response = await apiClient.get<any>(`/admin/users?${params.toString()}`);
     const data = unwrapResponse<any>(response.data);
-    return {
-      data: data.data || data || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 10,
-    };
+    return extractPaginated<AdminUser>(data);
   }
 
   // GET /admin/users/stats - Get user statistics
+  // Backend returns: { success, stats: { total, verifiedPhones, ... } }
   async getUserStats(): Promise<UserStats> {
     const response = await apiClient.get<any>('/admin/users/stats');
-    return unwrapResponse<UserStats>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<UserStats>(data, 'stats');
   }
 
   // GET /admin/users/:id - Get user details
+  // Backend returns: { success, user: { ...userData, _count, wallets, recentTransactions, ... } }
   async getUserById(userId: string): Promise<AdminUser & {
     preferences?: any;
     devices?: any[];
     loyaltyHistory?: any[];
-    transactionCount?: number;
-    disputeCount?: number;
-    refundCount?: number;
     recentTransactions?: any[];
   }> {
     const response = await apiClient.get<any>(`/admin/users/${userId}`);
-    return unwrapResponse<any>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    const user = extractInner<any>(data, 'user');
+    // Normalize: backend uses currentTier, frontend uses tier
+    if (user && user.currentTier && !user.tier) {
+      user.tier = user.currentTier;
+    }
+    return user;
   }
 
   // GET /admin/users/:id/transactions - Get user's transactions
+  // Backend returns: { success, data: [...], pagination: { ... } }
   async getUserTransactions(userId: string, filters?: Omit<TransactionFilters, 'userId'>): Promise<{
     data: AdminTransaction[];
     total: number;
@@ -266,35 +334,38 @@ class AdminService {
     }
     const response = await apiClient.get<any>(`/admin/users/${userId}/transactions?${params.toString()}`);
     const data = unwrapResponse<any>(response.data);
-    return {
-      data: data.data || data || [],
-      total: data.total || 0,
-      page: data.page || 1,
-      limit: data.limit || 10,
-    };
+    return extractPaginated<AdminTransaction>(data);
   }
 
   // GET /admin/users/:id/wallets - Get user's wallets
+  // Backend returns: { success, wallets: [...] }
   async getUserWallets(userId: string): Promise<Array<{
     id: string;
     balance: string;
     currency: string;
+    type?: string;
+    isActive?: boolean;
     ledgerEntries?: any[];
   }>> {
     const response = await apiClient.get<any>(`/admin/users/${userId}/wallets`);
-    return unwrapResponse<any>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<any[]>(data, 'wallets') || [];
   }
 
   // PATCH /admin/users/:id/status - Update user status
+  // Backend returns: { success, message, user: { ... } }
   async updateUserStatus(userId: string, data: { status: string; reason?: string }): Promise<AdminUser> {
     const response = await apiClient.patch<any>(`/admin/users/${userId}/status`, data);
-    return unwrapResponse<AdminUser>(response.data);
+    const result = unwrapResponse<any>(response.data);
+    return extractInner<AdminUser>(result, 'user');
   }
 
   // PATCH /admin/users/:id/role - Update user role (SUPER_ADMIN only)
+  // Backend returns: { success, message, user: { ... } }
   async updateUserRole(userId: string, data: { role: string }): Promise<AdminUser> {
     const response = await apiClient.patch<any>(`/admin/users/${userId}/role`, data);
-    return unwrapResponse<AdminUser>(response.data);
+    const result = unwrapResponse<any>(response.data);
+    return extractInner<AdminUser>(result, 'user');
   }
 }
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -27,6 +27,9 @@ import {
   FiPieChart,
   FiBarChart2,
   FiRefreshCw,
+  FiSearch,
+  FiChevronLeft,
+  FiChevronRight,
 } from '@/utils/icons';
 
 // Animation variants
@@ -133,63 +136,6 @@ const renderActiveDot = (props: any) => {
   );
 };
 
-// Demo data for visualization when API data is not available
-const DEMO_REVENUE_DATA = [
-  { name: 'Jan 1', revenue: 45000, fees: 4500 },
-  { name: 'Jan 5', revenue: 52000, fees: 5200 },
-  { name: 'Jan 10', revenue: 48000, fees: 4800 },
-  { name: 'Jan 15', revenue: 61000, fees: 6100 },
-  { name: 'Jan 20', revenue: 55000, fees: 5500 },
-  { name: 'Jan 25', revenue: 67000, fees: 6700 },
-  { name: 'Jan 30', revenue: 72000, fees: 7200 },
-];
-
-const DEMO_TRANSACTION_TYPES = [
-  { name: 'Payments', value: 450 },
-  { name: 'Transfers', value: 280 },
-  { name: 'Rewards', value: 180 },
-  { name: 'Refunds', value: 45 },
-];
-
-const DEMO_USER_ROLES = [
-  { name: 'Customer', value: 1250 },
-  { name: 'Admin', value: 12 },
-  { name: 'Cashier', value: 35 },
-  { name: 'Support', value: 8 },
-];
-
-const DEMO_LOYALTY_TIERS = [
-  { name: 'Bronze', value: 650 },
-  { name: 'Silver', value: 380 },
-  { name: 'Gold', value: 180 },
-  { name: 'Platinum', value: 45 },
-];
-
-const DEMO_TRANSACTION_STATUS = [
-  { name: 'Completed', value: 850 },
-  { name: 'Pending', value: 120 },
-  { name: 'Failed', value: 30 },
-];
-
-const DEMO_USERS = [
-  { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', phoneNumber: '+234 801 234 5678', role: 'CUSTOMER', status: 'ACTIVE' },
-  { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', phoneNumber: '+234 802 345 6789', role: 'CUSTOMER', status: 'ACTIVE' },
-  { id: '3', firstName: 'Mike', lastName: 'Johnson', email: 'mike@example.com', phoneNumber: '+234 803 456 7890', role: 'ADMIN', status: 'ACTIVE' },
-  { id: '4', firstName: 'Sarah', lastName: 'Williams', email: 'sarah@example.com', phoneNumber: '+234 804 567 8901', role: 'CUSTOMER', status: 'SUSPENDED' },
-  { id: '5', firstName: 'David', lastName: 'Brown', email: 'david@example.com', phoneNumber: '+234 805 678 9012', role: 'CASHIER', status: 'ACTIVE' },
-];
-
-const DEMO_DISPUTES = [
-  { id: '1', reason: 'Transaction not credited', createdAt: new Date().toISOString() },
-  { id: '2', reason: 'Duplicate charge', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '3', reason: 'Unauthorized transaction', createdAt: new Date(Date.now() - 172800000).toISOString() },
-];
-
-const DEMO_REFUNDS = [
-  { id: '1', amount: '15000', status: 'PENDING', createdAt: new Date().toISOString() },
-  { id: '2', amount: '8500', status: 'PENDING', createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '3', amount: '25000', status: 'PENDING', createdAt: new Date(Date.now() - 172800000).toISOString() },
-];
 
 // Custom tooltip component
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
@@ -243,20 +189,52 @@ const AnimatedCounter = ({ value, prefix = '', suffix = '' }: { value: number | 
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [usersSearch, setUsersSearch] = useState('');
+  const [usersSearchInput, setUsersSearchInput] = useState('');
+  const [usersPage, setUsersPage] = useState(1);
+  const usersPerPage = 5;
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ['admin'] });
+    await queryClient.invalidateQueries({ queryKey: ['disputes'] });
+    await queryClient.invalidateQueries({ queryKey: ['refunds'] });
+    setIsRefreshing(false);
+  };
 
   // Fetch dashboard summary
-  const { data: dashboardSummary, isLoading: summaryLoading, refetch: refetchSummary } = useQuery({
+  const { data: dashboardSummary, isLoading: summaryLoading } = useQuery({
     queryKey: ['admin', 'dashboard'],
     queryFn: () => adminService.getDashboardSummary(),
     staleTime: 30000,
     retry: 1,
   });
 
+  // Compute date range from selected period (shared by multiple queries)
+  const dateRange = (() => {
+    const endDate = new Date();
+    const startDate = new Date();
+    if (selectedPeriod === 'week') {
+      startDate.setDate(endDate.getDate() - 7);
+    } else if (selectedPeriod === 'month') {
+      startDate.setDate(endDate.getDate() - 30);
+    } else {
+      startDate.setFullYear(endDate.getFullYear() - 1);
+    }
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+    };
+  })();
+
   // Fetch transaction stats
   const { data: transactionStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['admin', 'transactions', 'stats'],
-    queryFn: () => adminService.getTransactionStats(),
+    queryKey: ['admin', 'transactions', 'stats', selectedPeriod],
+    queryFn: () => adminService.getTransactionStats(dateRange.startDate, dateRange.endDate),
     staleTime: 30000,
     retry: 1,
   });
@@ -269,10 +247,24 @@ export default function AdminDashboard() {
     retry: 1,
   });
 
+  // Debounced search handler
+  const handleUsersSearchChange = (value: string) => {
+    setUsersSearchInput(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setUsersSearch(value);
+      setUsersPage(1);
+    }, 400);
+  };
+
   // Fetch recent users
   const { data: recentUsers, isLoading: usersLoading } = useQuery({
-    queryKey: ['admin', 'users', 'recent'],
-    queryFn: () => adminService.getUsers({ page: 1, limit: 5 }),
+    queryKey: ['admin', 'users', 'recent', usersSearch, usersPage],
+    queryFn: () => adminService.getUsers({
+      page: usersPage,
+      limit: usersPerPage,
+      ...(usersSearch ? { search: usersSearch } : {}),
+    }),
     staleTime: 30000,
     retry: 1,
   });
@@ -280,22 +272,11 @@ export default function AdminDashboard() {
   // Fetch revenue report
   const { data: revenueReport, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', selectedPeriod],
-    queryFn: () => {
-      const endDate = new Date();
-      const startDate = new Date();
-      if (selectedPeriod === 'week') {
-        startDate.setDate(endDate.getDate() - 7);
-      } else if (selectedPeriod === 'month') {
-        startDate.setDate(endDate.getDate() - 30);
-      } else {
-        startDate.setFullYear(endDate.getFullYear() - 1);
-      }
-      return adminService.getRevenueReport({
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        groupBy: selectedPeriod === 'year' ? 'month' : 'day',
-      });
-    },
+    queryFn: () => adminService.getRevenueReport({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      groupBy: selectedPeriod === 'year' ? 'month' : 'day',
+    }),
     staleTime: 60000,
     retry: 1,
   });
@@ -314,60 +295,63 @@ export default function AdminDashboard() {
     retry: 1,
   });
 
-  // Use API data or fall back to demo data
+  // Use API data with proper nullish coalescing (not ||, which treats 0 as falsy)
   const revenueChartData = revenueReport?.breakdown?.length
     ? revenueReport.breakdown.map((item) => ({
         name: new Date(item.period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: parseFloat(item.revenue) || 0,
-        fees: parseFloat(item.fees) || 0,
+        revenue: typeof item.revenue === 'number' ? item.revenue : parseFloat(String(item.revenue)) || 0,
+        fees: typeof item.fees === 'number' ? item.fees : parseFloat(String(item.fees)) || 0,
       }))
-    : DEMO_REVENUE_DATA;
+    : [];
 
   const transactionTypeData = transactionStats?.byType && Object.keys(transactionStats.byType).length > 0
     ? Object.entries(transactionStats.byType).map(([name, value]) => ({
         name: name.replace(/_/g, ' '),
-        value: value as number,
+        // Backend byType values can be { count, volume } objects or plain numbers
+        value: typeof value === 'object' && value !== null ? (value as any).count ?? 0 : (value as number),
       }))
-    : DEMO_TRANSACTION_TYPES;
+    : [];
 
   const transactionStatusData = transactionStats?.byStatus && Object.keys(transactionStats.byStatus).length > 0
     ? Object.entries(transactionStats.byStatus).map(([name, value]) => ({
         name,
         value: value as number,
       }))
-    : DEMO_TRANSACTION_STATUS;
+    : [];
 
   const userRoleData = userStats?.byRole && Object.keys(userStats.byRole).length > 0
     ? Object.entries(userStats.byRole).map(([name, value]) => ({
         name: name.replace(/_/g, ' '),
         value: value as number,
       }))
-    : DEMO_USER_ROLES;
+    : [];
 
   const userTierData = userStats?.byTier && Object.keys(userStats.byTier).length > 0
     ? Object.entries(userStats.byTier).map(([name, value]) => ({
         name,
         value: value as number,
       }))
-    : DEMO_LOYALTY_TIERS;
+    : [];
 
-  // Get actual values or demo values
-  const totalUsers = dashboardSummary?.users?.total || userStats?.total || 1305;
-  const totalRevenue = dashboardSummary?.revenue?.thisMonth || '2450000';
-  const totalTransactions = transactionStats?.totalCount || 1000;
-  const walletBalance = dashboardSummary?.totalWalletBalance || '5800000';
-  const pendingDisputes = dashboardSummary?.pendingActions?.disputes || disputes?.total || 3;
-  const pendingRefunds = dashboardSummary?.pendingActions?.refunds || refunds?.total || 3;
-  const newUsersThisMonth = dashboardSummary?.users?.newThisMonth || 128;
-  const revenueGrowth = dashboardSummary?.revenue?.growthPercentage || 12.5;
-  const successRate = transactionStats?.successRate || 94.5;
-  const todaysRevenue = dashboardSummary?.revenue?.today || '85000';
-  const newUsersToday = dashboardSummary?.users?.newToday || 12;
-  const activeUsers = dashboardSummary?.users?.active || 890;
+  // Get actual values with nullish coalescing to preserve 0 values
+  const totalUsers = dashboardSummary?.users?.total ?? userStats?.total ?? 0;
+  const totalRevenue = dashboardSummary?.revenue?.thisMonth ?? '0';
+  const totalTransactions = transactionStats?.totalCount ?? 0;
+  const walletBalance = dashboardSummary?.totalWalletBalance ?? '0';
+  const pendingDisputes = dashboardSummary?.pendingActions?.disputes ?? disputes?.total ?? 0;
+  const pendingRefunds = dashboardSummary?.pendingActions?.refunds ?? refunds?.total ?? 0;
+  const newUsersThisMonth = dashboardSummary?.users?.newThisMonth ?? 0;
+  const revenueGrowth = dashboardSummary?.revenue?.growthPercentage ?? 0;
+  const successRate = transactionStats?.successRate ?? 0;
+  const todaysRevenue = dashboardSummary?.revenue?.today ?? '0';
+  const newUsersToday = dashboardSummary?.users?.newToday ?? 0;
+  const activeUsers = dashboardSummary?.users?.active ?? 0;
 
-  const usersToDisplay = recentUsers?.data?.length ? recentUsers.data : DEMO_USERS;
-  const disputesToDisplay = disputes?.data?.length ? disputes.data : DEMO_DISPUTES;
-  const refundsToDisplay = refunds?.data?.length ? refunds.data : DEMO_REFUNDS;
+  const usersToDisplay = recentUsers?.data ?? [];
+  const usersTotalPages = Math.ceil((recentUsers?.total ?? 0) / usersPerPage);
+  const usersTotalCount = recentUsers?.total ?? 0;
+  const disputesToDisplay = disputes?.data ?? [];
+  const refundsToDisplay = refunds?.data ?? [];
 
   // Stat cards configuration
   const statCards = [
@@ -429,7 +413,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const isLoading = summaryLoading || statsLoading || userStatsLoading;
+  const isLoading = summaryLoading || statsLoading || userStatsLoading || isRefreshing;
 
   return (
     <motion.div
@@ -448,7 +432,7 @@ export default function AdminDashboard() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => refetchSummary()}
+            onClick={handleRefresh}
             className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
           >
             <FiRefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -570,66 +554,72 @@ export default function AdminDashboard() {
             </div>
 
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                    </linearGradient>
-                    <linearGradient id="feesGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
-                    </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '12px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                    }}
-                    labelStyle={{ color: '#9ca3af', fontWeight: 600, marginBottom: 4 }}
-                    itemStyle={{ color: '#e5e7eb', fontSize: 13 }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={((value: any, name: any) => [`₦${Number(value).toLocaleString()}`, name]) as any}
-                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#10b981"
-                    strokeWidth={2.5}
-                    fill="url(#revenueGradient)"
-                    name="Revenue"
-                    animationDuration={1500}
-                    dot={false}
-                    activeDot={renderActiveDot}
-                    filter="url(#glow)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="fees"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    fill="url(#feesGradient)"
-                    name="Fees"
-                    animationDuration={1800}
-                    dot={false}
-                    activeDot={renderActiveDot}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {revenueChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="feesGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
+                      </linearGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      }}
+                      labelStyle={{ color: '#9ca3af', fontWeight: 600, marginBottom: 4 }}
+                      itemStyle={{ color: '#e5e7eb', fontSize: 13 }}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={((value: any, name: any) => [`₦${Number(value).toLocaleString()}`, name]) as any}
+                      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      fill="url(#revenueGradient)"
+                      name="Revenue"
+                      animationDuration={1500}
+                      dot={false}
+                      activeDot={renderActiveDot}
+                      filter="url(#glow)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="fees"
+                      stroke="#f59e0b"
+                      strokeWidth={2}
+                      fill="url(#feesGradient)"
+                      name="Fees"
+                      animationDuration={1800}
+                      dot={false}
+                      activeDot={renderActiveDot}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500 text-sm">{revenueLoading ? 'Loading...' : 'No revenue data yet'}</p>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -648,31 +638,37 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={transactionTypeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={renderOuterLabel}
-                  labelLine={false}
-                  animationBegin={0}
-                  animationDuration={1500}
-                >
-                  {transactionTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={TRANSACTION_TYPE_COLORS[index % TRANSACTION_TYPE_COLORS.length]} strokeWidth={0} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [(value as number).toLocaleString(), 'Count']}
-                  contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {transactionTypeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={transactionTypeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={renderOuterLabel}
+                    labelLine={false}
+                    animationBegin={0}
+                    animationDuration={1500}
+                  >
+                    {transactionTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={TRANSACTION_TYPE_COLORS[index % TRANSACTION_TYPE_COLORS.length]} strokeWidth={0} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [(value as number).toLocaleString(), 'Count']}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400 text-sm">{statsLoading ? 'Loading...' : 'No transaction data yet'}</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
@@ -691,20 +687,26 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userRoleData} layout="vertical" barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={70} />
-                <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} />
-                <Bar
-                  dataKey="value"
-                  fill={CHART_COLORS.primary}
-                  radius={[0, 6, 6, 0]}
-                  animationDuration={1500}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {userRoleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={userRoleData} layout="vertical" barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={70} />
+                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} />
+                  <Bar
+                    dataKey="value"
+                    fill={CHART_COLORS.primary}
+                    radius={[0, 6, 6, 0]}
+                    animationDuration={1500}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400 text-sm">{userStatsLoading ? 'Loading...' : 'No user data yet'}</p>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -720,30 +722,36 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={userTierData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={68}
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={renderOuterLabel}
-                  labelLine={false}
-                  animationDuration={1500}
-                >
-                  {userTierData.map((entry) => (
-                    <Cell key={`cell-${entry.name}`} fill={LOYALTY_TIER_COLORS[entry.name] || PIE_COLORS[0]} strokeWidth={0} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [(value as number).toLocaleString(), 'Users']}
-                  contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {userTierData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={userTierData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={68}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={renderOuterLabel}
+                    labelLine={false}
+                    animationDuration={1500}
+                  >
+                    {userTierData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={LOYALTY_TIER_COLORS[entry.name] || PIE_COLORS[0]} strokeWidth={0} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [(value as number).toLocaleString(), 'Users']}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400 text-sm">{userStatsLoading ? 'Loading...' : 'No tier data yet'}</p>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -759,30 +767,36 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={transactionStatusData} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={1500}>
-                  {transactionStatusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        entry.name === 'Completed' || entry.name === 'SUCCESS'
-                          ? CHART_COLORS.success
-                          : entry.name === 'Pending'
-                          ? CHART_COLORS.warning
-                          : entry.name === 'Failed'
-                          ? CHART_COLORS.danger
-                          : PIE_COLORS[index % PIE_COLORS.length]
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {transactionStatusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={transactionStatusData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={1500}>
+                    {transactionStatusData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.name === 'Completed' || entry.name === 'SUCCESS' || entry.name === 'SUCCESSFUL'
+                            ? CHART_COLORS.success
+                            : entry.name === 'Pending' || entry.name === 'PENDING'
+                            ? CHART_COLORS.warning
+                            : entry.name === 'Failed' || entry.name === 'FAILED'
+                            ? CHART_COLORS.danger
+                            : PIE_COLORS[index % PIE_COLORS.length]
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400 text-sm">{statsLoading ? 'Loading...' : 'No status data yet'}</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
@@ -790,13 +804,18 @@ export default function AdminDashboard() {
       {/* Recent Users and Alerts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Users */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+        <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg">
                 <FiUsers className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">Recent Users</h2>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Recent Users</h2>
+                {usersTotalCount > 0 && (
+                  <p className="text-xs text-gray-400">{usersTotalCount} total</p>
+                )}
+              </div>
             </div>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -808,73 +827,121 @@ export default function AdminDashboard() {
             </motion.button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {usersToDisplay.map((user, index) => (
-                    <motion.tr
-                      key={user.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                            {user.firstName?.[0]}{user.lastName?.[0]}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900 text-sm">
-                              {user.firstName} {user.lastName}
-                            </p>
-                            <p className="text-xs text-gray-400">{user.phoneNumber}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                          {user.role?.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          user.status === 'ACTIVE'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : user.status === 'SUSPENDED'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => router.push(`/dashboard/users/${user.id}`)}
-                          className="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-                        >
-                          <FiEye className="w-4 h-4" />
-                        </motion.button>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
+          {/* Search */}
+          <div className="relative mb-4">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search by name, email or phone..."
+              value={usersSearchInput}
+              onChange={(e) => handleUsersSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all placeholder:text-gray-400"
+            />
           </div>
+
+          {usersToDisplay.length > 0 ? (
+            <>
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence mode="wait">
+                      {usersToDisplay.map((user, index) => (
+                        <motion.tr
+                          key={user.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                                {user.firstName?.[0]}{user.lastName?.[0]}
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900 text-sm">
+                                  {user.firstName} {user.lastName}
+                                </p>
+                                <p className="text-xs text-gray-400">{user.phoneNumber}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
+                          <td className="py-3 px-4">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                              {user.role?.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                              user.status === 'ACTIVE'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : user.status === 'SUSPENDED'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {user.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                              className="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+                            >
+                              <FiEye className="w-4 h-4" />
+                            </motion.button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {usersTotalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 mt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Page {usersPage} of {usersTotalPages}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
+                      disabled={usersPage <= 1}
+                      className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <FiChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setUsersPage((p) => Math.min(usersTotalPages, p + 1))}
+                      disabled={usersPage >= usersTotalPages}
+                      className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <FiChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <FiUsers className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm">
+                {usersLoading ? 'Loading...' : usersSearch ? 'No users match your search' : 'No users yet'}
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Sidebar - Alerts */}
@@ -893,21 +960,25 @@ export default function AdminDashboard() {
               </span>
             </div>
             <div className="space-y-2.5">
-              {disputesToDisplay.slice(0, 3).map((dispute, index) => (
-                <motion.div
-                  key={dispute.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => router.push(`/dashboard/disputes/${dispute.id}`)}
-                  className="p-3 rounded-xl bg-gray-50 hover:bg-amber-50 cursor-pointer transition-all border border-transparent hover:border-amber-200"
-                >
-                  <p className="font-medium text-sm text-gray-900 line-clamp-1">{dispute.reason}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(dispute.createdAt).toLocaleDateString()}
-                  </p>
-                </motion.div>
-              ))}
+              {disputesToDisplay.length > 0 ? (
+                disputesToDisplay.slice(0, 3).map((dispute, index) => (
+                  <motion.div
+                    key={dispute.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => router.push(`/dashboard/disputes/${dispute.id}`)}
+                    className="p-3 rounded-xl bg-gray-50 hover:bg-amber-50 cursor-pointer transition-all border border-transparent hover:border-amber-200"
+                  >
+                    <p className="font-medium text-sm text-gray-900 line-clamp-1">{dispute.reason}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(dispute.createdAt).toLocaleDateString()}
+                    </p>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-4">No pending disputes</p>
+              )}
             </div>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -933,30 +1004,34 @@ export default function AdminDashboard() {
               </span>
             </div>
             <div className="space-y-2.5">
-              {refundsToDisplay.slice(0, 3).map((refund, index) => (
-                <motion.div
-                  key={refund.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => router.push(`/dashboard/refunds/${refund.id}`)}
-                  className="p-3 rounded-xl bg-gray-50 hover:bg-rose-50 cursor-pointer transition-all border border-transparent hover:border-rose-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-gray-900">
-                        ₦{parseFloat(refund.amount).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {new Date(refund.createdAt).toLocaleDateString()}
-                      </p>
+              {refundsToDisplay.length > 0 ? (
+                refundsToDisplay.slice(0, 3).map((refund, index) => (
+                  <motion.div
+                    key={refund.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => router.push(`/dashboard/refunds/${refund.id}`)}
+                    className="p-3 rounded-xl bg-gray-50 hover:bg-rose-50 cursor-pointer transition-all border border-transparent hover:border-rose-200"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm text-gray-900">
+                          ₦{parseFloat(refund.amount).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {new Date(refund.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                        {refund.status}
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                      {refund.status}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-4">No pending refunds</p>
+              )}
             </div>
             <motion.button
               whileHover={{ scale: 1.02 }}

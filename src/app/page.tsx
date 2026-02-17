@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth.store';
@@ -63,31 +63,55 @@ function AnimatedCounter({ value, suffix = '', prefix = '' }: { value: string; s
 }
 
 // Floating particles background component
+// Uses useMemo + mounted guard to avoid hydration mismatch from Math.random()
 function FloatingParticles() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const particles = useMemo(() => {
+    if (!mounted) return [];
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      width: Math.random() * 6 + 2,
+      height: Math.random() * 6 + 2,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      background: `rgba(${Math.random() > 0.5 ? '67, 97, 238' : '72, 149, 239'}, ${Math.random() * 0.3 + 0.1})`,
+      xOffset: Math.random() * 20 - 10,
+      duration: Math.random() * 4 + 3,
+      delay: Math.random() * 2,
+    }));
+  }, [mounted]);
+
+  if (!mounted) return <div className="absolute inset-0 overflow-hidden pointer-events-none" />;
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 20 }).map((_, i) => (
+      {particles.map((p) => (
         <motion.div
-          key={i}
+          key={p.id}
           className="absolute rounded-full"
           style={{
-            width: Math.random() * 6 + 2,
-            height: Math.random() * 6 + 2,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: `rgba(${Math.random() > 0.5 ? '67, 97, 238' : '72, 149, 239'}, ${Math.random() * 0.3 + 0.1})`,
+            width: p.width,
+            height: p.height,
+            left: p.left,
+            top: p.top,
+            background: p.background,
           }}
           animate={{
             y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
+            x: [0, p.xOffset, 0],
             opacity: [0.2, 0.6, 0.2],
             scale: [1, 1.5, 1],
           }}
           transition={{
-            duration: Math.random() * 4 + 3,
+            duration: p.duration,
             repeat: Infinity,
             ease: 'easeInOut',
-            delay: Math.random() * 2,
+            delay: p.delay,
           }}
         />
       ))}

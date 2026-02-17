@@ -70,3 +70,8 @@ export { FiMinimize2 } from 'react-icons/fi';
 export { FiMaximize2 } from 'react-icons/fi';
 export { FiCopy } from 'react-icons/fi';
 export { FiCornerDownRight } from 'react-icons/fi';
+export { FiAlertTriangle } from 'react-icons/fi';
+export { FiCalendar } from 'react-icons/fi';
+export { FiSlash } from 'react-icons/fi';
+export { FiToggleLeft } from 'react-icons/fi';
+export { FiToggleRight } from 'react-icons/fi';

@@ -1,8 +1,13 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import dynamic from 'next/dynamic';
 import { QueryProvider } from '@/providers/QueryProvider';
-import { Toaster } from 'react-hot-toast';
 import './globals.css';
+
+const Toaster = dynamic(
+  () => import('react-hot-toast').then((mod) => mod.Toaster),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           {children}
           <Toaster position="top-right" />
@@ -27,5 +32,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-

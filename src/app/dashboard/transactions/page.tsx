@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
+import { adminService, TransactionFilters } from '@/services/admin.service';
 import { transactionService } from '@/services/transaction.service';
 import {
   FiCreditCard,
@@ -14,28 +15,59 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiClock,
+  FiChevronLeft,
+  FiChevronRight,
+  FiRefreshCw,
 } from '@/utils/icons';
 
 export default function TransactionsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isLoading } = useAuthGuard();
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 15;
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  // Debounce search
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
-    }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions', 'all', statusFilter],
-    queryFn: () => transactionService.getTransactions({ status: statusFilter || undefined, page: 1, limit: 50 }),
-    enabled: !!user,
+  // Admin query
+  const adminFilters: TransactionFilters = {
+    ...(debouncedSearch && { reference: debouncedSearch }),
+    ...(statusFilter && { status: statusFilter }),
+    ...(typeFilter && { type: typeFilter }),
+    ...(startDate && { startDate }),
+    ...(endDate && { endDate }),
+    page,
+    limit,
+  };
+
+  const { data: adminTxData, isLoading: adminTxLoading, refetch } = useQuery({
+    queryKey: ['admin', 'transactions', adminFilters],
+    queryFn: () => adminService.getTransactions(adminFilters),
+    enabled: !!user && isAdmin,
   });
 
-  if (isLoading || transactionsLoading) {
+  // Customer query (fallback for non-admin users)
+  const { data: customerTxData, isLoading: customerTxLoading } = useQuery({
+    queryKey: ['transactions', 'customer', statusFilter, page],
+    queryFn: () => transactionService.getTransactions({ status: statusFilter || undefined, page, limit }),
+    enabled: !!user && !isAdmin,
+  });
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -44,144 +76,317 @@ export default function TransactionsPage() {
   }
 
   const role = user?.role || 'CUSTOMER';
+  const txLoading = isAdmin ? adminTxLoading : customerTxLoading;
+  const transactions = isAdmin ? (adminTxData?.data || []) : (customerTxData?.data || []);
+  const total = isAdmin ? (adminTxData?.total || 0) : (customerTxData?.total || 0);
+  const totalPages = Math.ceil(total / limit);
+
+  const hasActiveFilters = !!(debouncedSearch || statusFilter || typeFilter || startDate || endDate);
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setDebouncedSearch('');
+    setStatusFilter('');
+    setTypeFilter('');
+    setStartDate('');
+    setEndDate('');
+    setPage(1);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SUCCESSFUL':
-        return 'bg-green-100 text-green-700';
+      case 'COMPLETED':
+      case 'SUCCESS':
+        return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
       case 'FAILED':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-50 text-red-700 ring-1 ring-red-600/20';
       case 'PENDING':
       case 'PROCESSING':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/20';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'SUCCESSFUL':
-        return <FiCheckCircle className="w-4 h-4" />;
+      case 'COMPLETED':
+      case 'SUCCESS':
+        return <FiCheckCircle className="w-3.5 h-3.5" />;
       case 'FAILED':
-        return <FiXCircle className="w-4 h-4" />;
+        return <FiXCircle className="w-3.5 h-3.5" />;
       default:
-        return <FiClock className="w-4 h-4" />;
+        return <FiClock className="w-3.5 h-3.5" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'WALLET_FUNDING': return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20';
+      case 'PAYMENT': return 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/20';
+      case 'REWARD_REDEMPTION': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20';
+      case 'TRANSFER': return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20';
+      case 'REFUND': return 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/20';
+      default: return 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/20';
     }
   };
 
   return (
     <DashboardLayout role={role}>
-      <div>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Transactions</h1>
-          <p className="text-gray-600">View and manage all your transactions</p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
+                <FiCreditCard className="w-5 h-5" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Transactions</h1>
+            </div>
+            <p className="text-gray-500 ml-[52px]">
+              {isAdmin ? `Manage all transactions` : 'View your transaction history'}
+              {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
+            </p>
+          </div>
+          <button
+            onClick={() => refetch?.()}
+            className="self-start p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+          >
+            <FiRefreshCw className={`w-5 h-5 ${txLoading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  className="input-field pl-10"
-                />
-              </div>
+        {/* Filters Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder={isAdmin ? 'Search by reference...' : 'Search transactions...'}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm placeholder:text-gray-400"
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <FiFilter className="text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">All Status</option>
-                <option value="SUCCESSFUL">Successful</option>
-                <option value="PENDING">Pending</option>
-                <option value="PROCESSING">Processing</option>
-                <option value="FAILED">Failed</option>
-              </select>
+
+            {/* Filter Row */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+              <div className="flex items-center gap-2 text-gray-400 sm:pb-2.5">
+                <FiFilter className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">Filters</span>
+              </div>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 w-full sm:w-auto flex-1">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1.5">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                    className="select-field text-sm !py-2.5"
+                  >
+                    <option value="">All Status</option>
+                    <option value="SUCCESSFUL">Successful</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="PROCESSING">Processing</option>
+                    <option value="FAILED">Failed</option>
+                  </select>
+                </div>
+                {isAdmin && (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 block mb-1.5">Type</label>
+                      <select
+                        value={typeFilter}
+                        onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+                        className="select-field text-sm !py-2.5"
+                      >
+                        <option value="">All Types</option>
+                        <option value="WALLET_FUNDING">Wallet Funding</option>
+                        <option value="PAYMENT">Payment</option>
+                        <option value="REWARD_REDEMPTION">Reward Redemption</option>
+                        <option value="TRANSFER">Transfer</option>
+                        <option value="REFUND">Refund</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 block mb-1.5">From</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                        className="select-field text-sm !py-2.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 block mb-1.5">To</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                        className="select-field text-sm !py-2.5"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-primary hover:text-primary-light font-semibold whitespace-nowrap pb-2.5"
+                >
+                  Clear all
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Transactions Table */}
-        <div className="card">
-          {transactions?.data && transactions.data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Reference</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Type</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Payment Method</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.data.map((tx) => (
-                    <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-4">
-                        <p className="font-mono text-sm text-gray-900">
-                          {tx.reference.substring(0, 16)}...
-                        </p>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                          {tx.type.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <p className="font-bold text-gray-900">
-                          ₦{parseFloat(tx.amount).toLocaleString()}
-                        </p>
-                        {tx.rewardAmount && (
-                          <p className="text-xs text-green-600 mt-1">
-                            +{parseFloat(tx.rewardAmount).toLocaleString()} pts
-                          </p>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        {tx.paymentMethod ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            {tx.paymentMethod.replace('_', ' ')}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}>
-                          {getStatusIcon(tx.status)}
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-sm text-gray-500">
-                        {new Date(tx.createdAt).toLocaleString()}
-                      </td>
-                      <td className="py-4 px-4">
-                        <button
-                          onClick={() => router.push(`/dashboard/transactions/${tx.id}`)}
-                          className="text-primary hover:text-primary-light"
-                        >
-                          <FiEye className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {txLoading ? (
+            <div className="flex justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
+          ) : transactions.length > 0 ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px]">
+                  <thead>
+                    <tr className="bg-gray-50/80">
+                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reference</th>
+                      {isAdmin && (
+                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                      )}
+                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-16"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {transactions.map((tx: any) => (
+                      <tr
+                        key={tx.id}
+                        className="hover:bg-gray-50/60 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/dashboard/transactions/${tx.id}`)}
+                      >
+                        <td className="py-4 px-5">
+                          <p className="font-mono text-sm text-gray-900 font-medium">
+                            {tx.reference?.substring(0, 16)}...
+                          </p>
+                        </td>
+                        {isAdmin && (
+                          <td className="py-4 px-5">
+                            {tx.user ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/users/${tx.user.id || tx.userId}`); }}
+                                className="text-left hover:text-primary transition-colors"
+                              >
+                                <p className="font-semibold text-gray-900 text-sm">
+                                  {tx.user.firstName} {tx.user.lastName}
+                                </p>
+                                <p className="text-xs text-gray-400">{tx.user.phoneNumber || tx.user.email}</p>
+                              </button>
+                            ) : (
+                              <span className="text-gray-300 text-sm">&mdash;</span>
+                            )}
+                          </td>
+                        )}
+                        <td className="py-4 px-5">
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getTypeColor(tx.type)}`}>
+                            {tx.type?.replace(/_/g, ' ')}
+                          </span>
+                        </td>
+                        <td className="py-4 px-5 text-right">
+                          <p className="font-bold text-gray-900 text-sm">
+                            ₦{parseFloat(tx.amount).toLocaleString()}
+                          </p>
+                          {tx.fee && parseFloat(tx.fee) > 0 && (
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              Fee: ₦{parseFloat(tx.fee).toLocaleString()}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-4 px-5">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>
+                            {getStatusIcon(tx.status)}
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-5">
+                          <p className="text-sm text-gray-700">
+                            {new Date(tx.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </td>
+                        <td className="py-4 px-5 text-center">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/transactions/${tx.id}`); }}
+                            className="text-gray-400 group-hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-primary/5"
+                            title="View details"
+                          >
+                            <FiEye className="w-4.5 h-4.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
+                  <p className="text-sm text-gray-500">
+                    Showing <span className="font-semibold text-gray-700">{(page - 1) * limit + 1}</span>–<span className="font-semibold text-gray-700">{Math.min(page * limit, total)}</span> of <span className="font-semibold text-gray-700">{total}</span>
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      <FiChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm font-medium text-gray-600 px-3 min-w-[100px] text-center">
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    >
+                      <FiChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-12">
-              <FiCreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No transactions found</p>
+            <div className="text-center py-16 px-6">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FiCreditCard className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-900 font-semibold mb-1">No transactions found</p>
+              <p className="text-sm text-gray-400">
+                {hasActiveFilters
+                  ? 'Try adjusting your filters'
+                  : 'No transactions have been recorded yet'}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-sm text-primary hover:text-primary-light font-semibold"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           )}
         </div>

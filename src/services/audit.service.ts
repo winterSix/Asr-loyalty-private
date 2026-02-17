@@ -8,10 +8,17 @@ export interface AuditLog {
   resource: string;
   resourceId?: string;
   changes?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;
   user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  performer?: {
     id: string;
     firstName: string;
     lastName: string;
@@ -98,11 +105,10 @@ class AuditService {
     return data;
   }
 
-  // Legacy method for compatibility
-  async getAuditLog(auditId: string): Promise<AuditLog | null> {
-    // This endpoint doesn't exist directly, would need to get all and filter
-    // For now, return null
-    return null;
+  // GET /audit/:id (Admin only)
+  async getAuditLog(auditId: string): Promise<AuditLog> {
+    const response = await apiClient.get<AuditLog>(`/audit/${auditId}`);
+    return unwrapResponse<AuditLog>(response.data);
   }
 }
 

@@ -65,6 +65,24 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
+  const navRef = useRef<HTMLElement>(null);
+
+  // Preserve sidebar scroll position across navigations
+  useEffect(() => {
+    const saved = sessionStorage.getItem('sidebarScroll');
+    if (saved && navRef.current) {
+      navRef.current.scrollTop = parseInt(saved, 10);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const onScroll = () => sessionStorage.setItem('sidebarScroll', String(nav.scrollTop));
+    nav.addEventListener('scroll', onScroll, { passive: true });
+    return () => nav.removeEventListener('scroll', onScroll);
+  }, []);
+
   // Save sidebar state to localStorage
   useEffect(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
@@ -380,7 +398,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
           </button>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto overflow-x-hidden py-5 sidebar-scrollbar relative z-10">
+          <nav ref={navRef} className="flex-1 overflow-y-auto overflow-x-hidden py-5 sidebar-scrollbar relative z-10">
             <div className="space-y-6" style={{ padding: isCollapsed ? '0 8px' : '0 16px' }}>
               {navSections.map((section) => (
                 <div key={section.title}>

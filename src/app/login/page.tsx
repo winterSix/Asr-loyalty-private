@@ -32,41 +32,28 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Redirect if already authenticated (but only after checking localStorage, not API)
   useEffect(() => {
-    console.log('[Login] Redirect check:', {
-      isLoading,
-      isAuthenticated,
-      authLoading,
-      pathname: window.location.pathname
-    });
-    
+    if (!mounted) return;
+
     // Don't redirect while we're submitting login
-    if (isLoading) {
-      console.log('[Login] Skipping redirect - login in progress');
-      return;
-    }
-    
+    if (isLoading) return;
+
     // Check if we have a stored user/token without calling API
     const storedUser = authService.getUser();
     const hasToken = authService.isAuthenticated();
-    
-    console.log('[Login] Auth state check:', {
-      storedUser: !!storedUser,
-      hasToken,
-      isAuthenticated,
-      authLoading
-    });
-    
+
     // Only redirect if we're definitely authenticated (must have actual token)
     if (hasToken && (isAuthenticated || storedUser) && !authLoading) {
-      console.log('[Login] User is authenticated, redirecting to /dashboard');
       router.replace('/dashboard');
-    } else {
-      console.log('[Login] User not authenticated, staying on login page');
     }
-  }, [isAuthenticated, authLoading, isLoading, router]);
+  }, [isAuthenticated, authLoading, isLoading, router, mounted]);
 
   const {
     register,
@@ -171,14 +158,6 @@ export default function LoginPage() {
     'Secure wallet with OTP protection',
     'Seamless QR payments & transfers',
   ];
-
-  // Don't render login form if already authenticated (will redirect)
-  // Must verify actual token exists, not just stale Zustand state
-  const storedUser = authService.getUser();
-  const hasToken = authService.isAuthenticated();
-  if (hasToken && (isAuthenticated || storedUser)) {
-    return null; // Will redirect via useEffect
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-stretch">

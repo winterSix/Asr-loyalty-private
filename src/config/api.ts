@@ -176,9 +176,11 @@ if (typeof window !== 'undefined' && !localStorage.getItem('deviceId')) {
  * This function extracts the data if wrapped, otherwise returns the response as-is
  */
 export function unwrapResponse<T>(responseData: any): T {
-  // If response is wrapped (has data property and other wrapper properties)
-  if (responseData?.data && typeof responseData.data === 'object' && 
-      (responseData.success !== undefined || responseData.statusCode !== undefined)) {
+  // Only strip the OUTER interceptor wrapper which has BOTH success AND statusCode.
+  // Inner service responses (e.g. { success, data, pagination }) only have success,
+  // so they won't be incorrectly unwrapped.
+  if (responseData?.data && typeof responseData.data === 'object' &&
+      responseData.success !== undefined && responseData.statusCode !== undefined) {
     return responseData.data as T;
   }
   // Return as-is if not wrapped
