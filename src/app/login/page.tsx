@@ -31,6 +31,8 @@ export default function LoginPage() {
   const { login, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationAlert, setVerificationAlert] = useState<'email' | 'phone' | null>(null);
+  const [pendingEmail, setPendingEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -116,38 +118,52 @@ export default function LoginPage() {
 
       toast.success('Login successful!');
       console.log('[Login] Toast shown, preparing redirect...');
-      
+
       // Force cookie setting one more time before redirect
-      Cookies.set('accessToken', response.accessToken, { 
+      Cookies.set('accessToken', response.accessToken, {
         expires: 7,
         path: '/',
         sameSite: 'lax',
         secure: false // Set to false for localhost
       });
-      Cookies.set('refreshToken', response.refreshToken, { 
+      Cookies.set('refreshToken', response.refreshToken, {
         expires: 30,
         path: '/',
         sameSite: 'lax',
         secure: false
       });
-      
+
       console.log('[Login] Cookies set again before redirect');
       console.log('[Login] Final cookie check:', {
         accessToken: Cookies.get('accessToken')?.substring(0, 30) + '...' || 'NOT SET',
         allCookies: document.cookie
       });
-      
+
+      // If user must change password, redirect to force-change-password page
+      const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
+      const redirectPath = mustChange ? '/force-change-password' : '/dashboard';
+
       // Use window.location.href for full page reload so middleware can see cookies
-      console.log('[Login] Redirecting to /dashboard in 500ms...');
+      console.log(`[Login] Redirecting to ${redirectPath} in 500ms...`);
       setTimeout(() => {
         console.log('[Login] ========== REDIRECTING NOW ==========');
-        window.location.href = '/dashboard';
+        window.location.href = redirectPath;
       }, 500);
     } catch (err: any) {
       console.error('[Login] Login error:', err);
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
-      setError(errorMessage);
-      toast.error(errorMessage);
+
+      if (errorMessage === 'Please verify your email first') {
+        setVerificationAlert('email');
+        setPendingEmail(data.email);
+        setError(null);
+      } else if (errorMessage === 'Please verify your phone number first') {
+        setVerificationAlert('phone');
+        setError(null);
+      } else {
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -224,6 +240,26 @@ export default function LoginPage() {
             {error && (
               <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
                 {error}
+              </div>
+            )}
+
+            {verificationAlert === 'email' && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-sm shadow-sm">
+                <p className="font-semibold mb-1">Email verification required</p>
+                <p className="text-amber-700 mb-3">Your email address has not been verified. Please check your inbox for the verification code.</p>
+                <a
+                  href={`/verify-otp?email=${encodeURIComponent(pendingEmail)}`}
+                  className="inline-block px-4 py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors"
+                >
+                  Enter verification code
+                </a>
+              </div>
+            )}
+
+            {verificationAlert === 'phone' && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-sm shadow-sm">
+                <p className="font-semibold mb-1">Phone verification required</p>
+                <p className="text-amber-700">Your phone number must be verified before you can sign in. Please verify it from your mobile app profile, or contact support.</p>
               </div>
             )}
 

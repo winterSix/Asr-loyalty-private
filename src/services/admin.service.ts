@@ -107,6 +107,7 @@ export interface AdminUser {
   currentTier?: string;
   phoneVerified: boolean;
   emailVerified: boolean;
+  mustChangePassword?: boolean;
   totalSpent?: number;
   totalTransactions?: number;
   lastLoginAt?: string;
@@ -367,6 +368,37 @@ class AdminService {
     const result = unwrapResponse<any>(response.data);
     return extractInner<AdminUser>(result, 'user');
   }
+
+  // POST /admin/cashiers - Create a new cashier account
+  // Backend returns: { success, message, cashier: { id, firstName, lastName, email, phoneNumber, role, status, temporaryPassword } }
+  async createCashier(data: CreateCashierData): Promise<CreateCashierResponse> {
+    const response = await apiClient.post<any>('/admin/cashiers', data);
+    const result = unwrapResponse<any>(response.data);
+    // The backend returns the full object at the top level (not nested under a key)
+    return result as CreateCashierResponse;
+  }
+}
+
+export interface CreateCashierData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+}
+
+export interface CreateCashierResponse {
+  success: boolean;
+  message: string;
+  cashier: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string | null;
+    role: string;
+    status: string;
+    temporaryPassword: string;
+  };
 }
 
 export const adminService = new AdminService();

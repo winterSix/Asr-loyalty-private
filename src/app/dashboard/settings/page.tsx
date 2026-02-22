@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { systemSettingsService } from '@/services/system-settings.service';
+import { systemSettingsService, SystemSettingKey } from '@/services/system-settings.service';
 import {
   FiSettings,
   FiShield,
@@ -25,8 +25,16 @@ import {
   FiEdit,
   FiCheck,
   FiX,
+  FiAlertTriangle,
+  FiCreditCard,
+  FiSlash,
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
+
+// Keys shown in dedicated sections — excluded from the generic Feature Flags list
+const MAINTENANCE_KEY = SystemSettingKey.MAINTENANCE_MODE;
+const GATEWAY_KEYS = [SystemSettingKey.PAYSTACK_ENABLED, SystemSettingKey.OPAY_ENABLED];
+const DEDICATED_KEYS = [MAINTENANCE_KEY, ...GATEWAY_KEYS];
 
 export default function SettingsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -47,6 +55,7 @@ export default function SettingsPage() {
   }, [isLoading, isAuthenticated, router, checkAuth]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const { data: groupedRaw, isLoading: settingsLoading } = useQuery({
     queryKey: ['system-settings-grouped'],
@@ -57,6 +66,12 @@ export default function SettingsPage() {
   const { data: featuresRaw } = useQuery({
     queryKey: ['system-settings-features'],
     queryFn: () => systemSettingsService.getFeatures(),
+    enabled: !!user && isAdmin,
+  });
+
+  const { data: paymentGatewaysRaw } = useQuery({
+    queryKey: ['payment-gateway-statuses'],
+    queryFn: () => systemSettingsService.getPaymentGatewayStatuses(),
     enabled: !!user && isAdmin,
   });
 
@@ -71,6 +86,19 @@ export default function SettingsPage() {
     if (Array.isArray(featuresRaw)) return featuresRaw;
     return (featuresRaw as any)?.data || (featuresRaw as any)?.features || [];
   }, [featuresRaw]);
+
+  const paymentGateways = useMemo(() => {
+    if (!paymentGatewaysRaw) return [];
+    if (Array.isArray(paymentGatewaysRaw)) return paymentGatewaysRaw;
+    return (paymentGatewaysRaw as any)?.gateways || [];
+  }, [paymentGatewaysRaw]);
+
+  // Maintenance mode derived from features list
+  const maintenanceFeature = features.find((f: any) => f.key === MAINTENANCE_KEY);
+  const isMaintenanceActive = maintenanceFeature?.enabled ?? false;
+
+  // Feature flags excluding maintenance_mode and payment gateway keys (they have dedicated sections)
+  const filteredFeatures = features.filter((f: any) => !DEDICATED_KEYS.includes(f.key));
 
   // Initialize all categories as expanded
   useEffect(() => {
@@ -102,6 +130,7 @@ export default function SettingsPage() {
       toast.success('Setting toggled');
       queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
       queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to toggle setting');
@@ -121,11 +150,38 @@ export default function SettingsPage() {
     },
   });
 
+  const initializeMutation = useMutation({
+    mutationFn: () => systemSettingsService.initializeDefaults(),
+    onSuccess: () => {
+      toast.success('System settings initialized with defaults');
+      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to initialize defaults');
+    },
+  });
+
+  const refreshCacheMutation = useMutation({
+    mutationFn: () => systemSettingsService.refreshCache(),
+    onSuccess: () => {
+      toast.success('Server cache refreshed');
+      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to refresh cache');
+    },
+  });
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] }),
       queryClient.invalidateQueries({ queryKey: ['system-settings-features'] }),
+      queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] }),
     ]);
     setTimeout(() => setIsRefreshing(false), 600);
   };
@@ -212,14 +268,42 @@ export default function SettingsPage() {
               <p className="text-gray-500 text-sm">Manage system configuration and feature flags</p>
             </div>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
-            title="Refresh"
-          >
-            <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <>
+                <button
+                  onClick={() => initializeMutation.mutate()}
+                  disabled={initializeMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+                  title="Initialize system settings with default values"
+                >
+                  <FiDatabase className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {initializeMutation.isPending ? 'Initializing...' : 'Init Defaults'}
+                  </span>
+                </button>
+                <button
+                  onClick={() => refreshCacheMutation.mutate()}
+                  disabled={refreshCacheMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+                  title="Flush and reload server-side settings cache"
+                >
+                  <FiRefreshCw className={`w-4 h-4 ${refreshCacheMutation.isPending ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">
+                    {refreshCacheMutation.isPending ? 'Refreshing...' : 'Refresh Cache'}
+                  </span>
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+              title="Reload page data"
+            >
+              <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -239,8 +323,145 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Feature Flags Section */}
-        {isAdmin && features.length > 0 && (
+        {/* ── Maintenance Mode ──────────────────────────────────────── */}
+        {isAdmin && (
+          <div
+            className={`rounded-2xl border shadow-sm overflow-hidden mb-6 ${
+              isMaintenanceActive
+                ? 'border-red-200 bg-red-50'
+                : 'border-amber-100 bg-amber-50/40'
+            }`}
+          >
+            <div
+              className={`px-6 py-4 flex items-center justify-between border-b ${
+                isMaintenanceActive ? 'border-red-200 bg-red-100/60' : 'border-amber-100 bg-amber-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2 rounded-lg text-white shadow-sm ${
+                    isMaintenanceActive
+                      ? 'bg-gradient-to-br from-red-500 to-rose-600'
+                      : 'bg-gradient-to-br from-amber-500 to-orange-500'
+                  }`}
+                >
+                  {isMaintenanceActive ? (
+                    <FiSlash className="w-4 h-4" />
+                  ) : (
+                    <FiAlertTriangle className="w-4 h-4" />
+                  )}
+                </div>
+                <div>
+                  <h2 className={`font-semibold ${isMaintenanceActive ? 'text-red-900' : 'text-amber-900'}`}>
+                    Maintenance Mode
+                    {isMaintenanceActive && (
+                      <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white animate-pulse">
+                        ACTIVE
+                      </span>
+                    )}
+                  </h2>
+                  <p className={`text-xs mt-0.5 ${isMaintenanceActive ? 'text-red-600' : 'text-amber-700'}`}>
+                    {isMaintenanceActive
+                      ? 'All API requests are returning 503. Only admins can access the system.'
+                      : 'Enabling this will block all non-admin API requests with a 503 response.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  toggleMutation.mutate({ key: MAINTENANCE_KEY, enabled: !isMaintenanceActive })
+                }
+                disabled={toggleMutation.isPending || !maintenanceFeature}
+                title={isMaintenanceActive ? 'Disable maintenance mode' : 'Enable maintenance mode'}
+                className={`flex-shrink-0 p-1 rounded-full transition-all disabled:opacity-50 ${
+                  isMaintenanceActive
+                    ? 'text-red-500 hover:text-red-600'
+                    : 'text-gray-300 hover:text-amber-500'
+                }`}
+              >
+                {isMaintenanceActive ? (
+                  <FiToggleRight className="w-9 h-9" />
+                ) : (
+                  <FiToggleLeft className="w-9 h-9" />
+                )}
+              </button>
+            </div>
+            <div className={`px-6 py-3 text-xs ${isMaintenanceActive ? 'text-red-700' : 'text-amber-700'}`}>
+              <strong>Impact:</strong> When active, all public and authenticated API endpoints return HTTP 503.
+              Admin and Super Admin bypass this restriction. Use with caution.
+            </div>
+          </div>
+        )}
+
+        {/* ── Payment Gateways ─────────────────────────────────────── */}
+        {isAdmin && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <FiCreditCard className="w-4 h-4 text-emerald-500" />
+                Payment Gateways
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">Enable or disable individual payment processors</p>
+            </div>
+            {paymentGateways.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {paymentGateways.map((gw: any) => (
+                  <div key={gw.gateway} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm capitalize">
+                        {gw.gateway?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                      </p>
+                      {gw.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{gw.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          gw.enabled
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {gw.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const keyMap: Record<string, string> = {
+                            paystack: SystemSettingKey.PAYSTACK_ENABLED,
+                            opay: SystemSettingKey.OPAY_ENABLED,
+                          };
+                          const settingKey = keyMap[gw.gateway?.toLowerCase()] || `${gw.gateway?.toLowerCase()}_enabled`;
+                          toggleMutation.mutate({ key: settingKey, enabled: !gw.enabled });
+                        }}
+                        disabled={toggleMutation.isPending}
+                        className={`p-1 rounded-full transition-all ${
+                          gw.enabled
+                            ? 'text-emerald-500 hover:text-emerald-600'
+                            : 'text-gray-300 hover:text-gray-400'
+                        }`}
+                      >
+                        {gw.enabled ? (
+                          <FiToggleRight className="w-8 h-8" />
+                        ) : (
+                          <FiToggleLeft className="w-8 h-8" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-6 py-8 text-center">
+                <FiCreditCard className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No payment gateways configured</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Feature Flags ────────────────────────────────────────── */}
+        {isAdmin && filteredFeatures.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -250,7 +471,7 @@ export default function SettingsPage() {
               <p className="text-xs text-gray-400 mt-0.5">Toggle system features on or off</p>
             </div>
             <div className="divide-y divide-gray-100">
-              {features.map((feature: any) => (
+              {filteredFeatures.map((feature: any) => (
                 <div key={feature.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">
@@ -405,7 +626,7 @@ export default function SettingsPage() {
                                     <span className="px-3 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs font-mono text-gray-700 max-w-[200px] truncate">
                                       {setting.value}
                                     </span>
-                                    {user?.role === 'SUPER_ADMIN' && (
+                                    {isSuperAdmin && (
                                       <button
                                         onClick={() => { setEditingSetting(setting.key); setEditValue(setting.value); }}
                                         className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors"
@@ -434,6 +655,15 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-400">
                 {searchTerm ? 'Try adjusting your search' : 'System settings have not been initialized'}
               </p>
+              {!searchTerm && isSuperAdmin && (
+                <button
+                  onClick={() => initializeMutation.mutate()}
+                  disabled={initializeMutation.isPending}
+                  className="mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-semibold shadow-lg shadow-violet-500/25 hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {initializeMutation.isPending ? 'Initializing...' : 'Initialize Defaults'}
+                </button>
+              )}
             </div>
           )
         ) : (

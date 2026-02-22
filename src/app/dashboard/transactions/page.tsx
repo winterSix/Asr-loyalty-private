@@ -18,7 +18,12 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiRefreshCw,
+  FiDownload,
 } from '@/utils/icons';
+import { paymentService } from '@/services/payment.service';
+import toast from 'react-hot-toast';
+
+type PeriodFilter = 'daily' | 'weekly' | 'monthly' | 'yearly' | '';
 
 export default function TransactionsPage() {
   const { user, isLoading } = useAuthGuard();
@@ -27,9 +32,11 @@ export default function TransactionsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
   const limit = 15;
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -61,9 +68,14 @@ export default function TransactionsPage() {
   });
 
   // Customer query (fallback for non-admin users)
-  const { data: customerTxData, isLoading: customerTxLoading } = useQuery({
-    queryKey: ['transactions', 'customer', statusFilter, page],
-    queryFn: () => transactionService.getTransactions({ status: statusFilter || undefined, page, limit }),
+  const { data: customerTxData, isLoading: customerTxLoading, refetch: customerRefetch } = useQuery({
+    queryKey: ['transactions', 'customer', statusFilter, periodFilter, page],
+    queryFn: () => transactionService.getTransactions({
+      status: statusFilter || undefined,
+      period: periodFilter || undefined,
+      page,
+      limit,
+    }),
     enabled: !!user && !isAdmin,
   });
 
@@ -81,17 +93,49 @@ export default function TransactionsPage() {
   const total = isAdmin ? (adminTxData?.total || 0) : (customerTxData?.total || 0);
   const totalPages = Math.ceil(total / limit);
 
-  const hasActiveFilters = !!(debouncedSearch || statusFilter || typeFilter || startDate || endDate);
+  const hasActiveFilters = !!(debouncedSearch || statusFilter || typeFilter || startDate || endDate || periodFilter);
 
   const clearFilters = () => {
     setSearchInput('');
     setDebouncedSearch('');
     setStatusFilter('');
     setTypeFilter('');
+    setPeriodFilter('');
     setStartDate('');
     setEndDate('');
     setPage(1);
   };
+
+  const handleExportPdf = async () => {
+    if (isAdmin) return; // admin export not available via this endpoint
+    setIsExporting(true);
+    try {
+      const blob = await paymentService.exportTransactionHistory({
+        period: periodFilter || undefined,
+        status: statusFilter || undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const period = periodFilter || 'all';
+      a.href = url;
+      a.download = `transactions_${period}_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('PDF downloaded');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Export failed');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const periodOptions: { value: PeriodFilter; label: string }[] = [
+    { value: '', label: 'All Time' },
+    { value: 'daily', label: 'Today' },
+    { value: 'weekly', label: 'This Week' },
+    { value: 'monthly', label: 'This Month' },
+    { value: 'yearly', label: 'This Year' },
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -150,12 +194,25 @@ export default function TransactionsPage() {
               {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
             </p>
           </div>
-          <button
-            onClick={() => refetch?.()}
-            className="self-start p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-          >
-            <FiRefreshCw className={`w-5 h-5 ${txLoading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2 self-start">
+            {!isAdmin && (
+              <button
+                onClick={handleExportPdf}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
+                title="Export as PDF"
+              >
+                <FiDownload className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+                <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+              </button>
+            )}
+            <button
+              onClick={() => isAdmin ? refetch?.() : customerRefetch?.()}
+              className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+            >
+              <FiRefreshCw className={`w-5 h-5 ${txLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Filters Card */}
@@ -194,6 +251,20 @@ export default function TransactionsPage() {
                     <option value="FAILED">Failed</option>
                   </select>
                 </div>
+                {!isAdmin && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 block mb-1.5">Period</label>
+                    <select
+                      value={periodFilter}
+                      onChange={(e) => { setPeriodFilter(e.target.value as PeriodFilter); setPage(1); }}
+                      className="select-field text-sm !py-2.5"
+                    >
+                      {periodOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 {isAdmin && (
                   <>
                     <div>

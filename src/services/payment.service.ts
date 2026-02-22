@@ -42,6 +42,15 @@ class PaymentService {
     const response = await apiClient.get<any>(`/payments/${reference}`);
     return unwrapResponse(response.data);
   }
+
+  // GET /payments/history/export — returns PDF as a Blob
+  async exportTransactionHistory(params?: { period?: string; status?: string }): Promise<Blob> {
+    const response = await apiClient.get('/payments/history/export', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  }
 }
 
 export const paymentService = new PaymentService();

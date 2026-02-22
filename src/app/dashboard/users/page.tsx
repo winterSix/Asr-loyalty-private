@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useQuery } from '@tanstack/react-query';
-import { adminService, UserFilters } from '@/services/admin.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService, UserFilters, CreateCashierData } from '@/services/admin.service';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import toast from 'react-hot-toast';
 import {
   FiUsers,
   FiSearch,
@@ -13,11 +17,25 @@ import {
   FiFilter,
   FiChevronLeft,
   FiChevronRight,
+  FiX,
+  FiUserPlus,
+  FiCopy,
+  FiCheckCircle,
 } from '@/utils/icons';
+
+const createCashierSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  phoneNumber: z.string().optional(),
+});
+
+type CreateCashierFormData = z.infer<typeof createCashierSchema>;
 
 export default function UsersPage() {
   const { user, isLoading } = useAuthGuard();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -25,6 +43,17 @@ export default function UsersPage() {
   const [tierFilter, setTierFilter] = useState('');
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  // Create Cashier modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{
+    email: string;
+    temporaryPassword: string;
+    name: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
   // Debounce search input
   useEffect(() => {
@@ -47,8 +76,51 @@ export default function UsersPage() {
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!user && isAdmin,
   });
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateCashierFormData>({
+    resolver: zodResolver(createCashierSchema),
+  });
+
+  const createCashierMutation = useMutation({
+    mutationFn: (data: CreateCashierData) => adminService.createCashier(data),
+    onSuccess: (result) => {
+      setCreatedCredentials({
+        email: result.cashier.email,
+        temporaryPassword: result.cashier.temporaryPassword,
+        name: `${result.cashier.firstName} ${result.cashier.lastName}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      reset();
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to create cashier');
+    },
+  });
+
+  const onCreateCashier = (data: CreateCashierFormData) => {
+    createCashierMutation.mutate(data);
+  };
+
+  const handleCopyPassword = () => {
+    if (createdCredentials?.temporaryPassword) {
+      navigator.clipboard.writeText(createdCredentials.temporaryPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setCreatedCredentials(null);
+    reset();
+  };
 
   if (isLoading) {
     return (
@@ -92,9 +164,20 @@ export default function UsersPage() {
   return (
     <DashboardLayout role={role}>
       <div>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
-          <p className="text-gray-600">Manage all system users ({total} total)</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
+            <p className="text-gray-600">Manage all system users ({total} total)</p>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              <FiUserPlus className="w-5 h-5" />
+              Create Cashier
+            </button>
+          )}
         </div>
 
         {/* Search & Filters */}
@@ -193,9 +276,16 @@ export default function UsersPage() {
                         <td className="py-4 px-4 text-sm text-gray-700">{u.email || '—'}</td>
                         <td className="py-4 px-4 text-sm text-gray-700">{u.phoneNumber}</td>
                         <td className="py-4 px-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(u.role)}`}>
-                            {u.role.replace('_', ' ')}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getRoleColor(u.role)}`}>
+                              {u.role.replace('_', ' ')}
+                            </span>
+                            {u.mustChangePassword && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold w-fit bg-amber-100 text-amber-700">
+                                Temp Password
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(u.status)}`}>
@@ -266,6 +356,165 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+
+      {/* Create Cashier Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Create Cashier Account</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  A temporary password will be emailed to the cashier
+                </p>
+              </div>
+              <button
+                onClick={closeCreateModal}
+                className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {createdCredentials ? (
+              /* Success state — show credentials */
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <FiCheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Cashier Created!</p>
+                    <p className="text-sm text-gray-500">{createdCredentials.name}</p>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                  <p className="text-xs font-semibold text-amber-700 mb-3 uppercase tracking-wide">
+                    Credentials (save these now)
+                  </p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="font-mono text-sm text-gray-900">{createdCredentials.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Temporary Password</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="font-mono text-sm text-gray-900 bg-white border border-gray-200 rounded-lg px-3 py-1.5 flex-1">
+                          {createdCredentials.temporaryPassword}
+                        </p>
+                        <button
+                          onClick={handleCopyPassword}
+                          className="p-2 rounded-lg hover:bg-amber-100 text-amber-600 transition-colors"
+                          title="Copy password"
+                        >
+                          {copied ? <FiCheckCircle className="w-4 h-4 text-green-600" /> : <FiCopy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-amber-600 mt-3">
+                    The cashier will be prompted to change their password on first login. The credentials have also been emailed to them.
+                  </p>
+                </div>
+
+                <button
+                  onClick={closeCreateModal}
+                  className="btn-primary w-full"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              /* Create form */
+              <form onSubmit={handleSubmit(onCreateCashier)} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register('firstName')}
+                      type="text"
+                      className={`input-field ${errors.firstName ? 'border-red-300' : ''}`}
+                      placeholder="John"
+                    />
+                    {errors.firstName && (
+                      <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register('lastName')}
+                      type="text"
+                      className={`input-field ${errors.lastName ? 'border-red-300' : ''}`}
+                      placeholder="Doe"
+                    />
+                    {errors.lastName && (
+                      <p className="mt-1 text-xs text-red-600">{errors.lastName.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('email')}
+                    type="email"
+                    className={`input-field ${errors.email ? 'border-red-300' : ''}`}
+                    placeholder="cashier@example.com"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Phone Number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    {...register('phoneNumber')}
+                    type="tel"
+                    className="input-field"
+                    placeholder="+234..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createCashierMutation.isPending}
+                    className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {createCashierMutation.isPending ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Creating...
+                      </span>
+                    ) : (
+                      'Create Cashier'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

@@ -231,7 +231,7 @@ export default function UserDetailPage() {
                   </div>
                   <div>
                     <label className="text-sm font-semibold text-gray-500">Status</label>
-                    <p className="mt-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         userData.status === 'ACTIVE'
                           ? 'bg-green-100 text-green-700'
@@ -241,7 +241,15 @@ export default function UserDetailPage() {
                       }`}>
                         {userData.status}
                       </span>
-                    </p>
+                      {userData.mustChangePassword && (
+                        <span
+                          className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200"
+                          title="This user is using a temporary password and has not yet changed it"
+                        >
+                          Temporary Password Active
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="text-sm font-semibold text-gray-500">Loyalty Tier</label>

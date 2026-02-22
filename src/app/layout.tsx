@@ -9,6 +9,11 @@ const Toaster = dynamic(
   { ssr: false }
 );
 
+const MaintenanceBanner = dynamic(
+  () => import('@/components/MaintenanceBanner'),
+  { ssr: false }
+);
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -25,6 +30,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
+          <MaintenanceBanner />
           {children}
           <Toaster position="top-right" />
         </QueryProvider>

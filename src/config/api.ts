@@ -151,9 +151,19 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Handle 503 Maintenance Mode
+    if (error.response?.status === 503) {
+      const msg = error.response?.data?.message || 'The system is currently under maintenance.';
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('asr:maintenance', { detail: { active: true, message: msg } }));
+        toast.error(msg, { id: 'maintenance-mode', duration: 8000 });
+      }
+      return Promise.reject(error);
+    }
+
     // Handle other errors
     const message = error.response?.data?.message || error.message || 'An error occurred';
-    
+
     // Don't show toast for 401 errors (handled above) or if it's an auth endpoint
     if (error.response?.status !== 401 && !isAuthEndpoint && typeof window !== 'undefined') {
       toast.error(message);

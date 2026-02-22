@@ -26,6 +26,7 @@ class TransactionService {
     limit?: number;
     type?: string;
     status?: string;
+    period?: string;
     startDate?: string;
     endDate?: string;
   }) {

@@ -26,6 +26,7 @@ export interface ResendOtpData {
 
 export interface AuthResponse {
   message: string;
+  mustChangePassword?: boolean;
   accessToken: string;
   refreshToken: string;
   user: User;
@@ -41,6 +42,7 @@ export interface User {
   emailVerified?: boolean;
   role: string;
   status: string;
+  mustChangePassword?: boolean;
   currentTier?: string;
   totalSpent?: string;
   totalTransactions?: number;
@@ -131,6 +133,14 @@ class AuthService {
     const response = await apiClient.post<any>('/auth/reset-password', {
       email,
       code,
+      newPassword,
+    });
+    return unwrapResponse(response.data);
+  }
+
+  async changePassword(currentPassword: string, newPassword: string) {
+    const response = await apiClient.post<any>('/auth/change-password', {
+      currentPassword,
       newPassword,
     });
     return unwrapResponse(response.data);

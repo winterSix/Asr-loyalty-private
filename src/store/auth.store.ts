@@ -155,8 +155,18 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await authService.getCurrentUser();
           const storedUser = authService.getUser();
+          const resolvedUser = user || storedUser;
+
+          // If the user still has mustChangePassword set, redirect them
+          if (resolvedUser?.mustChangePassword && typeof window !== 'undefined') {
+            const path = window.location.pathname;
+            if (path !== '/force-change-password') {
+              window.location.href = '/force-change-password';
+            }
+          }
+
           set({
-            user: user || storedUser,
+            user: resolvedUser,
             isAuthenticated: true,
             isLoading: false,
           });

@@ -45,7 +45,7 @@ class WalletService {
   }
 
   // GET /wallet/history
-  async getHistory(params?: { page?: number; limit?: number; type?: string; startDate?: string; endDate?: string }) {
+  async getHistory(params?: { page?: number; limit?: number; type?: string; status?: string; period?: string; startDate?: string; endDate?: string }) {
     const response = await apiClient.get<any>('/wallet/history', { params });
     return unwrapResponse<{ data: any[]; total: number; page: number; limit: number }>(response.data);
   }
