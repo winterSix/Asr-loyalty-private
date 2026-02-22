@@ -22,8 +22,8 @@ import {
   FiZap,
   FiLock,
   FiHeart,
-  FiTarget,
-  FiGlobe,
+  FiRefreshCw,
+  FiMessageSquare,
   FiPlay,
   FiAward,
   FiCheck,
@@ -159,6 +159,24 @@ export default function LandingPage() {
   const { scrollYProgress } = useScroll();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
+  const [platformStats, setPlatformStats] = useState<{
+    totalUsers: number;
+    totalTransactions: number;
+    totalRewardsEarned: number;
+  } | null>(null);
+
+  // Fetch real platform stats
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000/api/v1';
+    fetch(`${apiUrl}/health/public-stats`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (!data) return;
+        const stats = data?.data ?? data;
+        if (stats?.totalUsers !== undefined) setPlatformStats(stats);
+      })
+      .catch(() => {});
+  }, []);
 
   // Redirect authenticated users to dashboard (only if actual token exists)
   useEffect(() => {
@@ -193,7 +211,6 @@ export default function LandingPage() {
   const testimonialsRef = useRef(null);
   const ctaRef = useRef(null);
 
-  const heroInView = useInView(heroRef, { once: true, amount: 0.3 });
   const featuresInView = useInView(featuresRef, { once: true, amount: 0.1 });
   const howItWorksInView = useInView(howItWorksRef, { once: true, amount: 0.1 });
   const benefitsInView = useInView(benefitsRef, { once: true, amount: 0.1 });
@@ -278,8 +295,8 @@ export default function LandingPage() {
     },
     {
       number: '04',
-      title: 'Redeem & Enjoy',
-      description: 'Convert points to cashback, discounts, and exclusive partner rewards',
+      title: 'Pay with Rewards',
+      description: 'Use your reward points to pay — choose rewards only, rewards + wallet, or wallet only at checkout',
       icon: <FiAward className="w-7 h-7" />,
       color: 'from-pink-500 to-rose-500',
     },
@@ -326,19 +343,19 @@ export default function LandingPage() {
       description: 'Access your wallet and rewards anywhere, anytime',
     },
     {
-      icon: <FiGlobe className="w-6 h-6" />,
-      title: 'Wide Acceptance',
-      description: 'Use at thousands of partner locations nationwide',
+      icon: <FiRefreshCw className="w-6 h-6" />,
+      title: 'Refund Protection',
+      description: 'Request refunds on eligible transactions directly from the app',
     },
     {
       icon: <FiHeart className="w-6 h-6" />,
       title: 'Personalized',
-      description: 'Rewards tailored to your spending habits and preferences',
+      description: 'Rewards tailored to your spending habits and tier level',
     },
     {
-      icon: <FiTarget className="w-6 h-6" />,
-      title: 'Goal Tracking',
-      description: 'Set savings goals and track your progress in real-time',
+      icon: <FiMessageSquare className="w-6 h-6" />,
+      title: 'Dispute Resolution',
+      description: 'Raise and track disputes for any transaction issue instantly',
     },
   ];
 
@@ -451,14 +468,14 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pt-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center"
           >
             {/* Badge */}
             <motion.div
               initial={{ scale: 0, rotate: -10 }}
-              animate={heroInView ? { scale: 1, rotate: 0 } : {}}
+              animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="inline-block mb-8"
             >
@@ -467,14 +484,16 @@ export default function LandingPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                 </span>
-                Trusted by 10,000+ customers
+                {platformStats
+                  ? `Trusted by ${platformStats.totalUsers.toLocaleString()}+ customers`
+                  : 'Join our growing community'}
               </span>
             </motion.div>
 
             {/* Main heading */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
               className="text-5xl md:text-6xl lg:text-[80px] font-black text-white mb-6 leading-[1.05] tracking-tight"
             >
@@ -486,7 +505,7 @@ export default function LandingPage() {
                   </span>
                   <motion.span
                     initial={{ width: 0 }}
-                    animate={heroInView ? { width: '100%' } : {}}
+                    animate={{ width: '100%' }}
                     transition={{ delay: 1.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute -bottom-2 left-0 h-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
                   />
@@ -496,7 +515,7 @@ export default function LandingPage() {
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
               className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed font-medium"
             >
@@ -507,7 +526,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.8 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
             >
@@ -530,19 +549,35 @@ export default function LandingPage() {
             {/* Stats with animated counters */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9, duration: 0.8 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto"
             >
               {[
-                { value: '10000', suffix: '+', label: 'Active Users', icon: <FiUsers className="w-5 h-5" /> },
-                { value: '50', prefix: '\u20A6', suffix: 'M+', label: 'Transactions Processed', icon: <FiTrendingUp className="w-5 h-5" /> },
-                { value: '1000000', suffix: '+', label: 'Points Earned', icon: <FiAward className="w-5 h-5" /> },
+                {
+                  value: platformStats ? String(platformStats.totalUsers) : '0',
+                  suffix: '+',
+                  label: 'Active Users',
+                  icon: <FiUsers className="w-5 h-5" />,
+                },
+                {
+                  value: platformStats ? String(platformStats.totalTransactions) : '0',
+                  suffix: '+',
+                  label: 'Transactions Processed',
+                  icon: <FiTrendingUp className="w-5 h-5" />,
+                },
+                {
+                  value: platformStats ? String(platformStats.totalRewardsEarned) : '0',
+                  prefix: '\u20A6',
+                  suffix: '+',
+                  label: 'Rewards Earned',
+                  icon: <FiAward className="w-5 h-5" />,
+                },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, scale: 0.8 }}
-                  animate={heroInView ? { opacity: 1, scale: 1 } : {}}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1 + index * 0.15, duration: 0.5 }}
                   className="relative group"
                 >

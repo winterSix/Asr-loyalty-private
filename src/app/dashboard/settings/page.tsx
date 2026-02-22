@@ -75,6 +75,12 @@ export default function SettingsPage() {
     enabled: !!user && isAdmin,
   });
 
+  // Public endpoint — works even during maintenance mode
+  const { data: systemStatus } = useQuery({
+    queryKey: ['system-status'],
+    queryFn: () => systemSettingsService.getSystemStatus(),
+  });
+
   const grouped = useMemo(() => {
     if (!groupedRaw) return {};
     if (typeof groupedRaw === 'object' && !Array.isArray(groupedRaw)) return groupedRaw as Record<string, any[]>;
@@ -93,9 +99,8 @@ export default function SettingsPage() {
     return (paymentGatewaysRaw as any)?.gateways || [];
   }, [paymentGatewaysRaw]);
 
-  // Maintenance mode derived from features list
-  const maintenanceFeature = features.find((f: any) => f.key === MAINTENANCE_KEY);
-  const isMaintenanceActive = maintenanceFeature?.enabled ?? false;
+  // Maintenance mode derived from the public status endpoint (bypasses maintenance guard)
+  const isMaintenanceActive = systemStatus?.maintenanceMode ?? false;
 
   // Feature flags excluding maintenance_mode and payment gateway keys (they have dedicated sections)
   const filteredFeatures = features.filter((f: any) => !DEDICATED_KEYS.includes(f.key));
@@ -131,6 +136,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
       queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
       queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
+      queryClient.invalidateQueries({ queryKey: ['system-status'] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to toggle setting');
@@ -182,6 +188,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] }),
       queryClient.invalidateQueries({ queryKey: ['system-settings-features'] }),
       queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] }),
+      queryClient.invalidateQueries({ queryKey: ['system-status'] }),
     ]);
     setTimeout(() => setIsRefreshing(false), 600);
   };
@@ -371,7 +378,7 @@ export default function SettingsPage() {
                 onClick={() =>
                   toggleMutation.mutate({ key: MAINTENANCE_KEY, enabled: !isMaintenanceActive })
                 }
-                disabled={toggleMutation.isPending || !maintenanceFeature}
+                disabled={toggleMutation.isPending}
                 title={isMaintenanceActive ? 'Disable maintenance mode' : 'Enable maintenance mode'}
                 className={`flex-shrink-0 p-1 rounded-full transition-all disabled:opacity-50 ${
                   isMaintenanceActive

@@ -17,6 +17,7 @@ import {
   FiEyeOff,
   FiCheckCircle,
   FiShield,
+  FiAlertTriangle,
 } from '@/utils/icons';
 
 const loginSchema = z.object({
@@ -35,9 +36,21 @@ export default function LoginPage() {
   const [pendingEmail, setPendingEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000/api/v1';
+    fetch(`${apiUrl}/system-settings/status`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const status = data?.data ?? data;
+        if (status?.maintenanceMode === true) setIsMaintenanceMode(true);
+      })
+      .catch(() => {});
   }, []);
 
   // Redirect if already authenticated (but only after checking localStorage, not API)
@@ -237,6 +250,20 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {isMaintenanceMode && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <FiAlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-amber-900 text-sm">System Under Maintenance</p>
+                    <p className="text-amber-700 text-sm mt-0.5">
+                      The system is currently undergoing maintenance. Only administrators can sign in at this time. Please check back later.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
                 {error}
@@ -322,7 +349,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isMaintenanceMode}
                 className="btn-primary w-full mt-6 h-14 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {isLoading ? (

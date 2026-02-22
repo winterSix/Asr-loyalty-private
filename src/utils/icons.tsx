@@ -41,6 +41,7 @@ export { FiZap } from 'react-icons/fi';
 export { FiLock } from 'react-icons/fi';
 export { FiEdit } from 'react-icons/fi';
 export { FiPlus } from 'react-icons/fi';
+export { FiUserPlus } from 'react-icons/fi';
 export { FiCheck } from 'react-icons/fi';
 export { FiSearch } from 'react-icons/fi';
 export { FiMoreVertical } from 'react-icons/fi';
