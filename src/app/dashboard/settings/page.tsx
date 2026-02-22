@@ -413,10 +413,10 @@ export default function SettingsPage() {
             {paymentGateways.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {paymentGateways.map((gw: any) => (
-                  <div key={gw.gateway} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                  <div key={gw.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm capitalize">
-                        {gw.gateway?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        {gw.key?.replace(/_enabled$/, '').replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                       </p>
                       {gw.description && (
                         <p className="text-xs text-gray-500 mt-0.5">{gw.description}</p>
@@ -433,14 +433,7 @@ export default function SettingsPage() {
                         {gw.enabled ? 'Enabled' : 'Disabled'}
                       </span>
                       <button
-                        onClick={() => {
-                          const keyMap: Record<string, string> = {
-                            paystack: SystemSettingKey.PAYSTACK_ENABLED,
-                            opay: SystemSettingKey.OPAY_ENABLED,
-                          };
-                          const settingKey = keyMap[gw.gateway?.toLowerCase()] || `${gw.gateway?.toLowerCase()}_enabled`;
-                          toggleMutation.mutate({ key: settingKey, enabled: !gw.enabled });
-                        }}
+                        onClick={() => toggleMutation.mutate({ key: gw.key, enabled: !gw.enabled })}
                         disabled={toggleMutation.isPending}
                         className={`p-1 rounded-full transition-all ${
                           gw.enabled
