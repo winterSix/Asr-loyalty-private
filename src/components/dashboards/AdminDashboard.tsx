@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  ComposedChart, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
   PieChart, Pie, Cell,
   BarChart, Bar,
 } from 'recharts';
@@ -154,6 +155,46 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   return null;
 };
 
+// Revenue stacked-area tooltip — shows Gross (computed), Net, and Fees
+const RevenueTooltip = ({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; value: number }>;
+  label?: string;
+}) => {
+  if (!active || !payload || !payload.length) return null;
+  const fees = payload.find((p) => p.dataKey === 'fees')?.value ?? 0;
+  const net = payload.find((p) => p.dataKey === 'net')?.value ?? 0;
+  const gross = fees + net;
+  return (
+    <div style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', padding: '14px 18px', minWidth: 218 }}>
+      <p style={{ color: '#94a3b8', fontWeight: 700, marginBottom: 10, fontSize: 12 }}>{label}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 12, height: 8, borderRadius: 2, background: 'linear-gradient(90deg,#f59e0b,#10b981)' }} />
+            <span style={{ color: '#9ca3af', fontSize: 12 }}>Gross Revenue</span>
+          </div>
+          <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 700 }}>₦{Number(gross).toLocaleString()}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 5px #10b981' }} />
+            <span style={{ color: '#9ca3af', fontSize: 12 }}>Net Revenue</span>
+          </div>
+          <span style={{ color: '#10b981', fontSize: 13, fontWeight: 700 }}>₦{Number(net).toLocaleString()}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: '#f59e0b' }} />
+            <span style={{ color: '#9ca3af', fontSize: 12 }}>Paystack Fees</span>
+          </div>
+          <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 700 }}>₦{Number(fees).toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Animated counter component
 const AnimatedCounter = ({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -297,12 +338,31 @@ export default function AdminDashboard() {
 
   // Use API data with proper nullish coalescing (not ||, which treats 0 as falsy)
   const revenueChartData = revenueReport?.breakdown?.length
-    ? revenueReport.breakdown.map((item) => ({
-        name: new Date(item.period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: typeof item.revenue === 'number' ? item.revenue : parseFloat(String(item.revenue)) || 0,
-        fees: typeof item.fees === 'number' ? item.fees : parseFloat(String(item.fees)) || 0,
-      }))
+    ? revenueReport.breakdown.map((item) => {
+        const revenue = typeof item.revenue === 'number' ? item.revenue : parseFloat(String(item.revenue)) || 0;
+        const fees = typeof item.fees === 'number' ? item.fees : parseFloat(String(item.fees)) || 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const count = typeof (item as any).count === 'number' ? (item as any).count as number : 0;
+        return {
+          name: new Date(item.period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          revenue,
+          fees,
+          net: revenue - fees,
+          count,
+        };
+      })
     : [];
+
+  const chartTotalRevenue = revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0);
+  const chartTotalFees = revenueChartData.reduce((sum, d) => sum + (d.fees || 0), 0);
+  const chartTotalNet = chartTotalRevenue - chartTotalFees;
+  const chartFeePercentage = chartTotalRevenue > 0 ? (chartTotalFees / chartTotalRevenue) * 100 : 0;
+  const chartAvgPerDay = revenueChartData.length > 0 ? Math.round(chartTotalRevenue / revenueChartData.length) : 0;
+  const chartHighestDay = revenueChartData.reduce(
+    (best, d) => (d.revenue > best.revenue ? d : best),
+    { name: '–', revenue: 0, fees: 0, net: 0, count: 0 },
+  );
+  const chartAvgRevenue = revenueChartData.length > 0 ? chartTotalRevenue / revenueChartData.length : 0;
 
   const transactionTypeData = transactionStats?.byType && Object.keys(transactionStats.byType).length > 0
     ? Object.entries(transactionStats.byType).map(([name, value]) => ({
@@ -500,130 +560,211 @@ export default function AdminDashboard() {
         ))}
       </motion.div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Trend Chart */}
-        <motion.div variants={itemVariants} className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 shadow-lg border border-gray-700/50">
-          {/* Decorative background glow */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      {/* Revenue Trend Chart — Full Width */}
+      <motion.div
+        variants={itemVariants}
+        className="relative overflow-hidden rounded-2xl shadow-xl border border-slate-700/50"
+        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}
+      >
+        {/* Dot grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.12]"
+          style={{ backgroundImage: 'radial-gradient(circle, #64748b 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+        />
+        {/* Ambient glow orbs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  <FiActivity className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Revenue Trend</h2>
-                  <p className="text-sm text-gray-400">Daily revenue overview</p>
-                </div>
+        <div className="relative z-10 p-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <FiActivity className="w-5 h-5" />
               </div>
-              <div className="flex gap-4 text-xs">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></div>
-                  <span className="text-emerald-300 font-medium">Revenue</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                  <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></div>
-                  <span className="text-amber-300 font-medium">Fees</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Summary stats row */}
-            <div className="flex gap-6 mb-5 mt-4">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Revenue</p>
-                <p className="text-2xl font-bold text-white mt-0.5">
-                  ₦{revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="border-l border-gray-700 pl-6">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Total Fees</p>
-                <p className="text-2xl font-bold text-amber-400 mt-0.5">
-                  ₦{revenueChartData.reduce((sum, d) => sum + (d.fees || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="border-l border-gray-700 pl-6">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Avg/Day</p>
-                <p className="text-2xl font-bold text-emerald-400 mt-0.5">
-                  ₦{Math.round(revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0) / (revenueChartData.length || 1)).toLocaleString()}
-                </p>
+                <h2 className="text-xl font-bold text-white">Revenue Trend</h2>
+                <p className="text-sm text-slate-400">Net Revenue <span className="text-slate-600">+</span> Fees <span className="text-slate-600">=</span> Gross Revenue</p>
               </div>
             </div>
-
-            <div className="h-64">
-              {revenueChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                      </linearGradient>
-                      <linearGradient id="feesGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
-                        <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.02} />
-                      </linearGradient>
-                      <filter id="glow">
-                        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                        <feMerge>
-                          <feMergeNode in="coloredBlur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '12px',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                      }}
-                      labelStyle={{ color: '#9ca3af', fontWeight: 600, marginBottom: 4 }}
-                      itemStyle={{ color: '#e5e7eb', fontSize: 13 }}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      formatter={((value: any, name: any) => [`₦${Number(value).toLocaleString()}`, name]) as any}
-                      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#10b981"
-                      strokeWidth={2.5}
-                      fill="url(#revenueGradient)"
-                      name="Revenue"
-                      animationDuration={1500}
-                      dot={false}
-                      activeDot={renderActiveDot}
-                      filter="url(#glow)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="fees"
-                      stroke="#f59e0b"
-                      strokeWidth={2}
-                      fill="url(#feesGradient)"
-                      name="Fees"
-                      animationDuration={1800}
-                      dot={false}
-                      activeDot={renderActiveDot}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500 text-sm">{revenueLoading ? 'Loading...' : 'No revenue data yet'}</p>
-                </div>
-              )}
+            <div className="flex flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #10b981' }} />
+                <span className="text-emerald-300 font-medium">Net Revenue</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <div className="w-3 h-2 rounded-sm bg-amber-400/80" />
+                <span className="text-amber-300 font-medium">Paystack Fees</span>
+              </div>
             </div>
           </div>
-        </motion.div>
 
+          {/* 5-metric summary strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-slate-700/40 rounded-xl overflow-hidden mb-6 border border-slate-700/40">
+            <div className="bg-slate-800/70 p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Gross Revenue</p>
+              <p className="text-xl font-bold text-white mt-1">₦{chartTotalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-slate-600 mt-0.5">Total received</p>
+            </div>
+            <div className="bg-slate-800/70 p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Net Revenue</p>
+              <p className="text-xl font-bold text-indigo-400 mt-1">₦{chartTotalNet.toLocaleString()}</p>
+              <p className="text-xs text-slate-600 mt-0.5">After fees</p>
+            </div>
+            <div className="bg-slate-800/70 p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Paystack Fees</p>
+              <p className="text-xl font-bold text-amber-400 mt-1">₦{chartTotalFees.toLocaleString()}</p>
+              <p className="text-xs text-slate-600 mt-0.5">Processing cost</p>
+            </div>
+            <div className="bg-slate-800/70 p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Fee Rate</p>
+              <p className="text-xl font-bold text-rose-400 mt-1">{chartFeePercentage.toFixed(2)}%</p>
+              <div className="w-full h-1 bg-slate-700 rounded-full mt-2">
+                <div
+                  className="h-1 bg-gradient-to-r from-amber-400 to-rose-400 rounded-full"
+                  style={{ width: `${Math.min(chartFeePercentage * 10, 100)}%` }}
+                />
+              </div>
+            </div>
+            <div className="bg-slate-800/70 p-4">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Avg / Period</p>
+              <p className="text-xl font-bold text-emerald-400 mt-1">₦{chartAvgPerDay.toLocaleString()}</p>
+              <p className="text-xs text-slate-600 mt-0.5">Per day</p>
+            </div>
+          </div>
+
+          {/* Stacked Area Chart — fees (amber, bottom) + net (emerald, top) = gross revenue */}
+          <div className="h-72">
+            {revenueChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="feesStackGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.85} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.45} />
+                    </linearGradient>
+                    <linearGradient id="netStackGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.25} />
+                    </linearGradient>
+                    <filter id="glowFilter">
+                      <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) =>
+                      v >= 1000000
+                        ? `₦${(v / 1000000).toFixed(1)}M`
+                        : v >= 1000
+                        ? `₦${(v / 1000).toFixed(0)}k`
+                        : `₦${v}`
+                    }
+                  />
+                  <Tooltip
+                    content={<RevenueTooltip />}
+                    cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+                  />
+                  <ReferenceLine
+                    y={chartAvgRevenue}
+                    stroke="#475569"
+                    strokeDasharray="6 3"
+                    strokeWidth={1.5}
+                    label={{ value: 'Avg', fill: '#64748b', fontSize: 10, position: 'insideTopRight' }}
+                  />
+                  {/* Bottom slice: Paystack Fees */}
+                  <Area
+                    type="monotone"
+                    stackId="stack"
+                    dataKey="fees"
+                    stroke="#f59e0b"
+                    strokeWidth={1.5}
+                    fill="url(#feesStackGrad)"
+                    name="fees"
+                    animationDuration={1200}
+                    dot={{ r: 4, fill: '#f59e0b', stroke: '#1e293b', strokeWidth: 2 }}
+                    activeDot={renderActiveDot}
+                  />
+                  {/* Top slice: Net Revenue */}
+                  <Area
+                    type="monotone"
+                    stackId="stack"
+                    dataKey="net"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fill="url(#netStackGrad)"
+                    name="net"
+                    animationDuration={1500}
+                    dot={{ r: 4, fill: '#10b981', stroke: '#1e293b', strokeWidth: 2 }}
+                    activeDot={renderActiveDot}
+                    filter="url(#glowFilter)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-slate-500 text-sm">{revenueLoading ? 'Loading...' : 'No revenue data yet'}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer insights */}
+          <div className="flex flex-wrap items-center gap-6 mt-5 pt-5 border-t border-slate-700/50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <FiTrendingUp className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Peak Day</p>
+                <p className="text-sm font-bold text-white">
+                  {chartHighestDay.name}{' '}
+                  <span className="text-emerald-400">₦{chartHighestDay.revenue.toLocaleString()}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                <FiActivity className="w-4 h-4 text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Net Efficiency</p>
+                <p className="text-sm font-bold text-white">
+                  {chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}
+                  <span className="text-slate-400 font-normal text-xs">% retained</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <FiCreditCard className="w-4 h-4 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Transactions in Period</p>
+                <p className="text-sm font-bold text-white">
+                  {revenueChartData.reduce((sum, d) => sum + (d.count || 0), 0) || '–'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Charts Row — Transaction Types & User Roles */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Transaction Distribution Chart */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-6">
@@ -671,10 +812,7 @@ export default function AdminDashboard() {
             )}
           </div>
         </motion.div>
-      </div>
 
-      {/* Second Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Roles Distribution */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
@@ -709,7 +847,10 @@ export default function AdminDashboard() {
             )}
           </div>
         </motion.div>
+      </div>
 
+      {/* Charts Row — Loyalty Tiers & Transaction Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Loyalty Tiers Distribution */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
