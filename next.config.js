@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:9000/api/v1";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "https://asr-loyalty-api-1.onrender.com/api/v1";
 
 const nextConfig = {
   reactStrictMode: true,
@@ -14,7 +17,7 @@ const nextConfig = {
       },
     ];
   },
-  transpilePackages: ['react-icons'],
+  transpilePackages: ["react-icons"],
 };
 
 module.exports = nextConfig;
