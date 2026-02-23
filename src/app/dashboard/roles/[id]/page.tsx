@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleService } from '@/services/role.service';
 import toast from 'react-hot-toast';
@@ -87,7 +86,6 @@ export default function RoleDetailPage() {
 
   if (!role) {
     return (
-      <DashboardLayout role={user?.role || 'CUSTOMER'}>
         <div className="text-center py-12">
           <FiLayers className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Role not found</p>
@@ -95,7 +93,6 @@ export default function RoleDetailPage() {
             Go Back
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
@@ -103,7 +100,7 @@ export default function RoleDetailPage() {
   const canEdit = !role.isSystem && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN');
 
   return (
-    <DashboardLayout role={roleUserRole}>
+    <>
       <div>
         <div className="mb-6">
           <button
@@ -274,7 +271,7 @@ export default function RoleDetailPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 

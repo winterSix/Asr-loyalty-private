@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { loyaltyService, LoyaltyTierConfig } from '@/services/loyalty.service';
@@ -19,7 +18,7 @@ import {
   FiXCircle,
   FiTrendingUp,
   FiZap,
-  FiArrowRight,
+  FiArrowLeft,
 } from '@/utils/icons';
 
 const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; text: string; ring: string; icon: string; label: string }> = {
@@ -180,7 +179,6 @@ export default function LoyaltyTiersPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -198,8 +196,8 @@ export default function LoyaltyTiersPage() {
               onClick={() => router.push('/dashboard/rewards')}
               className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
             >
-              <FiStar className="w-4 h-4" />
-              Rewards
+              <FiArrowLeft className="w-4 h-4" />
+              Back to Rewards
             </button>
             <button
               onClick={handleRefresh}
@@ -413,6 +411,5 @@ export default function LoyaltyTiersPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }

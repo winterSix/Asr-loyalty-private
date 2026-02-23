@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rewardConfigurationService, RewardConfiguration } from '@/services/reward-configuration.service';
 import {
@@ -19,7 +18,7 @@ import {
   FiLayers,
   FiCalendar,
   FiZap,
-  FiEye,
+  FiArrowLeft,
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
@@ -141,7 +140,6 @@ export default function RewardConfigPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -159,8 +157,8 @@ export default function RewardConfigPage() {
               onClick={() => router.push('/dashboard/rewards')}
               className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
             >
-              <FiStar className="w-4 h-4" />
-              Rewards
+              <FiArrowLeft className="w-4 h-4" />
+              Back to Rewards
             </button>
             <button
               onClick={handleRefresh}
@@ -386,6 +384,5 @@ export default function RewardConfigPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

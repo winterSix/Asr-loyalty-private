@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { auditService, AuditLog } from '@/services/audit.service';
 import {
@@ -76,7 +75,7 @@ export default function AuditDetailPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         {/* Header */}
         <div className="mb-8">
@@ -304,6 +303,6 @@ export default function AuditDetailPage() {
           </div>
         ) : null}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

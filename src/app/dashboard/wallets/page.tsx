@@ -3,12 +3,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService, UserFilters } from '@/services/admin.service';
 import {
   FiWallet,
-  FiEye,
   FiSearch,
   FiChevronLeft,
   FiChevronRight,
@@ -168,7 +166,6 @@ export default function WalletsPage() {
   ];
 
   return (
-    <DashboardLayout role={role}>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -229,16 +226,15 @@ export default function WalletsPage() {
           ) : users.length > 0 ? (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[750px]">
+                <table className="w-full table-auto">
                   <thead>
-                    <tr className="bg-gray-50/80">
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Main Wallet</th>
-                      <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reward Points</th>
-                      <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Balance</th>
-                      <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Wallets</th>
-                      <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[200px]">User</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[120px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Main Wallet</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Reward Points</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Total Balance</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[90px]">Wallets</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -249,21 +245,25 @@ export default function WalletsPage() {
                       const walletCount = u.wallets?.length || 0;
 
                       return (
-                        <tr key={u.id} className="hover:bg-gray-50/60 transition-colors group">
-                          <td className="py-4 px-5">
+                        <tr
+                          key={u.id}
+                          className="hover:bg-gray-50/60 transition-colors cursor-pointer group"
+                          onClick={() => router.push(`/dashboard/users/${u.id}`)}
+                        >
+                          <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                              <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
                                 {u.firstName?.[0]}{u.lastName?.[0]}
                               </div>
-                              <div>
-                                <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors whitespace-nowrap">
                                   {u.firstName} {u.lastName}
                                 </p>
-                                <p className="text-xs text-gray-500">{u.email || u.phoneNumber}</p>
+                                <p className="text-xs text-gray-500 whitespace-nowrap">{u.email || u.phoneNumber}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-5">
+                          <td className="py-4 px-4 whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ${
                               u.status === 'ACTIVE'
                                 ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
@@ -277,36 +277,27 @@ export default function WalletsPage() {
                               {u.status}
                             </span>
                           </td>
-                          <td className="py-4 px-5 text-right">
+                          <td className="py-4 px-4 whitespace-nowrap">
                             <p className="font-bold text-gray-900">
                               ₦{mainBalance.toLocaleString()}
                             </p>
                           </td>
-                          <td className="py-4 px-5 text-right">
+                          <td className="py-4 px-4 whitespace-nowrap">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
                               <FiStar className="w-3 h-3" />
                               {rewardBalance.toLocaleString()} pts
                             </span>
                           </td>
-                          <td className="py-4 px-5 text-right">
-                            <p className="font-bold text-gray-900 text-base">
+                          <td className="py-4 px-4 whitespace-nowrap">
+                            <p className="font-bold text-gray-900">
                               ₦{totalBalance.toLocaleString()}
                             </p>
                           </td>
-                          <td className="py-4 px-5 text-center">
+                          <td className="py-4 px-4 whitespace-nowrap">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
                               <FiCreditCard className="w-3 h-3" />
                               {walletCount}
                             </span>
-                          </td>
-                          <td className="py-4 px-5 text-center">
-                            <button
-                              onClick={() => router.push(`/dashboard/users/${u.id}`)}
-                              className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/5 transition-all"
-                              title="View user details"
-                            >
-                              <FiEye className="w-5 h-5" />
-                            </button>
                           </td>
                         </tr>
                       );
@@ -356,6 +347,5 @@ export default function WalletsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

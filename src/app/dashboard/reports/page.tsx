@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import {
@@ -67,11 +66,16 @@ export default function ReportsPage() {
   ];
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
-          <p className="text-gray-600">Generate and view system reports</p>
+        <div className="mb-8 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/25">
+            <FiBarChart className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports</h1>
+            <p className="text-gray-500 text-sm">Generate and view system reports</p>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -201,27 +205,27 @@ export default function ReportsPage() {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-200">
-                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Period</th>
-                            <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Revenue</th>
-                            <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Fees</th>
-                            <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Rewards</th>
-                            <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Count</th>
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[120px]">Period</th>
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Revenue</th>
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[130px]">Fees</th>
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[130px]">Rewards</th>
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[80px]">Count</th>
                           </tr>
                         </thead>
                         <tbody>
                           {revenueData.breakdown.map((row, i) => (
                             <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-4 text-sm font-medium text-gray-900">{row.period}</td>
-                              <td className="py-3 px-4 text-sm text-right font-bold text-gray-900">
+                              <td className="py-3 px-4 text-sm font-medium text-gray-900 whitespace-nowrap">{row.period}</td>
+                              <td className="py-3 px-4 text-sm font-bold text-gray-900 whitespace-nowrap">
                                 ₦{Number(row.revenue ?? 0).toLocaleString()}
                               </td>
-                              <td className="py-3 px-4 text-sm text-right text-gray-600">
+                              <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap">
                                 ₦{Number(row.fees ?? 0).toLocaleString()}
                               </td>
-                              <td className="py-3 px-4 text-sm text-right text-purple-600">
+                              <td className="py-3 px-4 text-sm text-purple-600 whitespace-nowrap">
                                 ₦{Number(row.rewards ?? 0).toLocaleString()}
                               </td>
-                              <td className="py-3 px-4 text-sm text-right text-gray-700">
+                              <td className="py-3 px-4 text-sm text-gray-700 whitespace-nowrap">
                                 {row.count}
                               </td>
                             </tr>
@@ -454,6 +458,6 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

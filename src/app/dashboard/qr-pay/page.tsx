@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
   FiQrCode,
   FiPlus,
@@ -32,7 +31,6 @@ export default function QRPayPage() {
   const role = user?.role || 'CUSTOMER';
 
   return (
-    <DashboardLayout role={role}>
       <div>
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -74,7 +72,6 @@ export default function QRPayPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }
 

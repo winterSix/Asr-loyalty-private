@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, UserFilters, CreateCashierData } from '@/services/admin.service';
 import { useForm } from 'react-hook-form';
@@ -13,7 +12,6 @@ import toast from 'react-hot-toast';
 import {
   FiUsers,
   FiSearch,
-  FiEye,
   FiFilter,
   FiChevronLeft,
   FiChevronRight,
@@ -162,12 +160,17 @@ export default function UsersPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
-            <p className="text-gray-600">Manage all system users ({total} total)</p>
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
+              <FiUsers className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users Management</h1>
+              <p className="text-gray-500 text-sm">Manage all system users ({total} total)</p>
+            </div>
           </div>
           {isAdmin && (
             <button
@@ -216,7 +219,8 @@ export default function UsersPage() {
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
                 <option value="SUSPENDED">Suspended</option>
-                <option value="INACTIVE">Inactive</option>
+                <option value="PENDING_VERIFICATION">Pending Verification</option>
+                <option value="DEACTIVATED">Deactivated</option>
               </select>
               <select
                 value={tierFilter}
@@ -234,7 +238,7 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="card">
+        <div className="card overflow-x-hidden">
           {usersLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -242,25 +246,28 @@ export default function UsersPage() {
           ) : users.length > 0 ? (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-0">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">User</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Phone</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden md:table-cell">Email</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Phone</th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Role</th>
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tier</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Joined</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Tier</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Joined</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((u) => (
-                      <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={u.id}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/dashboard/users/${u.id}`)}
+                      >
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                               {u.firstName?.[0]}{u.lastName?.[0]}
                             </div>
                             <div>
@@ -273,9 +280,9 @@ export default function UsersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-700">{u.email || '—'}</td>
-                        <td className="py-4 px-4 text-sm text-gray-700">{u.phoneNumber}</td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4 text-sm text-gray-700 hidden md:table-cell whitespace-nowrap">{u.email || '—'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-700 hidden lg:table-cell whitespace-nowrap">{u.phoneNumber}</td>
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getRoleColor(u.role)}`}>
                               {u.role.replace('_', ' ')}
@@ -287,27 +294,18 @@ export default function UsersPage() {
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(u.status)}`}>
                             {u.status}
                           </span>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4 hidden lg:table-cell whitespace-nowrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTierColor(u.tier || 'BRONZE')}`}>
                             {u.tier || 'BRONZE'}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-500">
+                        <td className="py-4 px-4 text-sm text-gray-500 hidden sm:table-cell whitespace-nowrap">
                           {new Date(u.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-4 px-4">
-                          <button
-                            onClick={() => router.push(`/dashboard/users/${u.id}`)}
-                            className="text-primary hover:text-primary-light transition-colors"
-                            title="View details"
-                          >
-                            <FiEye className="w-5 h-5" />
-                          </button>
                         </td>
                       </tr>
                     ))}
@@ -515,6 +513,6 @@ export default function UsersPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 }

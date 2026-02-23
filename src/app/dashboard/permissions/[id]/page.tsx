@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { permissionService } from '@/services/permission.service';
 import {
@@ -35,7 +34,6 @@ export default function PermissionDetailPage() {
 
   if (!permission) {
     return (
-      <DashboardLayout role={user?.role || 'CUSTOMER'}>
         <div className="text-center py-12">
           <FiKey className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Permission not found</p>
@@ -43,14 +41,13 @@ export default function PermissionDetailPage() {
             Go Back
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
   const role = user?.role || 'CUSTOMER';
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         <div className="mb-6">
           <button
@@ -120,7 +117,7 @@ export default function PermissionDetailPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 

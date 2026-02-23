@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/user.service';
 import {
@@ -160,7 +159,6 @@ export default function ProfilePage() {
     );
 
   return (
-    <DashboardLayout role={role}>
       <div className="w-full space-y-6 animate-fade-in">
 
         {/* ─── Profile Card with Banner ─── */}
@@ -624,6 +622,5 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

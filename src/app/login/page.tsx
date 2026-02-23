@@ -174,8 +174,16 @@ export default function LoginPage() {
         setVerificationAlert('phone');
         setError(null);
       } else {
-        setError(errorMessage);
-        toast.error(errorMessage);
+        // Normalize suspended/inactive message
+        const lowerMsg = errorMessage.toLowerCase();
+        const displayMessage =
+          lowerMsg.includes('suspend')
+            ? 'Account suspended. Please contact admin.'
+            : lowerMsg.includes('inactive') || lowerMsg.includes('deactivat')
+            ? 'Account deactivated. Please contact admin.'
+            : errorMessage;
+        setError(displayMessage);
+        toast.error(displayMessage);
       }
     } finally {
       setIsLoading(false);

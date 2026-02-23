@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import {
@@ -80,7 +79,7 @@ export default function TransactionDetailPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         {/* Header */}
         <div className="mb-8">
@@ -383,6 +382,6 @@ export default function TransactionDetailPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

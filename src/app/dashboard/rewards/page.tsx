@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { rewardService } from '@/services/reward.service';
 import { rewardConfigurationService } from '@/services/reward-configuration.service';
@@ -736,13 +735,9 @@ export default function RewardsPage() {
   const role = user?.role || 'CUSTOMER';
   const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'LOYALTY_MANAGER' || role === 'FINANCE_MANAGER';
 
-  return (
-    <DashboardLayout role={role}>
-      {isAdmin ? (
-        <AdminRewardsView />
-      ) : (
-        <CustomerRewardsView userId={user?.id || ''} />
-      )}
-    </DashboardLayout>
+  return isAdmin ? (
+    <AdminRewardsView />
+  ) : (
+    <CustomerRewardsView userId={user?.id || ''} />
   );
 }

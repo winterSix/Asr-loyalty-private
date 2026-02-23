@@ -23,7 +23,6 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiArrowRight,
-  FiEye,
   FiActivity,
   FiPieChart,
   FiBarChart2,
@@ -166,27 +165,27 @@ const RevenueTooltip = ({ active, payload, label }: {
   const net = payload.find((p) => p.dataKey === 'net')?.value ?? 0;
   const gross = fees + net;
   return (
-    <div style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', padding: '14px 18px', minWidth: 218 }}>
-      <p style={{ color: '#94a3b8', fontWeight: 700, marginBottom: 10, fontSize: 12 }}>{label}</p>
+    <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 14, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '14px 18px', minWidth: 218 }}>
+      <p style={{ color: '#374151', fontWeight: 700, marginBottom: 10, fontSize: 12 }}>{label}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 12, height: 8, borderRadius: 2, background: 'linear-gradient(90deg,#f59e0b,#10b981)' }} />
-            <span style={{ color: '#9ca3af', fontSize: 12 }}>Gross Revenue</span>
+            <span style={{ color: '#6b7280', fontSize: 12 }}>Gross Revenue</span>
           </div>
-          <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 700 }}>₦{Number(gross).toLocaleString()}</span>
+          <span style={{ color: '#111827', fontSize: 13, fontWeight: 700 }}>₦{Number(gross).toLocaleString()}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 5px #10b981' }} />
-            <span style={{ color: '#9ca3af', fontSize: 12 }}>Net Revenue</span>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
+            <span style={{ color: '#6b7280', fontSize: 12 }}>Net Revenue</span>
           </div>
           <span style={{ color: '#10b981', fontSize: 13, fontWeight: 700 }}>₦{Number(net).toLocaleString()}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: '#f59e0b' }} />
-            <span style={{ color: '#9ca3af', fontSize: 12 }}>Paystack Fees</span>
+            <span style={{ color: '#6b7280', fontSize: 12 }}>Paystack Fees</span>
           </div>
           <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 700 }}>₦{Number(fees).toLocaleString()}</span>
         </div>
@@ -484,9 +483,14 @@ export default function AdminDashboard() {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-500 mt-1">System overview and management</p>
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/25">
+            <FiActivity className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-500 text-sm">System overview and management</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <motion.button
@@ -563,74 +567,63 @@ export default function AdminDashboard() {
       {/* Revenue Trend Chart — Full Width */}
       <motion.div
         variants={itemVariants}
-        className="relative overflow-hidden rounded-2xl shadow-xl border border-slate-700/50"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}
+        className="relative overflow-hidden rounded-2xl shadow-sm border border-gray-100 bg-white"
       >
-        {/* Dot grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{ backgroundImage: 'radial-gradient(circle, #64748b 1px, transparent 1px)', backgroundSize: '24px 24px' }}
-        />
-        {/* Ambient glow orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-        <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-
         <div className="relative z-10 p-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
                 <FiActivity className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Revenue Trend</h2>
-                <p className="text-sm text-slate-400">Net Revenue <span className="text-slate-600">+</span> Fees <span className="text-slate-600">=</span> Gross Revenue</p>
+                <h2 className="text-xl font-bold text-gray-900">Revenue Trend</h2>
+                <p className="text-sm text-gray-500">Net Revenue <span className="text-gray-300">+</span> Fees <span className="text-gray-300">=</span> Gross Revenue</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #10b981' }} />
-                <span className="text-emerald-300 font-medium">Net Revenue</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-emerald-700 font-medium">Net Revenue</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <div className="w-3 h-2 rounded-sm bg-amber-400/80" />
-                <span className="text-amber-300 font-medium">Paystack Fees</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
+                <div className="w-3 h-2 rounded-sm bg-amber-400" />
+                <span className="text-amber-700 font-medium">Paystack Fees</span>
               </div>
             </div>
           </div>
 
           {/* 5-metric summary strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-slate-700/40 rounded-xl overflow-hidden mb-6 border border-slate-700/40">
-            <div className="bg-slate-800/70 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Gross Revenue</p>
-              <p className="text-xl font-bold text-white mt-1">₦{chartTotalRevenue.toLocaleString()}</p>
-              <p className="text-xs text-slate-600 mt-0.5">Total received</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-gray-100 rounded-xl overflow-hidden mb-6 border border-gray-100">
+            <div className="bg-white p-4">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Gross Revenue</p>
+              <p className="text-xl font-bold text-gray-900 mt-1">₦{chartTotalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-0.5">Total received</p>
             </div>
-            <div className="bg-slate-800/70 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Net Revenue</p>
-              <p className="text-xl font-bold text-indigo-400 mt-1">₦{chartTotalNet.toLocaleString()}</p>
-              <p className="text-xs text-slate-600 mt-0.5">After fees</p>
+            <div className="bg-white p-4">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Net Revenue</p>
+              <p className="text-xl font-bold text-indigo-600 mt-1">₦{chartTotalNet.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-0.5">After fees</p>
             </div>
-            <div className="bg-slate-800/70 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Paystack Fees</p>
-              <p className="text-xl font-bold text-amber-400 mt-1">₦{chartTotalFees.toLocaleString()}</p>
-              <p className="text-xs text-slate-600 mt-0.5">Processing cost</p>
+            <div className="bg-white p-4">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Paystack Fees</p>
+              <p className="text-xl font-bold text-amber-500 mt-1">₦{chartTotalFees.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-0.5">Processing cost</p>
             </div>
-            <div className="bg-slate-800/70 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Fee Rate</p>
-              <p className="text-xl font-bold text-rose-400 mt-1">{chartFeePercentage.toFixed(2)}%</p>
-              <div className="w-full h-1 bg-slate-700 rounded-full mt-2">
+            <div className="bg-white p-4">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Fee Rate</p>
+              <p className="text-xl font-bold text-rose-500 mt-1">{chartFeePercentage.toFixed(2)}%</p>
+              <div className="w-full h-1 bg-gray-100 rounded-full mt-2">
                 <div
                   className="h-1 bg-gradient-to-r from-amber-400 to-rose-400 rounded-full"
                   style={{ width: `${Math.min(chartFeePercentage * 10, 100)}%` }}
                 />
               </div>
             </div>
-            <div className="bg-slate-800/70 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Avg / Period</p>
-              <p className="text-xl font-bold text-emerald-400 mt-1">₦{chartAvgPerDay.toLocaleString()}</p>
-              <p className="text-xs text-slate-600 mt-0.5">Per day</p>
+            <div className="bg-white p-4">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Avg / Period</p>
+              <p className="text-xl font-bold text-emerald-600 mt-1">₦{chartAvgPerDay.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-0.5">Per day</p>
             </div>
           </div>
 
@@ -641,30 +634,23 @@ export default function AdminDashboard() {
                 <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="feesStackGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.85} />
-                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.45} />
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.15} />
                     </linearGradient>
                     <linearGradient id="netStackGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.25} />
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.7} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.1} />
                     </linearGradient>
-                    <filter id="glowFilter">
-                      <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
                     axisLine={false}
                     tickLine={false}
                     tickFormatter={(v) =>
@@ -677,14 +663,14 @@ export default function AdminDashboard() {
                   />
                   <Tooltip
                     content={<RevenueTooltip />}
-                    cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+                    cursor={{ stroke: 'rgba(0,0,0,0.08)', strokeWidth: 1 }}
                   />
                   <ReferenceLine
                     y={chartAvgRevenue}
-                    stroke="#475569"
+                    stroke="#d1d5db"
                     strokeDasharray="6 3"
                     strokeWidth={1.5}
-                    label={{ value: 'Avg', fill: '#64748b', fontSize: 10, position: 'insideTopRight' }}
+                    label={{ value: 'Avg', fill: '#9ca3af', fontSize: 10, position: 'insideTopRight' }}
                   />
                   {/* Bottom slice: Paystack Fees */}
                   <Area
@@ -696,7 +682,7 @@ export default function AdminDashboard() {
                     fill="url(#feesStackGrad)"
                     name="fees"
                     animationDuration={1200}
-                    dot={{ r: 4, fill: '#f59e0b', stroke: '#1e293b', strokeWidth: 2 }}
+                    dot={{ r: 4, fill: '#f59e0b', stroke: '#ffffff', strokeWidth: 2 }}
                     activeDot={renderActiveDot}
                   />
                   {/* Top slice: Net Revenue */}
@@ -709,52 +695,51 @@ export default function AdminDashboard() {
                     fill="url(#netStackGrad)"
                     name="net"
                     animationDuration={1500}
-                    dot={{ r: 4, fill: '#10b981', stroke: '#1e293b', strokeWidth: 2 }}
+                    dot={{ r: 4, fill: '#10b981', stroke: '#ffffff', strokeWidth: 2 }}
                     activeDot={renderActiveDot}
-                    filter="url(#glowFilter)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-slate-500 text-sm">{revenueLoading ? 'Loading...' : 'No revenue data yet'}</p>
+                <p className="text-gray-400 text-sm">{revenueLoading ? 'Loading...' : 'No revenue data yet'}</p>
               </div>
             )}
           </div>
 
           {/* Footer insights */}
-          <div className="flex flex-wrap items-center gap-6 mt-5 pt-5 border-t border-slate-700/50">
+          <div className="flex flex-wrap items-center gap-6 mt-5 pt-5 border-t border-gray-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <FiTrendingUp className="w-4 h-4 text-emerald-400" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                <FiTrendingUp className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">Peak Day</p>
-                <p className="text-sm font-bold text-white">
+                <p className="text-xs text-gray-400">Peak Day</p>
+                <p className="text-sm font-bold text-gray-900">
                   {chartHighestDay.name}{' '}
-                  <span className="text-emerald-400">₦{chartHighestDay.revenue.toLocaleString()}</span>
+                  <span className="text-emerald-600">₦{chartHighestDay.revenue.toLocaleString()}</span>
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                <FiActivity className="w-4 h-4 text-indigo-400" />
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+                <FiActivity className="w-4 h-4 text-indigo-600" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">Net Efficiency</p>
-                <p className="text-sm font-bold text-white">
+                <p className="text-xs text-gray-400">Net Efficiency</p>
+                <p className="text-sm font-bold text-gray-900">
                   {chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}
-                  <span className="text-slate-400 font-normal text-xs">% retained</span>
+                  <span className="text-gray-400 font-normal text-xs">% retained</span>
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <FiCreditCard className="w-4 h-4 text-amber-400" />
+              <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                <FiCreditCard className="w-4 h-4 text-amber-500" />
               </div>
               <div>
-                <p className="text-xs text-slate-500">Transactions in Period</p>
-                <p className="text-sm font-bold text-white">
+                <p className="text-xs text-gray-400">Transactions in Period</p>
+                <p className="text-sm font-bold text-gray-900">
                   {revenueChartData.reduce((sum, d) => sum + (d.count || 0), 0) || '–'}
                 </p>
               </div>
@@ -983,14 +968,13 @@ export default function AdminDashboard() {
           {usersToDisplay.length > 0 ? (
             <>
               <div className="overflow-x-auto flex-1">
-                <table className="w-full">
+                <table className="w-full table-auto">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[160px]">User</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[180px]">Email</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[120px]">Role</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[100px]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1001,28 +985,29 @@ export default function AdminDashboard() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                          className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                          onClick={() => router.push(`/dashboard/users/${user.id}`)}
                         >
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-xs shadow-sm flex-shrink-0">
                                 {user.firstName?.[0]}{user.lastName?.[0]}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 text-sm">
+                                <p className="font-medium text-gray-900 text-sm whitespace-nowrap">
                                   {user.firstName} {user.lastName}
                                 </p>
-                                <p className="text-xs text-gray-400">{user.phoneNumber}</p>
+                                <p className="text-xs text-gray-400 whitespace-nowrap">{user.phoneNumber}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap">{user.email}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
                             <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                               {user.role?.replace('_', ' ')}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                               user.status === 'ACTIVE'
                                 ? 'bg-emerald-100 text-emerald-700'
@@ -1032,16 +1017,6 @@ export default function AdminDashboard() {
                             }`}>
                               {user.status}
                             </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => router.push(`/dashboard/users/${user.id}`)}
-                              className="text-indigo-600 hover:text-indigo-700 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-                            >
-                              <FiEye className="w-4 h-4" />
-                            </motion.button>
                           </td>
                         </motion.tr>
                       ))}

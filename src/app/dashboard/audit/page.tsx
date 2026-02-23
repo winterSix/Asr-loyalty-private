@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { auditService } from '@/services/audit.service';
 import {
@@ -51,11 +50,15 @@ export default function AuditLogsPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Audit Logs</h1>
-          <p className="text-gray-600">System activity and audit trail</p>
+        <div className="mb-8 flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 text-white shadow-lg shadow-slate-600/25">
+            <FiFileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Audit Logs</h1>
+            <p className="text-gray-500 text-sm">System activity and audit trail</p>
+          </div>
         </div>
 
         {/* Filters */}
@@ -148,7 +151,6 @@ export default function AuditLogsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }
 

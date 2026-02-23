@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService, Notification } from '@/services/notification.service';
 import {
@@ -202,7 +201,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -401,6 +400,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

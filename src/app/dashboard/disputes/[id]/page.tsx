@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
 import toast from 'react-hot-toast';
@@ -105,7 +104,6 @@ export default function DisputeDetailPage() {
 
   if (!dispute) {
     return (
-      <DashboardLayout role={user?.role || 'CUSTOMER'}>
         <div className="text-center py-12">
           <FiShield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Dispute not found</p>
@@ -113,7 +111,6 @@ export default function DisputeDetailPage() {
             Go Back
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
@@ -137,7 +134,7 @@ export default function DisputeDetailPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         <div className="mb-6">
           <button
@@ -340,7 +337,7 @@ export default function DisputeDetailPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 

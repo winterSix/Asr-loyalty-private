@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { refundService } from '@/services/refund.service';
 import toast from 'react-hot-toast';
@@ -106,7 +105,6 @@ export default function RefundDetailPage() {
 
   if (!refund) {
     return (
-      <DashboardLayout role={user?.role || 'CUSTOMER'}>
         <div className="text-center py-12">
           <FiDollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Refund not found</p>
@@ -114,7 +112,6 @@ export default function RefundDetailPage() {
             Go Back
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
@@ -136,7 +133,7 @@ export default function RefundDetailPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         <div className="mb-6">
           <button
@@ -360,7 +357,7 @@ export default function RefundDetailPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 

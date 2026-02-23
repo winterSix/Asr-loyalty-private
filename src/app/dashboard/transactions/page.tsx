@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { adminService, TransactionFilters } from '@/services/admin.service';
 import { transactionService } from '@/services/transaction.service';
@@ -11,7 +10,6 @@ import {
   FiCreditCard,
   FiSearch,
   FiFilter,
-  FiEye,
   FiCheckCircle,
   FiXCircle,
   FiClock,
@@ -178,21 +176,20 @@ export default function TransactionsPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
-                <FiCreditCard className="w-5 h-5" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Transactions</h1>
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
+              <FiCreditCard className="w-6 h-6" />
             </div>
-            <p className="text-gray-500 ml-[52px]">
-              {isAdmin ? `Manage all transactions` : 'View your transaction history'}
-              {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
-            </p>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Transactions</h1>
+              <p className="text-gray-500 text-sm">
+                {isAdmin ? 'Manage all transactions' : 'View your transaction history'}
+                {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 self-start">
             {!isAdmin && (
@@ -324,18 +321,17 @@ export default function TransactionsPage() {
           ) : transactions.length > 0 ? (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px]">
+                <table className="w-full table-auto">
                   <thead>
-                    <tr className="bg-gray-50/80">
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reference</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[180px]">Reference</th>
                       {isAdmin && (
-                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[180px]">User</th>
                       )}
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-16"></th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[160px]">Type</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Amount</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[130px]">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -345,65 +341,56 @@ export default function TransactionsPage() {
                         className="hover:bg-gray-50/60 transition-colors cursor-pointer group"
                         onClick={() => router.push(`/dashboard/transactions/${tx.id}`)}
                       >
-                        <td className="py-4 px-5">
-                          <p className="font-mono text-sm text-gray-900 font-medium">
-                            {tx.reference?.substring(0, 16)}...
+                        <td className="py-3.5 px-4">
+                          <p className="font-mono text-sm text-gray-900 font-medium whitespace-nowrap">
+                            {tx.reference?.substring(0, 22)}...
                           </p>
                         </td>
                         {isAdmin && (
-                          <td className="py-4 px-5">
+                          <td className="py-3.5 px-4">
                             {tx.user ? (
                               <button
                                 onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/users/${tx.user.id || tx.userId}`); }}
                                 className="text-left hover:text-primary transition-colors"
                               >
-                                <p className="font-semibold text-gray-900 text-sm">
+                                <p className="font-semibold text-gray-900 text-sm whitespace-nowrap">
                                   {tx.user.firstName} {tx.user.lastName}
                                 </p>
-                                <p className="text-xs text-gray-400">{tx.user.phoneNumber || tx.user.email}</p>
+                                <p className="text-xs text-gray-400 whitespace-nowrap">{tx.user.phoneNumber || tx.user.email}</p>
                               </button>
                             ) : (
                               <span className="text-gray-300 text-sm">&mdash;</span>
                             )}
                           </td>
                         )}
-                        <td className="py-4 px-5">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getTypeColor(tx.type)}`}>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold ${getTypeColor(tx.type)}`}>
                             {tx.type?.replace(/_/g, ' ')}
                           </span>
                         </td>
-                        <td className="py-4 px-5 text-right">
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <p className="font-bold text-gray-900 text-sm">
                             ₦{parseFloat(tx.amount).toLocaleString()}
                           </p>
                           {tx.fee && parseFloat(tx.fee) > 0 && (
-                            <p className="text-[11px] text-gray-400 mt-0.5">
+                            <p className="text-[11px] text-gray-400 mt-0.5 whitespace-nowrap">
                               Fee: ₦{parseFloat(tx.fee).toLocaleString()}
                             </p>
                           )}
                         </td>
-                        <td className="py-4 px-5">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>
                             {getStatusIcon(tx.status)}
                             {tx.status}
                           </span>
                         </td>
-                        <td className="py-4 px-5">
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <p className="text-sm text-gray-700">
                             {new Date(tx.createdAt).toLocaleDateString()}
                           </p>
                           <p className="text-xs text-gray-400">
                             {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
-                        </td>
-                        <td className="py-4 px-5 text-center">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/transactions/${tx.id}`); }}
-                            className="text-gray-400 group-hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-primary/5"
-                            title="View details"
-                          >
-                            <FiEye className="w-4.5 h-4.5" />
-                          </button>
                         </td>
                       </tr>
                     ))}
@@ -462,6 +449,5 @@ export default function TransactionsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { loyaltyService } from '@/services/loyalty.service';
@@ -139,7 +138,6 @@ export default function EditTierPage() {
 
   if (!tierConfig && !tierLoading) {
     return (
-      <DashboardLayout role={role}>
         <div className="text-center py-20">
           <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <FiAward className="w-8 h-8 text-gray-400" />
@@ -154,12 +152,10 @@ export default function EditTierPage() {
             Back to Tiers
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout role={role}>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -480,6 +476,5 @@ export default function EditTierPage() {
           </div>
         </form>
       </div>
-    </DashboardLayout>
   );
 }

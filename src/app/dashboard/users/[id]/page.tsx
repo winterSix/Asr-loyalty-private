@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import toast from 'react-hot-toast';
@@ -122,7 +121,6 @@ export default function UserDetailPage() {
   const recentTx = userTransactions?.data || userData?.recentTransactions || [];
 
   return (
-    <DashboardLayout role={role}>
       <div>
         <div className="mb-6">
           <button
@@ -640,6 +638,5 @@ export default function UserDetailPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }

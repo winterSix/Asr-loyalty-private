@@ -1,6 +1,5 @@
 'use client';
 
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 // Import role-specific dashboards
@@ -24,29 +23,21 @@ export default function DashboardPage() {
 
   const role = user.role || 'CUSTOMER';
 
-  const renderDashboard = () => {
-    switch (role) {
-      case 'CUSTOMER':
-        return <CustomerDashboard />;
-      case 'ADMIN':
-      case 'SUPER_ADMIN':
-        return <AdminDashboard />;
-      case 'CASHIER':
-        return <CashierDashboard />;
-      case 'FINANCE_MANAGER':
-        return <FinanceManagerDashboard />;
-      case 'LOYALTY_MANAGER':
-        return <LoyaltyManagerDashboard />;
-      case 'CUSTOMER_SUPPORT':
-        return <CustomerSupportDashboard />;
-      default:
-        return <CustomerDashboard />;
-    }
-  };
-
-  return (
-    <DashboardLayout role={role}>
-      {renderDashboard()}
-    </DashboardLayout>
-  );
+  switch (role) {
+    case 'CUSTOMER':
+      return <CustomerDashboard />;
+    case 'ADMIN':
+    case 'SUPER_ADMIN':
+      return <AdminDashboard />;
+    case 'CASHIER':
+      return <CashierDashboard />;
+    case 'FINANCE_MANAGER':
+      return <FinanceManagerDashboard />;
+    case 'LOYALTY_MANAGER':
+      return <LoyaltyManagerDashboard />;
+    case 'CUSTOMER_SUPPORT':
+      return <CustomerSupportDashboard />;
+    default:
+      return <CustomerDashboard />;
+  }
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { permissionService } from '@/services/permission.service';
 import {
@@ -190,7 +189,6 @@ export default function PermissionsPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -410,6 +408,5 @@ export default function PermissionsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }

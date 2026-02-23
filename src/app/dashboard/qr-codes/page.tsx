@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { qrService } from '@/services/qr.service';
 import {
   FiQrCode,
@@ -98,7 +97,7 @@ export default function QRCodesPage() {
   ];
 
   return (
-    <DashboardLayout role={role}>
+    <>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -271,6 +270,6 @@ export default function QRCodesPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

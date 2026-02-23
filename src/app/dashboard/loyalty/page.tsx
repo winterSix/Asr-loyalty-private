@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { loyaltyService } from '@/services/loyalty.service';
 import {
@@ -61,7 +60,6 @@ export default function LoyaltyPage() {
   };
 
   return (
-    <DashboardLayout role={role}>
       <div>
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Loyalty Program</h1>
@@ -165,7 +163,6 @@ export default function LoyaltyPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }
 

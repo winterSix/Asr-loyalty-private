@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import { walletService } from '@/services/wallet.service';
 import {
@@ -49,7 +48,6 @@ export default function WalletPage() {
   const role = user?.role || 'CUSTOMER';
 
   return (
-    <DashboardLayout role={role}>
       <div>
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Wallets</h1>
@@ -189,6 +187,5 @@ export default function WalletPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }
