@@ -11,6 +11,7 @@ import {
   FiFilter,
   FiEye,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function AuditLogsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -76,18 +77,19 @@ export default function AuditLogsPage() {
             </div>
             <div className="flex items-center gap-2">
               <FiFilter className="text-gray-400" />
-              <select
+              <CustomSelect
                 value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className="input-field"
-              >
-                <option value="">All Actions</option>
-                <option value="CREATE">Create</option>
-                <option value="UPDATE">Update</option>
-                <option value="DELETE">Delete</option>
-                <option value="LOGIN">Login</option>
-                <option value="LOGOUT">Logout</option>
-              </select>
+                onChange={(v) => setActionFilter(v)}
+                options={[
+                  { value: '', label: 'All Actions' },
+                  { value: 'CREATE', label: 'Create' },
+                  { value: 'UPDATE', label: 'Update' },
+                  { value: 'DELETE', label: 'Delete' },
+                  { value: 'LOGIN', label: 'Login' },
+                  { value: 'LOGOUT', label: 'Logout' },
+                ]}
+                className="flex-1 min-w-[160px]"
+              />
             </div>
           </div>
         </div>

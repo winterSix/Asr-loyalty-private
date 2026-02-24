@@ -20,6 +20,7 @@ import {
   FiCopy,
   FiCheckCircle,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 const createCashierSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -198,41 +199,41 @@ export default function UsersPage() {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <FiFilter className="text-gray-400 w-4 h-4" />
-              <select
+              <CustomSelect
                 value={roleFilter}
-                onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-                className="input-field text-sm"
-              >
-                <option value="">All Roles</option>
-                <option value="CUSTOMER">Customer</option>
-                <option value="CASHIER">Cashier</option>
-                <option value="ADMIN">Admin</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-              </select>
-              <select
+                onChange={(v) => { setRoleFilter(v); setPage(1); }}
+                options={[
+                  { value: '', label: 'All Roles' },
+                  { value: 'CUSTOMER', label: 'Customer' },
+                  { value: 'CASHIER', label: 'Cashier' },
+                  { value: 'ADMIN', label: 'Admin' },
+                  { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                ]}
+              />
+              <CustomSelect
                 value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                className="input-field text-sm"
-              >
-                <option value="">All Status</option>
-                <option value="ACTIVE">Active</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="PENDING_VERIFICATION">Pending Verification</option>
-                <option value="DEACTIVATED">Deactivated</option>
-              </select>
-              <select
+                onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                options={[
+                  { value: '', label: 'All Status' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'SUSPENDED', label: 'Suspended' },
+                  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                  { value: 'DEACTIVATED', label: 'Deactivated' },
+                ]}
+              />
+              <CustomSelect
                 value={tierFilter}
-                onChange={(e) => { setTierFilter(e.target.value); setPage(1); }}
-                className="input-field text-sm"
-              >
-                <option value="">All Tiers</option>
-                <option value="BRONZE">Bronze</option>
-                <option value="SILVER">Silver</option>
-                <option value="GOLD">Gold</option>
-                <option value="PLATINUM">Platinum</option>
-              </select>
+                onChange={(v) => { setTierFilter(v); setPage(1); }}
+                options={[
+                  { value: '', label: 'All Tiers' },
+                  { value: 'BRONZE', label: 'Bronze' },
+                  { value: 'SILVER', label: 'Silver' },
+                  { value: 'GOLD', label: 'Gold' },
+                  { value: 'PLATINUM', label: 'Platinum' },
+                ]}
+              />
             </div>
           </div>
         </div>

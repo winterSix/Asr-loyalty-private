@@ -18,6 +18,7 @@ import {
   FiRefreshCw,
   FiDownload,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 import { paymentService } from '@/services/payment.service';
 import toast from 'react-hot-toast';
 
@@ -236,48 +237,44 @@ export default function TransactionsPage() {
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 w-full sm:w-auto flex-1">
                 <div>
                   <label className="text-xs font-medium text-gray-500 block mb-1.5">Status</label>
-                  <select
+                  <CustomSelect
                     value={statusFilter}
-                    onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                    className="select-field text-sm !py-2.5"
-                  >
-                    <option value="">All Status</option>
-                    <option value="SUCCESSFUL">Successful</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="PROCESSING">Processing</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
+                    onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                    options={[
+                      { value: '', label: 'All Status' },
+                      { value: 'SUCCESSFUL', label: 'Successful' },
+                      { value: 'PENDING', label: 'Pending' },
+                      { value: 'PROCESSING', label: 'Processing' },
+                      { value: 'FAILED', label: 'Failed' },
+                    ]}
+                  />
                 </div>
                 {!isAdmin && (
                   <div>
                     <label className="text-xs font-medium text-gray-500 block mb-1.5">Period</label>
-                    <select
+                    <CustomSelect
                       value={periodFilter}
-                      onChange={(e) => { setPeriodFilter(e.target.value as PeriodFilter); setPage(1); }}
-                      className="select-field text-sm !py-2.5"
-                    >
-                      {periodOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                      onChange={(v) => { setPeriodFilter(v as PeriodFilter); setPage(1); }}
+                      options={periodOptions}
+                    />
                   </div>
                 )}
                 {isAdmin && (
                   <>
                     <div>
                       <label className="text-xs font-medium text-gray-500 block mb-1.5">Type</label>
-                      <select
+                      <CustomSelect
                         value={typeFilter}
-                        onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-                        className="select-field text-sm !py-2.5"
-                      >
-                        <option value="">All Types</option>
-                        <option value="WALLET_FUNDING">Wallet Funding</option>
-                        <option value="PAYMENT">Payment</option>
-                        <option value="REWARD_REDEMPTION">Reward Redemption</option>
-                        <option value="TRANSFER">Transfer</option>
-                        <option value="REFUND">Refund</option>
-                      </select>
+                        onChange={(v) => { setTypeFilter(v); setPage(1); }}
+                        options={[
+                          { value: '', label: 'All Types' },
+                          { value: 'WALLET_FUNDING', label: 'Wallet Funding' },
+                          { value: 'PAYMENT', label: 'Payment' },
+                          { value: 'REWARD_REDEMPTION', label: 'Reward Redemption' },
+                          { value: 'TRANSFER', label: 'Transfer' },
+                          { value: 'REFUND', label: 'Refund' },
+                        ]}
+                      />
                     </div>
                     <div>
                       <label className="text-xs font-medium text-gray-500 block mb-1.5">From</label>

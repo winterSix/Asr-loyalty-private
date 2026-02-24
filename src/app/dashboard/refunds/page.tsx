@@ -19,6 +19,7 @@ import {
   FiAlertTriangle,
   FiActivity,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function RefundsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -207,18 +208,19 @@ export default function RefundsPage() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
               />
             </div>
-            <select
+            <CustomSelect
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm min-w-[160px]"
-            >
-              <option value="">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="PROCESSED">Processed</option>
-              <option value="FAILED">Failed</option>
-            </select>
+              onChange={(v) => { setStatusFilter(v); setPage(1); }}
+              options={[
+                { value: '', label: 'All Status' },
+                { value: 'PENDING', label: 'Pending' },
+                { value: 'APPROVED', label: 'Approved' },
+                { value: 'REJECTED', label: 'Rejected' },
+                { value: 'PROCESSED', label: 'Processed' },
+                { value: 'FAILED', label: 'Failed' },
+              ]}
+              className="min-w-[160px]"
+            />
           </div>
         </div>
 

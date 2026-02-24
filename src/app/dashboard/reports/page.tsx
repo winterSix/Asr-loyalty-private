@@ -11,6 +11,7 @@ import {
   FiCreditCard,
   FiTrendingUp,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 type ReportTab = 'revenue' | 'transactions' | 'users';
 
@@ -122,15 +123,15 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-500 block mb-1.5">Group By</label>
-                  <select
+                  <CustomSelect
                     value={groupBy}
-                    onChange={(e) => setGroupBy(e.target.value as 'day' | 'week' | 'month')}
-                    className="select-field text-sm !py-2.5"
-                  >
-                    <option value="day">Daily</option>
-                    <option value="week">Weekly</option>
-                    <option value="month">Monthly</option>
-                  </select>
+                    onChange={(v) => setGroupBy(v as 'day' | 'week' | 'month')}
+                    options={[
+                      { value: 'day', label: 'Daily' },
+                      { value: 'week', label: 'Weekly' },
+                      { value: 'month', label: 'Monthly' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>

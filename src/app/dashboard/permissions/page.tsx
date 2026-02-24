@@ -18,6 +18,7 @@ import {
   FiChevronUp,
   FiActivity,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function PermissionsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -264,18 +265,18 @@ export default function PermissionsPage() {
               />
             </div>
             {viewMode === 'grouped' && resources && (
-              <select
+              <CustomSelect
                 value={selectedResource}
-                onChange={(e) => setSelectedResource(e.target.value)}
-                className="px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm min-w-[180px]"
-              >
-                <option value="">All Resources</option>
-                {resources.map((resource: string) => (
-                  <option key={resource} value={resource}>
-                    {resource.replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setSelectedResource(v)}
+                options={[
+                  { value: '', label: 'All Resources' },
+                  ...resources.map((resource: string) => ({
+                    value: resource,
+                    label: resource.replace(/_/g, ' '),
+                  })),
+                ]}
+                className="min-w-[180px]"
+              />
             )}
           </div>
         </div>

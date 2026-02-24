@@ -309,15 +309,15 @@ export default function AdminDashboard() {
     retry: 1,
   });
 
-  // Fetch revenue report
+  // Fetch revenue report — staleTime:0 so switching back to a period always re-fetches fresh data
   const { data: revenueReport, isLoading: revenueLoading } = useQuery({
-    queryKey: ['admin', 'revenue', selectedPeriod],
+    queryKey: ['admin', 'revenue', selectedPeriod, dateRange.startDate, dateRange.endDate],
     queryFn: () => adminService.getRevenueReport({
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       groupBy: selectedPeriod === 'year' ? 'month' : 'day',
     }),
-    staleTime: 60000,
+    staleTime: 0,
     retry: 1,
   });
 

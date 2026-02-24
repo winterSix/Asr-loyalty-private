@@ -19,6 +19,7 @@ import {
   FiActivity,
   FiTrendingUp,
 } from '@/utils/icons';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function DisputesPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -206,18 +207,19 @@ export default function DisputesPage() {
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
               />
             </div>
-            <select
+            <CustomSelect
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm min-w-[160px]"
-            >
-              <option value="">All Status</option>
-              <option value="OPEN">Open</option>
-              <option value="INVESTIGATING">Investigating</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="ESCALATED">Escalated</option>
-            </select>
+              onChange={(v) => { setStatusFilter(v); setPage(1); }}
+              options={[
+                { value: '', label: 'All Status' },
+                { value: 'OPEN', label: 'Open' },
+                { value: 'INVESTIGATING', label: 'Investigating' },
+                { value: 'RESOLVED', label: 'Resolved' },
+                { value: 'REJECTED', label: 'Rejected' },
+                { value: 'ESCALATED', label: 'Escalated' },
+              ]}
+              className="min-w-[160px]"
+            />
           </div>
         </div>
 

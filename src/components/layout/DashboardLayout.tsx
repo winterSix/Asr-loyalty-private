@@ -49,8 +49,8 @@ interface TooltipState {
     left: number;
 }
 
-const DRAWER_WIDTH = 280;
-const DRAWER_WIDTH_COLLAPSED = 80;
+const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH_COLLAPSED = 72;
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -429,17 +429,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                                             onMouseEnter={(e) => isCollapsed && showTooltip(e, item.label)}
                                                             onMouseLeave={hideTooltip}
                                                             className={`
-                              w-full flex items-center rounded-xl
-                              transition-all duration-150 relative
-                              ${isCollapsed
+                                                                    w-full flex items-center rounded-xl
+                                                                    transition-all duration-150 relative
+                                                                    ${isCollapsed
                                                                     ? 'justify-center py-2.5 px-0'
                                                                     : 'gap-3 px-3 py-2.5'
                                                                 }
-                              ${isActive
+                                                                    ${isActive
                                                                     ? 'text-primary'
                                                                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                                                                 }
-                            `}
+                                                            `}
                                                         >
                                                             {/* Active background */}
                                                             {isActive && (
@@ -453,8 +453,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
                                                             {/* Icon */}
                                                             <span className={`relative flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150
-                              ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}
-                            `}>
+                                                            ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}
+                                                            `}>
                                                                 <span className="text-[17px] leading-none">{item.icon}</span>
                                                             </span>
 
@@ -486,7 +486,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Main content */}
             <div
-                className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}`}
+                className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[240px]'}`}
             >
                 {/* Top bar / Header */}
                 <header className="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-gray-200/80 z-30 h-[72px]">
@@ -544,55 +544,55 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 </button>
 
                                 {userMenuOpen && (
-                                        <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[36] overflow-hidden animate-slide-down">
-                                            <div className="px-4 py-3 border-b border-gray-100">
-                                                <p className="text-sm font-bold text-gray-900">
-                                                    {user?.firstName} {user?.lastName}
-                                                </p>
-                                                <p className="text-xs text-gray-400 truncate mt-0.5">{user?.email}</p>
-                                            </div>
-                                            <div className="py-1">
-                                                <button
-                                                    onClick={() => {
-                                                        router.push('/dashboard/profile');
-                                                        setUserMenuOpen(false);
-                                                    }}
-                                                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                                                >
-                                                    <FiUser className="w-4 h-4" />
-                                                    Profile
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        router.push('/dashboard/notifications');
-                                                        setUserMenuOpen(false);
-                                                    }}
-                                                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                                                >
-                                                    <FiBell className="w-4 h-4" />
-                                                    Notifications
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        router.push('/dashboard/settings');
-                                                        setUserMenuOpen(false);
-                                                    }}
-                                                    className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                                                >
-                                                    <FiSettings className="w-4 h-4" />
-                                                    Settings
-                                                </button>
-                                            </div>
-                                            <div className="border-t border-gray-100 pt-1">
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="w-full px-4 py-2.5 text-left hover:bg-red-50 text-red-500 hover:text-red-600 flex items-center gap-3 text-sm transition-colors"
-                                                >
-                                                    <FiLogOut className="w-4 h-4" />
-                                                    Logout
-                                                </button>
-                                            </div>
+                                    <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-[36] overflow-hidden animate-slide-down">
+                                        <div className="px-4 py-3 border-b border-gray-100">
+                                            <p className="text-sm font-bold text-gray-900">
+                                                {user?.firstName} {user?.lastName}
+                                            </p>
+                                            <p className="text-xs text-gray-400 truncate mt-0.5">{user?.email}</p>
                                         </div>
+                                        <div className="py-1">
+                                            <button
+                                                onClick={() => {
+                                                    router.push('/dashboard/profile');
+                                                    setUserMenuOpen(false);
+                                                }}
+                                                className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                            >
+                                                <FiUser className="w-4 h-4" />
+                                                Profile
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    router.push('/dashboard/notifications');
+                                                    setUserMenuOpen(false);
+                                                }}
+                                                className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                            >
+                                                <FiBell className="w-4 h-4" />
+                                                Notifications
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    router.push('/dashboard/settings');
+                                                    setUserMenuOpen(false);
+                                                }}
+                                                className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                            >
+                                                <FiSettings className="w-4 h-4" />
+                                                Settings
+                                            </button>
+                                        </div>
+                                        <div className="border-t border-gray-100 pt-1">
+                                            <button
+                                                onClick={handleLogout}
+                                                className="w-full px-4 py-2.5 text-left hover:bg-red-50 text-red-500 hover:text-red-600 flex items-center gap-3 text-sm transition-colors"
+                                            >
+                                                <FiLogOut className="w-4 h-4" />
+                                                Logout
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

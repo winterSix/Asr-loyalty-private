@@ -19,6 +19,7 @@ import {
   FiCalendar,
   FiZap,
   FiArrowLeft,
+  FiX,
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
@@ -34,6 +35,15 @@ export default function RewardConfigPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const emptyCreateForm = () => ({
+    rewardPercentage: '',
+    effectiveFrom: new Date().toISOString().split('T')[0],
+    effectiveUntil: '',
+    tierMultipliers: { bronze: '', silver: '', gold: '', platinum: '' },
+  });
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -66,6 +76,43 @@ export default function RewardConfigPage() {
       toast.error(error.response?.data?.message || 'Failed to update configuration');
     },
   });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => rewardConfigurationService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reward-configs'] });
+      queryClient.invalidateQueries({ queryKey: ['reward-config-active'] });
+      toast.success('Configuration created successfully');
+      setShowCreateModal(false);
+      setCreateForm(emptyCreateForm());
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create configuration');
+    },
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const rewardPct = parseFloat(createForm.rewardPercentage);
+    if (isNaN(rewardPct) || rewardPct <= 0 || rewardPct > 100) {
+      toast.error('Reward percentage must be between 0 and 100');
+      return;
+    }
+    // Build tier multipliers — only include tiers the user filled in
+    const tierMultipliers: Record<string, number> = {};
+    for (const [tier, val] of Object.entries(createForm.tierMultipliers)) {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num > 0) {
+        tierMultipliers[tier] = num;
+      }
+    }
+    createMutation.mutate({
+      rewardPercentage: rewardPct,
+      effectiveFrom: createForm.effectiveFrom || undefined,
+      effectiveUntil: createForm.effectiveUntil || undefined,
+      tierMultipliers: Object.keys(tierMultipliers).length > 0 ? tierMultipliers : undefined,
+    });
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -140,6 +187,7 @@ export default function RewardConfigPage() {
   };
 
   return (
+    <>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -280,7 +328,7 @@ export default function RewardConfigPage() {
               <p className="text-xs text-gray-400 mt-0.5">{totalConfigs} configuration{totalConfigs !== 1 ? 's' : ''} total</p>
             </div>
             <button
-              onClick={() => toast('Create configuration form coming soon')}
+              onClick={() => setShowCreateModal(true)}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all flex items-center gap-2"
             >
               <FiPlus className="w-4 h-4" />
@@ -384,5 +432,145 @@ export default function RewardConfigPage() {
           )}
         </div>
       </div>
+
+      {/* Create Configuration Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/25">
+                  <FiGift className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">New Configuration</h2>
+                  <p className="text-xs text-gray-400">Set reward rules for this configuration</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowCreateModal(false); setCreateForm(emptyCreateForm()); }}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
+              {/* Reward Percentage */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Reward Percentage <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max="100"
+                    placeholder="e.g. 2.5"
+                    value={createForm.rewardPercentage}
+                    onChange={(e) => setCreateForm(f => ({ ...f, rewardPercentage: e.target.value }))}
+                    required
+                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Percentage of transaction amount awarded as loyalty points</p>
+              </div>
+
+              {/* Tier Multipliers */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Tier Multipliers
+                  <span className="text-xs text-gray-400 font-normal ml-2">(optional — leave blank to skip a tier)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['bronze', 'silver', 'gold', 'platinum'] as const).map((tier) => {
+                    const tc = tierColors[tier];
+                    return (
+                      <div key={tier}>
+                        <label className={`text-xs font-semibold uppercase tracking-wide mb-1 block ${tc.text}`}>
+                          {tier}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            placeholder="e.g. 1.5"
+                            value={createForm.tierMultipliers[tier]}
+                            onChange={(e) => setCreateForm(f => ({
+                              ...f,
+                              tierMultipliers: { ...f.tierMultipliers, [tier]: e.target.value },
+                            }))}
+                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary`}
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">×</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Effective Dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Effective From</label>
+                  <input
+                    type="date"
+                    value={createForm.effectiveFrom}
+                    onChange={(e) => setCreateForm(f => ({ ...f, effectiveFrom: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Effective Until
+                    <span className="text-xs text-gray-400 font-normal ml-1">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={createForm.effectiveUntil}
+                    onChange={(e) => setCreateForm(f => ({ ...f, effectiveUntil: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => { setShowCreateModal(false); setCreateForm(emptyCreateForm()); }}
+                  className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-pink-500/25 transition-all flex items-center gap-2 disabled:opacity-60"
+                >
+                  {createMutation.isPending ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="w-4 h-4" />
+                      Create Config
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
