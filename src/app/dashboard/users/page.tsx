@@ -22,14 +22,15 @@ import {
 } from '@/utils/icons';
 import CustomSelect from '@/components/ui/CustomSelect';
 
-const createCashierSchema = z.object({
+const createUserSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   phoneNumber: z.string().optional(),
+  role: z.string().min(1, 'Role is required'),
 });
 
-type CreateCashierFormData = z.infer<typeof createCashierSchema>;
+type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 export default function UsersPage() {
   const { user, isLoading } = useAuthGuard();
@@ -49,6 +50,7 @@ export default function UsersPage() {
     email: string;
     temporaryPassword: string;
     name: string;
+    role: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -82,29 +84,33 @@ export default function UsersPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<CreateCashierFormData>({
-    resolver: zodResolver(createCashierSchema),
+  } = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: { role: 'CASHIER' },
   });
 
-  const createCashierMutation = useMutation({
+  const createUserMutation = useMutation({
     mutationFn: (data: CreateCashierData) => adminService.createCashier(data),
     onSuccess: (result) => {
       setCreatedCredentials({
         email: result.cashier.email,
         temporaryPassword: result.cashier.temporaryPassword,
         name: `${result.cashier.firstName} ${result.cashier.lastName}`,
+        role: result.cashier.role,
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      reset();
+      reset({ role: 'CASHIER' });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || 'Failed to create cashier');
+      toast.error(err?.response?.data?.message || 'Failed to create user');
     },
   });
 
-  const onCreateCashier = (data: CreateCashierFormData) => {
-    createCashierMutation.mutate(data);
+  const onCreateUser = (data: CreateUserFormData) => {
+    createUserMutation.mutate(data);
   };
 
   const handleCopyPassword = () => {
@@ -118,7 +124,7 @@ export default function UsersPage() {
   const closeCreateModal = () => {
     setShowCreateModal(false);
     setCreatedCredentials(null);
-    reset();
+    reset({ role: 'CASHIER' });
   };
 
   if (isLoading) {
@@ -179,7 +185,7 @@ export default function UsersPage() {
               className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm"
             >
               <FiUserPlus className="w-5 h-5" />
-              Create Cashier
+              Create User
             </button>
           )}
         </div>
@@ -356,15 +362,15 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Create Cashier Modal */}
+      {/* Create User Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Create Cashier Account</h2>
+                <h2 className="text-xl font-bold text-gray-900">Create User Account</h2>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  A temporary password will be emailed to the cashier
+                  A temporary password will be generated for the new user
                 </p>
               </div>
               <button
@@ -383,8 +389,8 @@ export default function UsersPage() {
                     <FiCheckCircle className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Cashier Created!</p>
-                    <p className="text-sm text-gray-500">{createdCredentials.name}</p>
+                    <p className="font-semibold text-gray-900">User Created!</p>
+                    <p className="text-sm text-gray-500">{createdCredentials.name} &middot; <span className="font-medium">{createdCredentials.role}</span></p>
                   </div>
                 </div>
 
@@ -414,7 +420,7 @@ export default function UsersPage() {
                     </div>
                   </div>
                   <p className="text-xs text-amber-600 mt-3">
-                    The cashier will be prompted to change their password on first login. The credentials have also been emailed to them.
+                    The user will be prompted to change their password on first login. The credentials have also been emailed to them.
                   </p>
                 </div>
 
@@ -427,7 +433,7 @@ export default function UsersPage() {
               </div>
             ) : (
               /* Create form */
-              <form onSubmit={handleSubmit(onCreateCashier)} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit(onCreateUser)} className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -467,7 +473,7 @@ export default function UsersPage() {
                     {...register('email')}
                     type="email"
                     className={`input-field ${errors.email ? 'border-red-300' : ''}`}
-                    placeholder="cashier@example.com"
+                    placeholder="user@example.com"
                   />
                   {errors.email && (
                     <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
@@ -486,6 +492,30 @@ export default function UsersPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <CustomSelect
+                    value={watch('role')}
+                    onChange={(v) => setValue('role', v)}
+                    options={[
+                      { value: 'CASHIER', label: 'Cashier' },
+                      { value: 'CUSTOMER', label: 'Customer' },
+                      { value: 'FINANCE_MANAGER', label: 'Finance Manager' },
+                      { value: 'LOYALTY_MANAGER', label: 'Loyalty Manager' },
+                      { value: 'CUSTOMER_SUPPORT', label: 'Customer Support' },
+                      { value: 'ADMIN', label: 'Admin' },
+                    ]}
+                  />
+                  {errors.role && (
+                    <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    This sets what the user can access in the system.
+                  </p>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
@@ -496,16 +526,16 @@ export default function UsersPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={createCashierMutation.isPending}
+                    disabled={createUserMutation.isPending}
                     className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {createCashierMutation.isPending ? (
+                    {createUserMutation.isPending ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                         Creating...
                       </span>
                     ) : (
-                      'Create Cashier'
+                      'Create User'
                     )}
                   </button>
                 </div>

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
+import { walletService } from '@/services/wallet.service';
 import toast from 'react-hot-toast';
 import {
   FiUsers,
@@ -17,6 +18,8 @@ import {
   FiXCircle,
   FiAlertTriangle,
   FiX,
+  FiLock,
+  FiUnlock,
 } from '@/utils/icons';
 
 export default function UserDetailPage() {
@@ -32,6 +35,12 @@ export default function UserDetailPage() {
   const [statusAction, setStatusAction] = useState<'ACTIVE' | 'SUSPENDED'>('SUSPENDED');
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+
+  // Wallet freeze modal state
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [freezeAction, setFreezeAction] = useState<'freeze' | 'unfreeze'>('freeze');
+  const [freezeWalletType, setFreezeWalletType] = useState<'MAIN' | 'REWARDS'>('MAIN');
+  const [freezeReason, setFreezeReason] = useState('');
 
   // Fetch user data using admin service (no UUID validation on admin routes)
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -85,6 +94,31 @@ export default function UserDetailPage() {
       toast.error(error?.response?.data?.message || 'Failed to update user role');
     },
   });
+
+  // Freeze / unfreeze wallet mutation
+  const freezeMutation = useMutation({
+    mutationFn: () =>
+      freezeAction === 'freeze'
+        ? walletService.freezeWallet(userId, freezeWalletType, freezeReason)
+        : walletService.unfreezeWallet(userId, freezeWalletType),
+    onSuccess: () => {
+      toast.success(`Wallet ${freezeAction === 'freeze' ? 'frozen' : 'unfrozen'} successfully`);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user', userId, 'wallets'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user', userId] });
+      setShowFreezeModal(false);
+      setFreezeReason('');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || `Failed to ${freezeAction} wallet`);
+    },
+  });
+
+  const openFreezeModal = (action: 'freeze' | 'unfreeze', walletType: 'MAIN' | 'REWARDS') => {
+    setFreezeAction(action);
+    setFreezeWalletType(walletType);
+    setFreezeReason('');
+    setShowFreezeModal(true);
+  };
 
   const handleStatusChange = () => {
     statusMutation.mutate({
@@ -288,29 +322,46 @@ export default function UserDetailPage() {
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Wallets</h2>
                 {wallets.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {wallets.map((wallet: any) => (
-                      <div key={wallet.id} className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <FiCreditCard className="w-4 h-4 text-gray-500" />
-                            <p className="font-semibold text-gray-700 text-sm">
-                              {wallet.type || wallet.currency} Wallet
-                            </p>
-                          </div>
-                          {wallet.isActive !== undefined && (
+                    {wallets.map((wallet: any) => {
+                      const wType: 'MAIN' | 'REWARDS' = wallet.type === 'MAIN' ? 'MAIN' : 'REWARDS';
+                      const isFrozen = wallet.isActive === false;
+                      return (
+                        <div key={wallet.id} className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <FiCreditCard className="w-4 h-4 text-gray-500" />
+                              <p className="font-semibold text-gray-700 text-sm">
+                                {wallet.type || wallet.currency} Wallet
+                              </p>
+                            </div>
                             <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              wallet.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                              isFrozen ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
                             }`}>
-                              {wallet.isActive ? 'Active' : 'Inactive'}
+                              {isFrozen ? 'Frozen' : 'Active'}
                             </span>
+                          </div>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {wallet.currency === 'NGN' ? '₦' : ''}{parseFloat(wallet.balance).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1 mb-3">{wallet.currency}</p>
+                          {isFrozen ? (
+                            <button
+                              onClick={() => openFreezeModal('unfreeze', wType)}
+                              className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              <FiUnlock className="w-3.5 h-3.5" /> Unfreeze Wallet
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openFreezeModal('freeze', wType)}
+                              className="flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              <FiLock className="w-3.5 h-3.5" /> Freeze Wallet
+                            </button>
                           )}
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {wallet.currency === 'NGN' ? '₦' : ''}{parseFloat(wallet.balance).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">{wallet.currency}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-6">
@@ -572,6 +623,67 @@ export default function UserDetailPage() {
                     ? 'Processing...'
                     : statusAction === 'SUSPENDED' ? 'Suspend User' : 'Activate User'
                   }
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Wallet Freeze / Unfreeze Modal */}
+        {showFreezeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {freezeAction === 'freeze' ? 'Freeze' : 'Unfreeze'} {freezeWalletType} Wallet
+                </h3>
+                <button
+                  onClick={() => setShowFreezeModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+              <div className={`p-4 rounded-xl mb-4 ${freezeAction === 'freeze' ? 'bg-blue-50' : 'bg-green-50'}`}>
+                <div className="flex items-start gap-3">
+                  <FiAlertTriangle className={`w-5 h-5 mt-0.5 ${freezeAction === 'freeze' ? 'text-blue-500' : 'text-green-500'}`} />
+                  <p className={`text-sm ${freezeAction === 'freeze' ? 'text-blue-700' : 'text-green-700'}`}>
+                    {freezeAction === 'freeze'
+                      ? `This will freeze ${userData?.firstName}'s ${freezeWalletType} wallet. They will not be able to use it until unfrozen.`
+                      : `This will restore ${userData?.firstName}'s ${freezeWalletType} wallet to active status.`}
+                  </p>
+                </div>
+              </div>
+              {freezeAction === 'freeze' && (
+                <div className="mb-4">
+                  <label className="text-sm font-semibold text-gray-700 block mb-2">
+                    Reason <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={freezeReason}
+                    onChange={(e) => setFreezeReason(e.target.value)}
+                    placeholder="Enter reason for freezing..."
+                    className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3 justify-end">
+                <button
+                  onClick={() => setShowFreezeModal(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => freezeMutation.mutate()}
+                  disabled={freezeMutation.isPending || (freezeAction === 'freeze' && !freezeReason.trim())}
+                  className={`px-4 py-2 rounded-xl font-medium text-sm text-white transition-colors disabled:opacity-50 ${
+                    freezeAction === 'freeze' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                >
+                  {freezeMutation.isPending
+                    ? 'Processing...'
+                    : freezeAction === 'freeze' ? 'Freeze Wallet' : 'Unfreeze Wallet'}
                 </button>
               </div>
             </div>

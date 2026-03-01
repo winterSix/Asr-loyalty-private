@@ -62,6 +62,18 @@ class WalletService {
     return unwrapResponse(response.data);
   }
 
+  // POST /wallet/:userId/freeze/:walletType (Admin only)
+  async freezeWallet(userId: string, walletType: 'MAIN' | 'REWARDS', reason: string) {
+    const response = await apiClient.post<any>(`/wallet/${userId}/freeze/${walletType}`, { reason });
+    return unwrapResponse(response.data);
+  }
+
+  // POST /wallet/:userId/unfreeze/:walletType (Admin only)
+  async unfreezeWallet(userId: string, walletType: 'MAIN' | 'REWARDS') {
+    const response = await apiClient.post<any>(`/wallet/${userId}/unfreeze/${walletType}`);
+    return unwrapResponse(response.data);
+  }
+
   // Helper to get wallets array from balance
   async getWallets(): Promise<Wallet[]> {
     const balance = await this.getBalance();

@@ -1,6 +1,9 @@
 'use client';
 
 import { useAuthStore } from '@/store/auth.store';
+import { useQuery } from '@tanstack/react-query';
+import { disputeService } from '@/services/dispute.service';
+import { refundService } from '@/services/refund.service';
 import {
     FiBarChart,
     FiBell,
@@ -67,6 +70,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const { user, logout } = useAuthStore();
     const role = user?.role || 'CUSTOMER';
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+    // Fetch pending counts for sidebar badges (admin only)
+    const { data: pendingDisputes } = useQuery({
+        queryKey: ['disputes', 'pending-count'],
+        queryFn: () => disputeService.getDisputes({ status: 'OPEN', page: 1, limit: 1 }),
+        enabled: isAdmin,
+        staleTime: 60000,
+        retry: 1,
+    });
+    const { data: pendingRefunds } = useQuery({
+        queryKey: ['refunds', 'pending-count'],
+        queryFn: () => refundService.getRefunds({ status: 'PENDING', page: 1, limit: 1 }),
+        enabled: isAdmin,
+        staleTime: 60000,
+        retry: 1,
+    });
+
+    const disputesCount = pendingDisputes?.total ?? 0;
+    const refundsCount = pendingRefunds?.total ?? 0;
 
     const navRef = useRef<HTMLElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -199,8 +223,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     {
                         title: 'Support',
                         items: [
-                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes' },
-                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds' },
+                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: disputesCount > 0 ? disputesCount : undefined },
+                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: refundsCount > 0 ? refundsCount : undefined },
                         ],
                     },
                 ];
@@ -237,8 +261,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     {
                         title: 'Support',
                         items: [
-                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes' },
-                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds' },
+                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: disputesCount > 0 ? disputesCount : undefined },
+                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: refundsCount > 0 ? refundsCount : undefined },
                         ],
                     },
                 ];
@@ -276,8 +300,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     {
                         title: 'Support',
                         items: [
-                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes' },
-                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds' },
+                            { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: disputesCount > 0 ? disputesCount : undefined },
+                            { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: refundsCount > 0 ? refundsCount : undefined },
                         ],
                     },
                 ];
@@ -466,10 +490,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                                             )}
 
                                                             {/* Badge */}
-                                                            {item.badge && !isCollapsed && (
-                                                                <span className="relative ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                                            {item.badge !== undefined && item.badge > 0 && !isCollapsed && (
+                                                                <span className="relative ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center animate-pulse shadow-sm shadow-red-500/40">
                                                                     {item.badge}
                                                                 </span>
+                                                            )}
+                                                            {item.badge !== undefined && item.badge > 0 && isCollapsed && (
+                                                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-500/40" />
                                                             )}
                                                         </button>
                                                     </li>

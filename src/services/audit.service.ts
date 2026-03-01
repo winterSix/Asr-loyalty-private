@@ -24,6 +24,8 @@ export interface AuditLog {
     lastName: string;
     email: string;
   };
+  userFullName?: string;
+  performerFullName?: string;
 }
 
 export interface AuditLogsResponse {

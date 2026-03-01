@@ -124,7 +124,9 @@ export default function AuditLogsPage() {
                         )}
                       </td>
                       <td className="py-4 px-4 text-sm text-gray-700">
-                        {log.performedBy || 'System'}
+                        {log.performer
+                          ? `${log.performer.firstName} ${log.performer.lastName}`
+                          : log.performerFullName || 'System'}
                       </td>
                       <td className="py-4 px-4 text-sm text-gray-500 font-mono">
                         {log.ipAddress || '—'}

@@ -47,7 +47,8 @@ export interface RevenueReportItem {
   period: string;
   revenue: number;
   fees: number;
-  rewards: number;
+  rewards?: number;
+  rewardsGiven?: number;
   count: number;
 }
 
@@ -158,6 +159,34 @@ export interface RevenueFilters {
   startDate: string;
   endDate: string;
   groupBy?: 'day' | 'week' | 'month';
+}
+
+export interface TransactionExportFilters {
+  userId?: string;
+  type?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+}
+
+export interface GatewayStats {
+  gateways: Array<{
+    gateway: string;
+    totalTransactions: number;
+    totalVolume: number;
+    totalFees: number;
+    successfulTransactions: number;
+    successfulVolume: number;
+    byStatus: Record<string, { count: number; volume: number }>;
+  }>;
+  totals: {
+    totalTransactions: number;
+    totalVolume: number;
+    totalFees: number;
+    successfulVolume: number;
+  };
+  dateRange: { startDate: string | null; endDate: string | null };
 }
 
 /**
@@ -369,6 +398,32 @@ class AdminService {
     return extractInner<AdminUser>(result, 'user');
   }
 
+  // GET /admin/transactions/export — returns PDF as Blob
+  async exportTransactions(filters?: TransactionExportFilters): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const response = await apiClient.get(`/admin/transactions/export?${params.toString()}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  }
+
+  // GET /admin/transactions/gateway-stats
+  async getGatewayStats(startDate?: string, endDate?: string): Promise<GatewayStats> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const response = await apiClient.get<any>(`/admin/transactions/gateway-stats?${params.toString()}`);
+    const data = unwrapResponse<any>(response.data);
+    return extractInner<GatewayStats>(data, 'stats');
+  }
+
   // POST /admin/cashiers - Create a new cashier account
   // Backend returns: { success, message, cashier: { id, firstName, lastName, email, phoneNumber, role, status, temporaryPassword } }
   async createCashier(data: CreateCashierData): Promise<CreateCashierResponse> {
@@ -384,6 +439,7 @@ export interface CreateCashierData {
   lastName: string;
   email: string;
   phoneNumber?: string;
+  role?: string;
 }
 
 export interface CreateCashierResponse {

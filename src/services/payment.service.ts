@@ -51,6 +51,12 @@ class PaymentService {
     });
     return response.data as Blob;
   }
+
+  // POST /payments/reverse/:transactionId (Admin only)
+  async reversePayment(transactionId: string, reason: string) {
+    const response = await apiClient.post<any>(`/payments/reverse/${transactionId}`, { reason });
+    return unwrapResponse(response.data);
+  }
 }
 
 export const paymentService = new PaymentService();

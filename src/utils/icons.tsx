@@ -39,6 +39,7 @@ export { FiClock } from 'react-icons/fi';
 export { FiSmartphone } from 'react-icons/fi';
 export { FiZap } from 'react-icons/fi';
 export { FiLock } from 'react-icons/fi';
+export { FiUnlock } from 'react-icons/fi';
 export { FiEdit } from 'react-icons/fi';
 export { FiPlus } from 'react-icons/fi';
 export { FiUserPlus } from 'react-icons/fi';

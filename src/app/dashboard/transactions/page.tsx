@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery } from '@tanstack/react-query';
-import { adminService, TransactionFilters } from '@/services/admin.service';
+import { adminService, TransactionFilters, TransactionExportFilters } from '@/services/admin.service';
 import { transactionService } from '@/services/transaction.service';
 import {
   FiCreditCard,
@@ -60,14 +60,14 @@ export default function TransactionsPage() {
     limit,
   };
 
-  const { data: adminTxData, isLoading: adminTxLoading, refetch } = useQuery({
+  const { data: adminTxData, isLoading: adminTxLoading, isFetching: adminTxFetching, refetch } = useQuery({
     queryKey: ['admin', 'transactions', adminFilters],
     queryFn: () => adminService.getTransactions(adminFilters),
     enabled: !!user && isAdmin,
   });
 
   // Customer query (fallback for non-admin users)
-  const { data: customerTxData, isLoading: customerTxLoading, refetch: customerRefetch } = useQuery({
+  const { data: customerTxData, isLoading: customerTxLoading, isFetching: customerTxFetching, refetch: customerRefetch } = useQuery({
     queryKey: ['transactions', 'customer', statusFilter, periodFilter, page],
     queryFn: () => transactionService.getTransactions({
       status: statusFilter || undefined,
@@ -88,6 +88,7 @@ export default function TransactionsPage() {
 
   const role = user?.role || 'CUSTOMER';
   const txLoading = isAdmin ? adminTxLoading : customerTxLoading;
+  const txFetching = isAdmin ? adminTxFetching : customerTxFetching;
   const transactions = isAdmin ? (adminTxData?.data || []) : (customerTxData?.data || []);
   const total = isAdmin ? (adminTxData?.total || 0) : (customerTxData?.total || 0);
   const totalPages = Math.ceil(total / limit);
@@ -106,13 +107,23 @@ export default function TransactionsPage() {
   };
 
   const handleExportPdf = async () => {
-    if (isAdmin) return; // admin export not available via this endpoint
     setIsExporting(true);
     try {
-      const blob = await paymentService.exportTransactionHistory({
-        period: periodFilter || undefined,
-        status: statusFilter || undefined,
-      });
+      let blob: Blob;
+      if (isAdmin) {
+        const filters: TransactionExportFilters = {
+          ...(typeFilter && { type: typeFilter }),
+          ...(statusFilter && { status: statusFilter }),
+          ...(startDate && { startDate }),
+          ...(endDate && { endDate }),
+        };
+        blob = await adminService.exportTransactions(filters);
+      } else {
+        blob = await paymentService.exportTransactionHistory({
+          period: periodFilter || undefined,
+          status: statusFilter || undefined,
+        });
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const period = periodFilter || 'all';
@@ -193,22 +204,21 @@ export default function TransactionsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 self-start">
-            {!isAdmin && (
-              <button
-                onClick={handleExportPdf}
-                disabled={isExporting}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
-                title="Export as PDF"
-              >
-                <FiDownload className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
-                <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
-              </button>
-            )}
+            <button
+              onClick={handleExportPdf}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
+              title="Export as PDF"
+            >
+              <FiDownload className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+              <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+            </button>
             <button
               onClick={() => isAdmin ? refetch?.() : customerRefetch?.()}
               className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+              title="Refresh transactions"
             >
-              <FiRefreshCw className={`w-5 h-5 ${txLoading ? 'animate-spin' : ''}`} />
+              <FiRefreshCw className={`w-5 h-5 ${txFetching ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>

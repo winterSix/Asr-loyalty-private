@@ -44,6 +44,12 @@ class HealthService {
     const response = await apiClient.get('/health/stats');
     return unwrapResponse(response.data);
   }
+
+  // GET /health/detailed (Admin only) — full system health report
+  async getDetailedHealth() {
+    const response = await apiClient.get('/health/detailed');
+    return unwrapResponse(response.data);
+  }
 }
 
 export const healthService = new HealthService();

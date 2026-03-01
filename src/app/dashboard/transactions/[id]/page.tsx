@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
+import { paymentService } from '@/services/payment.service';
+import toast from 'react-hot-toast';
 import {
   FiArrowLeft,
   FiCreditCard,
@@ -12,6 +15,9 @@ import {
   FiClock,
   FiUser,
   FiWallet,
+  FiAlertTriangle,
+  FiX,
+  FiRefreshCw,
 } from '@/utils/icons';
 
 export default function TransactionDetailPage() {
@@ -19,8 +25,25 @@ export default function TransactionDetailPage() {
   const router = useRouter();
   const params = useParams();
   const transactionId = params.id as string;
+  const queryClient = useQueryClient();
+
+  const [showReverseModal, setShowReverseModal] = useState(false);
+  const [reverseReason, setReverseReason] = useState('');
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  const reverseMutation = useMutation({
+    mutationFn: () => paymentService.reversePayment(transactionId, reverseReason),
+    onSuccess: () => {
+      toast.success('Payment reversed successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'transaction', transactionId] });
+      setShowReverseModal(false);
+      setReverseReason('');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to reverse payment');
+    },
+  });
 
   const { data: transaction, isLoading: txLoading } = useQuery({
     queryKey: ['admin', 'transaction', transactionId],
@@ -90,7 +113,18 @@ export default function TransactionDetailPage() {
             <FiArrowLeft className="w-4 h-4" />
             Back to Transactions
           </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Transaction Details</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Transaction Details</h1>
+            {isAdmin && transaction?.status === 'SUCCESSFUL' && (
+              <button
+                onClick={() => setShowReverseModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl hover:bg-orange-100 transition-colors font-medium text-sm"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+                Reverse Payment
+              </button>
+            )}
+          </div>
         </div>
 
         {txLoading ? (
@@ -382,6 +416,54 @@ export default function TransactionDetailPage() {
           </div>
         )}
       </div>
+      {/* Reverse Payment Modal */}
+      {showReverseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Reverse Payment</h3>
+              <button
+                onClick={() => { setShowReverseModal(false); setReverseReason(''); }}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-xl mb-4">
+              <div className="flex items-start gap-3">
+                <FiAlertTriangle className="w-5 h-5 mt-0.5 text-orange-500" />
+                <p className="text-sm text-orange-700">
+                  This will reverse the payment of <strong>₦{parseFloat(transaction?.amount || '0').toLocaleString()}</strong> and return funds to the user's wallet. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="text-sm font-semibold text-gray-700 block mb-2">Reason <span className="text-red-500">*</span></label>
+              <textarea
+                value={reverseReason}
+                onChange={(e) => setReverseReason(e.target.value)}
+                placeholder="Enter reason for reversal..."
+                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
+              />
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => { setShowReverseModal(false); setReverseReason(''); }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => reverseMutation.mutate()}
+                disabled={reverseMutation.isPending || !reverseReason.trim()}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                {reverseMutation.isPending ? 'Reversing...' : 'Confirm Reversal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
