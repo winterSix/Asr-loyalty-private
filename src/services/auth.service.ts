@@ -30,6 +30,8 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
+  requiresTwoFactor?: boolean;
+  email?: string;
 }
 
 export interface User {
@@ -43,6 +45,7 @@ export interface User {
   role: string;
   status: string;
   mustChangePassword?: boolean;
+  twoFactorEnabled?: boolean;
   currentTier?: string;
   totalSpent?: string;
   totalTransactions?: number;
@@ -82,23 +85,22 @@ class AuthService {
     });
     
     const responseData = unwrapResponse<AuthResponse>(response.data);
-    
+
     if (!responseData) {
       throw new Error('No data in response');
     }
-    
+
+    // 2FA required — return partial response without tokens so the page can show the 2FA step
+    if ((responseData as any).requiresTwoFactor) {
+      return responseData;
+    }
+
     // Check if tokens are in the response
     if (!responseData.accessToken || !responseData.refreshToken) {
       console.error('[AuthService] Missing tokens in response:', responseData);
       throw new Error('Invalid response: missing tokens');
     }
-    
-    console.log('[AuthService] Tokens found:', {
-      hasAccessToken: !!responseData.accessToken,
-      hasRefreshToken: !!responseData.refreshToken,
-      hasUser: !!responseData.user
-    });
-    
+
     return responseData;
   }
 
@@ -144,6 +146,16 @@ class AuthService {
       newPassword,
     });
     return unwrapResponse(response.data);
+  }
+
+  async googleLogin(idToken: string) {
+    const response = await apiClient.post<any>('/auth/google', { idToken });
+    return unwrapResponse<AuthResponse>(response.data);
+  }
+
+  async verify2FA(email: string, code: string) {
+    const response = await apiClient.post<any>('/auth/verify-2fa', { email, code });
+    return unwrapResponse<AuthResponse>(response.data);
   }
 
   // Helper methods

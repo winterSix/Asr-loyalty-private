@@ -22,12 +22,58 @@ export interface NotificationsResponse {
   limit: number;
 }
 
+export type NotificationType = 'PUSH' | 'SMS' | 'IN_APP' | 'EMAIL';
+export type NotificationStatus = 'PENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+
 export interface SendNotificationDto {
   userId: string;
-  type: 'PUSH' | 'SMS' | 'IN_APP' | 'EMAIL';
+  type: NotificationType;
   title: string;
   body: string;
   data?: Record<string, unknown>;
+}
+
+export interface CreateNotificationDto {
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  priority?: string;
+}
+
+export interface BroadcastNotificationDto {
+  title: string;
+  body: string;
+  channels: NotificationType[];
+  targetRoles?: string[];
+  targetTiers?: string[];
+  data?: Record<string, unknown>;
+  priority?: string;
+}
+
+export interface BroadcastResult {
+  success: boolean;
+  message: string;
+  stats: {
+    totalUsers: number;
+    notificationsSent: number;
+    byChannel: Record<string, { sent: number; failed: number }>;
+    failureCount: number;
+  };
+}
+
+export interface BroadcastAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  data?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface BroadcastHistoryResponse {
+  announcements: BroadcastAnnouncement[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
 class NotificationService {
@@ -107,6 +153,37 @@ class NotificationService {
       };
     }
     return data;
+  }
+
+  // POST /notifications (Admin only)
+  async createNotification(data: CreateNotificationDto): Promise<Notification> {
+    const response = await apiClient.post<any>('/notifications', data);
+    return unwrapResponse<Notification>(response.data);
+  }
+
+  // PATCH /notifications/:id (Admin only)
+  async updateNotification(id: string, data: Partial<{ status: NotificationStatus; title: string; body: string; data: Record<string, unknown>; priority: string }>): Promise<Notification> {
+    const response = await apiClient.patch<any>(`/notifications/${id}`, data);
+    return unwrapResponse<Notification>(response.data);
+  }
+
+  // DELETE /notifications/:id (Admin only)
+  async deleteNotification(id: string): Promise<void> {
+    await apiClient.delete(`/notifications/${id}`);
+  }
+
+  // POST /notifications/broadcast (Admin only)
+  async broadcastNotification(data: BroadcastNotificationDto): Promise<BroadcastResult> {
+    const response = await apiClient.post<any>('/notifications/broadcast', data);
+    return unwrapResponse<BroadcastResult>(response.data);
+  }
+
+  // GET /notifications/broadcast/history (Admin only)
+  async getBroadcastHistory(page = 1, limit = 20): Promise<BroadcastHistoryResponse> {
+    const response = await apiClient.get<any>('/notifications/broadcast/history', {
+      params: { page, limit },
+    });
+    return unwrapResponse<BroadcastHistoryResponse>(response.data);
   }
 }
 

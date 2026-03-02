@@ -4,7 +4,12 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationService, Notification } from '@/services/notification.service';
+import {
+  notificationService,
+  Notification,
+  NotificationType,
+  BroadcastResult,
+} from '@/services/notification.service';
 import { adminService } from '@/services/admin.service';
 import CustomSelect from '@/components/ui/CustomSelect';
 import {
@@ -23,10 +28,18 @@ import {
   FiActivity,
   FiUser,
   FiUsers,
+  FiTrash2,
+  FiSend,
+  FiGlobe,
+  FiAlertTriangle,
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
-type Tab = 'mine' | 'all';
+type Tab = 'mine' | 'all' | 'send' | 'broadcast' | 'history';
+
+const CHANNELS: NotificationType[] = ['IN_APP', 'PUSH', 'EMAIL', 'SMS'];
+const TARGET_ROLES = ['CUSTOMER', 'CASHIER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT'];
+const TARGET_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
 
 export default function NotificationsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -35,10 +48,9 @@ export default function NotificationsPage() {
 
   const isAdmin = !!(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN');
 
-  // Tab only matters for admins; non-admins always see 'mine'
   const [activeTab, setActiveTab] = useState<Tab>('mine');
 
-  // Shared filter state (reset page on filter change)
+  // List filters
   const [typeFilter, setTypeFilter] = useState('');
   const [readFilter, setReadFilter] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -47,57 +59,120 @@ export default function NotificationsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const limit = 15;
 
+  // Delete confirm: stores notification id pending confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Broadcast history page
+  const [historyPage, setHistoryPage] = useState(1);
+
+  // Send form state
+  const [sendForm, setSendForm] = useState({ userId: '', type: 'IN_APP' as NotificationType, title: '', body: '', priority: 'normal' });
+
+  // Broadcast form state
+  const [broadcastForm, setBroadcastForm] = useState({ title: '', body: '', priority: 'normal' });
+  const [selectedChannels, setSelectedChannels] = useState<NotificationType[]>(['IN_APP']);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
+  const [broadcastResult, setBroadcastResult] = useState<BroadcastResult | null>(null);
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
-    }
+    if (!isLoading && !isAuthenticated) router.push('/login');
+    else if (!isLoading && isAuthenticated) checkAuth();
   }, [isLoading, isAuthenticated, router, checkAuth]);
 
-  // Reset page when tab or filters change
   useEffect(() => { setPage(1); }, [activeTab, typeFilter, readFilter]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPage(1);
-    }, 400);
+    const timer = setTimeout(() => { setDebouncedSearch(searchInput); setPage(1); }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // ── "My Notifications" query (/notifications/me) ──────────────────────────
+  // Queries
   const { data: myRaw, isLoading: myLoading } = useQuery({
     queryKey: ['notifications', 'mine', typeFilter, readFilter, page, limit],
-    queryFn: () => notificationService.getNotifications({
-      type: typeFilter || undefined,
-      read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined,
-      page,
-      limit,
-    }),
+    queryFn: () => notificationService.getNotifications({ type: typeFilter || undefined, read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined, page, limit }),
     enabled: !!user && (activeTab === 'mine' || !isAdmin),
   });
 
-  // ── "All Notifications" query (/notifications — admin only) ───────────────
   const { data: allRaw, isLoading: allLoading } = useQuery({
     queryKey: ['notifications', 'all', typeFilter, readFilter, page, limit],
-    queryFn: () => notificationService.getAllNotifications({
-      type: typeFilter || undefined,
-      read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined,
-      page,
-      limit,
-    }),
+    queryFn: () => notificationService.getAllNotifications({ type: typeFilter || undefined, read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined, page, limit }),
     enabled: !!user && isAdmin && activeTab === 'all',
   });
 
-  // Unread count (always from /me)
   const { data: unreadCount } = useQuery({
     queryKey: ['notifications-unread-count'],
     queryFn: () => notificationService.getUnreadCount(),
     enabled: !!user,
   });
 
-  // Pick the active dataset
+  const { data: broadcastHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ['notifications', 'broadcast-history', historyPage],
+    queryFn: () => notificationService.getBroadcastHistory(historyPage, 15),
+    enabled: !!user && isAdmin && activeTab === 'history',
+  });
+
+  // Mutations
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => notificationService.markAsRead(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }); },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => notificationService.markAllAsRead(),
+    onSuccess: (data) => {
+      toast.success(`Marked ${(data as any)?.count || 'all'} notifications as read`);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+    },
+    onError: () => toast.error('Failed to mark all as read'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => notificationService.deleteNotification(id),
+    onSuccess: () => {
+      toast.success('Notification deleted');
+      setDeleteConfirmId(null);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: () => toast.error('Failed to delete notification'),
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: () => notificationService.createNotification({ ...sendForm }),
+    onSuccess: () => {
+      toast.success('Notification sent successfully');
+      setSendForm({ userId: '', type: 'IN_APP', title: '', body: '', priority: 'normal' });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to send notification'),
+  });
+
+  const broadcastMutation = useMutation({
+    mutationFn: () => notificationService.broadcastNotification({
+      ...broadcastForm,
+      channels: selectedChannels,
+      targetRoles: selectedRoles.length > 0 ? selectedRoles : undefined,
+      targetTiers: selectedTiers.length > 0 ? selectedTiers : undefined,
+    }),
+    onSuccess: (result) => {
+      toast.success(result.message || 'Broadcast sent!');
+      setBroadcastResult(result);
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'broadcast-history'] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to send broadcast'),
+  });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }),
+    ]);
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  // Derived data
   const activeRaw = (isAdmin && activeTab === 'all') ? allRaw : myRaw;
   const activeLoading = (isAdmin && activeTab === 'all') ? allLoading : myLoading;
 
@@ -111,21 +186,15 @@ export default function NotificationsPage() {
     if (!debouncedSearch) return notifications;
     const q = debouncedSearch.toLowerCase();
     return notifications.filter((n: Notification) =>
-      n.title?.toLowerCase().includes(q) ||
-      n.body?.toLowerCase().includes(q) ||
-      (n as any).userId?.toLowerCase().includes(q)
+      n.title?.toLowerCase().includes(q) || n.body?.toLowerCase().includes(q) || (n as any).userId?.toLowerCase().includes(q)
     );
   }, [notifications, debouncedSearch]);
 
-  // Collect unique userIds from the current page (only when admin is on "All" tab)
   const uniqueUserIds = useMemo(() => {
     if (!isAdmin || activeTab !== 'all') return [];
-    return [...new Set(
-      filteredNotifications.map((n: any) => n.userId).filter(Boolean) as string[]
-    )];
+    return [...new Set(filteredNotifications.map((n: any) => n.userId).filter(Boolean) as string[])];
   }, [filteredNotifications, isAdmin, activeTab]);
 
-  // Fetch user details for each unique userId in parallel (cached 5 min each)
   const userQueries = useQueries({
     queries: uniqueUserIds.map((uid) => ({
       queryKey: ['admin', 'user', uid],
@@ -135,55 +204,20 @@ export default function NotificationsPage() {
     })),
   });
 
-  // Build userId → { name, email } lookup map
   const userMap = useMemo(() => {
     const map: Record<string, { name: string; email: string }> = {};
     userQueries.forEach((q, i) => {
       const uid = uniqueUserIds[i];
       if (uid && q.data) {
         const u = q.data as any;
-        map[uid] = {
-          name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || uid,
-          email: u.email || '',
-        };
+        map[uid] = { name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || uid, email: u.email || '' };
       }
     });
     return map;
   }, [userQueries, uniqueUserIds]);
 
-  const markAsReadMutation = useMutation({
-    mutationFn: (id: string) => notificationService.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-    },
-  });
-
-  const markAllAsReadMutation = useMutation({
-    mutationFn: () => notificationService.markAllAsRead(),
-    onSuccess: (data) => {
-      toast.success(`Marked ${(data as any)?.count || 'all'} notifications as read`);
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
-    },
-    onError: () => toast.error('Failed to mark all as read'),
-  });
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['notifications'] }),
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }),
-    ]);
-    setTimeout(() => setIsRefreshing(false), 600);
-  };
-
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
-    );
+    return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" /></div>;
   }
 
   const total = (activeRaw as any)?.total || notifications.length;
@@ -221,8 +255,7 @@ export default function NotificationsPage() {
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -232,6 +265,9 @@ export default function NotificationsPage() {
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   };
+
+  const toggleItem = <T,>(arr: T[], item: T): T[] =>
+    arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
   const statCards = [
     { label: 'Total', value: total, icon: FiBell, color: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-500/25' },
@@ -263,20 +299,11 @@ export default function NotificationsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
-            title="Refresh"
-          >
+          <button onClick={handleRefresh} disabled={isRefreshing} className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50" title="Refresh">
             <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           {activeTab === 'mine' && unread > 0 && (
-            <button
-              onClick={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
+            <button onClick={() => markAllAsReadMutation.mutate()} disabled={markAllAsReadMutation.isPending} className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all flex items-center gap-2 disabled:opacity-50">
               <FiCheck className="w-4 h-4" />
               Mark All Read
             </button>
@@ -284,253 +311,366 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* Tabs — only shown for admins */}
+      {/* Tabs — admin gets 5 tabs, others get none */}
       {isAdmin && (
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
-          <button
-            onClick={() => setActiveTab('mine')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'mine' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <FiUser className="w-4 h-4" />
-            My Notifications
-            {unread > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
-                {unread}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <FiUsers className="w-4 h-4" />
-            All Notifications
-          </button>
+        <div className="flex flex-wrap gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
+          {([
+            { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
+            { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
+            { id: 'send' as Tab, label: 'Send', icon: FiSend },
+            { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe },
+            { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock },
+          ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              {tab.id === 'mine' && unread > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">{unread}</span>
+              )}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {statCards.map((card) => (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-            <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
-              <card.icon className="w-5 h-5" />
+      {/* ── Mine & All tabs: stat cards + filters + list ── */}
+      {(activeTab === 'mine' || activeTab === 'all') && (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {statCards.map((card) => (
+              <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
+                  <card.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500">{card.label}</p>
+                  <p className="text-xl font-bold text-gray-900 mt-0.5">{card.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder={isAdmin && activeTab === 'all' ? 'Search by title, message or user ID...' : 'Search notifications...'}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                />
+              </div>
+              <CustomSelect value={typeFilter} onChange={(v) => { setTypeFilter(v); setPage(1); }} options={[{ value: '', label: 'All Types' }, { value: 'EMAIL', label: 'Email' }, { value: 'SMS', label: 'SMS' }, { value: 'PUSH', label: 'Push' }, { value: 'IN_APP', label: 'In-App' }]} className="min-w-[140px]" />
+              <CustomSelect value={readFilter} onChange={(v) => { setReadFilter(v); setPage(1); }} options={[{ value: '', label: 'All' }, { value: 'unread', label: 'Unread' }, { value: 'read', label: 'Read' }]} className="min-w-[140px]" />
             </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">{card.label}</p>
-              <p className="text-xl font-bold text-gray-900 mt-0.5">{card.value}</p>
-            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Search & Filters */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder={
-                isAdmin && activeTab === 'all'
-                  ? 'Search by title, message or user ID...'
-                  : 'Search notifications...'
-              }
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
-            />
-          </div>
-          <CustomSelect
-            value={typeFilter}
-            onChange={(v) => { setTypeFilter(v); setPage(1); }}
-            options={[
-              { value: '', label: 'All Types' },
-              { value: 'EMAIL', label: 'Email' },
-              { value: 'SMS', label: 'SMS' },
-              { value: 'PUSH', label: 'Push' },
-              { value: 'IN_APP', label: 'In-App' },
-            ]}
-            className="min-w-[140px]"
-          />
-          <CustomSelect
-            value={readFilter}
-            onChange={(v) => { setReadFilter(v); setPage(1); }}
-            options={[
-              { value: '', label: 'All' },
-              { value: 'unread', label: 'Unread' },
-              { value: 'read', label: 'Read' },
-            ]}
-            className="min-w-[140px]"
-          />
-        </div>
-      </div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {isAdmin && activeTab === 'all' && (
+              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/60 flex items-center gap-2">
+                <FiUsers className="w-4 h-4 text-gray-400" />
+                <p className="text-xs font-medium text-gray-500">Showing notifications sent to all users across the system</p>
+              </div>
+            )}
 
-      {/* Notifications List */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Tab label bar for "All Notifications" */}
-        {isAdmin && activeTab === 'all' && (
-          <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/60 flex items-center gap-2">
-            <FiUsers className="w-4 h-4 text-gray-400" />
-            <p className="text-xs font-medium text-gray-500">
-              Showing notifications sent to all users across the system
-            </p>
-          </div>
-        )}
+            {activeLoading ? (
+              <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
+            ) : filteredNotifications.length > 0 ? (
+              <>
+                <div className="divide-y divide-gray-100">
+                  {filteredNotifications.map((notification: Notification) => {
+                    const typeStyle = getTypeStyle(notification.type);
+                    const TypeIcon = getTypeIcon(notification.type);
+                    const isUnread = !notification.readAt;
+                    const recipientId = (notification as any).userId as string | undefined;
+                    const isConfirmingDelete = deleteConfirmId === notification.id;
 
-        {activeLoading ? (
-          <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        ) : filteredNotifications.length > 0 ? (
-          <>
-            <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification: Notification) => {
-                const typeStyle = getTypeStyle(notification.type);
-                const TypeIcon = getTypeIcon(notification.type);
-                const isUnread = !notification.readAt;
-                const recipientId = (notification as any).userId as string | undefined;
-
-                return (
-                  <div
-                    key={notification.id}
-                    className={`flex items-start gap-4 px-5 py-4 hover:bg-gray-50/60 transition-colors ${
-                      isUnread && activeTab === 'mine' ? 'bg-blue-50/30' : ''
-                    }`}
-                  >
-                    {/* Type icon */}
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${typeStyle.color} text-white shadow-lg ${typeStyle.shadow} flex-shrink-0 mt-0.5`}>
-                      <TypeIcon className="w-4 h-4" />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
+                    return (
+                      <div key={notification.id} className={`flex items-start gap-4 px-5 py-4 hover:bg-gray-50/60 transition-colors ${isUnread && activeTab === 'mine' ? 'bg-blue-50/30' : ''}`}>
+                        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${typeStyle.color} text-white shadow-lg ${typeStyle.shadow} flex-shrink-0 mt-0.5`}>
+                          <TypeIcon className="w-4 h-4" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          {/* Title */}
-                          <div className="flex items-center gap-2 mb-0.5">
-                            {isUnread && activeTab === 'mine' && (
-                              <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-                            )}
-                            <h3 className={`text-sm truncate ${isUnread && activeTab === 'mine' ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
-                              {notification.title}
-                            </h3>
-                          </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                {isUnread && activeTab === 'mine' && <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />}
+                                <h3 className={`text-sm truncate ${isUnread && activeTab === 'mine' ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>{notification.title}</h3>
+                              </div>
+                              <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{notification.body}</p>
 
-                          {/* Body */}
-                          <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{notification.body}</p>
+                              {isAdmin && activeTab === 'all' && recipientId && (() => {
+                                const recipient = userMap[recipientId];
+                                const isLoadingUser = uniqueUserIds.includes(recipientId) && userQueries[uniqueUserIds.indexOf(recipientId)]?.isLoading;
+                                return (
+                                  <button onClick={() => router.push(`/dashboard/users/${recipientId}`)} className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20 text-[10px] font-semibold hover:bg-indigo-100 transition-colors" title={recipient ? `${recipient.name} · ${recipient.email}` : recipientId}>
+                                    <FiUser className="w-3 h-3 flex-shrink-0" />
+                                    {isLoadingUser ? <span className="w-16 h-2.5 bg-indigo-200 rounded animate-pulse inline-block" /> : recipient ? <span>{recipient.name}{recipient.email && <span className="opacity-60 ml-1">· {recipient.email}</span>}</span> : <span>{recipientId.substring(0, 8)}…</span>}
+                                  </button>
+                                );
+                              })()}
 
-                          {/* Recipient row — only in "All" tab */}
-                          {isAdmin && activeTab === 'all' && recipientId && (() => {
-                            const recipient = userMap[recipientId];
-                            const isLoadingUser = uniqueUserIds.includes(recipientId) &&
-                              userQueries[uniqueUserIds.indexOf(recipientId)]?.isLoading;
-                            return (
-                              <button
-                                onClick={() => router.push(`/dashboard/users/${recipientId}`)}
-                                className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20 text-[10px] font-semibold hover:bg-indigo-100 transition-colors"
-                                title={recipient ? `${recipient.name} · ${recipient.email}` : recipientId}
-                              >
-                                <FiUser className="w-3 h-3 flex-shrink-0" />
-                                {isLoadingUser ? (
-                                  <span className="w-16 h-2.5 bg-indigo-200 rounded animate-pulse inline-block" />
-                                ) : recipient ? (
-                                  <span>
-                                    {recipient.name}
-                                    {recipient.email && (
-                                      <span className="opacity-60 ml-1">· {recipient.email}</span>
-                                    )}
-                                  </span>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset ${typeStyle.badge}`}>{notification.type}</span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset ${getStatusStyle(notification.status)}`}>{notification.status}</span>
+                                <span className="flex items-center gap-1 text-[10px] text-gray-400"><FiClock className="w-3 h-3" />{formatTime(notification.createdAt)}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {activeTab === 'mine' && isUnread && (
+                                <button onClick={() => markAsReadMutation.mutate(notification.id)} disabled={markAsReadMutation.isPending} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all" title="Mark as read">
+                                  <FiCheck className="w-4 h-4" />
+                                </button>
+                              )}
+                              {isAdmin && activeTab === 'all' && (
+                                isConfirmingDelete ? (
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => deleteMutation.mutate(notification.id)} disabled={deleteMutation.isPending} className="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors disabled:opacity-50">
+                                      {deleteMutation.isPending ? '...' : 'Yes'}
+                                    </button>
+                                    <button onClick={() => setDeleteConfirmId(null)} className="px-2 py-1 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-bold hover:bg-gray-200 transition-colors">No</button>
+                                  </div>
                                 ) : (
-                                  <span>{recipientId.substring(0, 8)}…</span>
-                                )}
-                              </button>
-                            );
-                          })()}
-
-                          {/* Badges row */}
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset ${typeStyle.badge}`}>
-                              {notification.type}
-                            </span>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ring-inset ${getStatusStyle(notification.status)}`}>
-                              {notification.status}
-                            </span>
-                            <span className="flex items-center gap-1 text-[10px] text-gray-400">
-                              <FiClock className="w-3 h-3" />
-                              {formatTime(notification.createdAt)}
-                            </span>
+                                  <button onClick={() => setDeleteConfirmId(notification.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete notification">
+                                    <FiTrash2 className="w-4 h-4" />
+                                  </button>
+                                )
+                              )}
+                            </div>
                           </div>
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                        {/* Mark as read — only in "Mine" tab */}
-                        {activeTab === 'mine' && isUnread && (
-                          <button
-                            onClick={() => markAsReadMutation.mutate(notification.id)}
-                            disabled={markAsReadMutation.isPending}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all flex-shrink-0"
-                            title="Mark as read"
-                          >
-                            <FiCheck className="w-4 h-4" />
-                          </button>
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
+                    <p className="text-sm text-gray-500">Showing <span className="font-medium text-gray-700">{(page - 1) * limit + 1}</span>–<span className="font-medium text-gray-700">{Math.min(page * limit, total)}</span> of <span className="font-medium text-gray-700">{total}</span></p>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><FiChevronLeft className="w-4 h-4" /></button>
+                      <span className="text-sm font-medium text-gray-600 px-3 min-w-[100px] text-center">Page {page} of {totalPages}</span>
+                      <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><FiChevronRight className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><FiBell className="w-8 h-8 text-gray-400" /></div>
+                <p className="text-gray-900 font-semibold mb-1">No notifications</p>
+                <p className="text-sm text-gray-400">{typeFilter || readFilter || debouncedSearch ? 'Try adjusting your filters' : activeTab === 'all' ? 'No notifications have been sent to any user yet' : "You're all caught up!"}</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Send Notification tab ── */}
+      {activeTab === 'send' && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25"><FiSend className="w-5 h-5" /></div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Send Notification</h2>
+              <p className="text-sm text-gray-500">Send a notification to a specific user</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">User ID <span className="text-red-500">*</span></label>
+              <input type="text" value={sendForm.userId} onChange={(e) => setSendForm((f) => ({ ...f, userId: e.target.value }))} placeholder="Paste user UUID here" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type <span className="text-red-500">*</span></label>
+              <CustomSelect value={sendForm.type} onChange={(v) => setSendForm((f) => ({ ...f, type: v as NotificationType }))} options={CHANNELS.map((c) => ({ value: c, label: c }))} className="w-full" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title <span className="text-red-500">*</span></label>
+              <input type="text" value={sendForm.title} onChange={(e) => setSendForm((f) => ({ ...f, title: e.target.value }))} placeholder="Notification title" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message <span className="text-red-500">*</span></label>
+              <textarea rows={4} value={sendForm.body} onChange={(e) => setSendForm((f) => ({ ...f, body: e.target.value }))} placeholder="Notification message body" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Priority</label>
+              <CustomSelect value={sendForm.priority} onChange={(v) => setSendForm((f) => ({ ...f, priority: v }))} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} className="w-full" />
+            </div>
+            <button
+              onClick={() => sendMutation.mutate()}
+              disabled={sendMutation.isPending || !sendForm.userId || !sendForm.title || !sendForm.body}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {sendMutation.isPending ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <><FiSend className="w-4 h-4" />Send Notification</>}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Broadcast tab ── */}
+      {activeTab === 'broadcast' && (
+        <div className="max-w-2xl space-y-6">
+          {broadcastResult ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"><FiCheckCircle className="w-5 h-5" /></div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Broadcast Sent!</h2>
+                  <p className="text-sm text-gray-500">{broadcastResult.message}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{broadcastResult.stats?.totalUsers ?? '–'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-1">Notifications Sent</p>
+                  <p className="text-2xl font-bold text-gray-900">{broadcastResult.stats?.notificationsSent ?? '–'}</p>
+                </div>
+              </div>
+              {broadcastResult.stats?.byChannel && (
+                <div className="space-y-2 mb-5">
+                  {Object.entries(broadcastResult.stats.byChannel).map(([ch, s]) => (
+                    <div key={ch} className="flex items-center justify-between text-sm px-4 py-2 bg-gray-50 rounded-lg">
+                      <span className="font-medium text-gray-700">{ch}</span>
+                      <span className="text-emerald-600 font-semibold">{s.sent} sent{s.failed > 0 && <span className="text-red-500 ml-2">/ {s.failed} failed</span>}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => { setBroadcastResult(null); setBroadcastForm({ title: '', body: '', priority: 'normal' }); setSelectedChannels(['IN_APP']); setSelectedRoles([]); setSelectedTiers([]); }} className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm">
+                Send Another Broadcast
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25"><FiGlobe className="w-5 h-5" /></div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Broadcast Notification</h2>
+                  <p className="text-sm text-gray-500">Send a message to all or targeted users</p>
+                </div>
+              </div>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title <span className="text-red-500">*</span></label>
+                  <input type="text" value={broadcastForm.title} onChange={(e) => setBroadcastForm((f) => ({ ...f, title: e.target.value }))} placeholder="Broadcast title" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message <span className="text-red-500">*</span></label>
+                  <textarea rows={4} value={broadcastForm.body} onChange={(e) => setBroadcastForm((f) => ({ ...f, body: e.target.value }))} placeholder="Write your broadcast message..." className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm resize-none" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Channels <span className="text-red-500">*</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {CHANNELS.map((ch) => (
+                      <button key={ch} onClick={() => setSelectedChannels((prev) => toggleItem(prev, ch))} className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${selectedChannels.includes(ch) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{ch}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Target Roles <span className="text-xs font-normal text-gray-400">(leave empty for all)</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {TARGET_ROLES.map((r) => (
+                      <button key={r} onClick={() => setSelectedRoles((prev) => toggleItem(prev, r))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedRoles.includes(r) ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{r}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Target Tiers <span className="text-xs font-normal text-gray-400">(leave empty for all)</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {TARGET_TIERS.map((t) => (
+                      <button key={t} onClick={() => setSelectedTiers((prev) => toggleItem(prev, t))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedTiers.includes(t) ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Priority</label>
+                  <CustomSelect value={broadcastForm.priority} onChange={(v) => setBroadcastForm((f) => ({ ...f, priority: v }))} options={[{ value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }]} className="w-full" />
+                </div>
+
+                {selectedChannels.length === 0 && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
+                    <FiAlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    Select at least one channel to broadcast
+                  </div>
+                )}
+
+                <button
+                  onClick={() => broadcastMutation.mutate()}
+                  disabled={broadcastMutation.isPending || !broadcastForm.title || !broadcastForm.body || selectedChannels.length === 0}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold hover:shadow-lg hover:shadow-violet-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {broadcastMutation.isPending ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Broadcasting...</> : <><FiGlobe className="w-4 h-4" />Send Broadcast</>}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Broadcast History tab ── */}
+      {activeTab === 'history' && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-violet-100 text-violet-600"><FiClock className="w-4 h-4" /></div>
+            <h2 className="font-bold text-gray-900">Broadcast History</h2>
+          </div>
+
+          {historyLoading ? (
+            <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
+          ) : (broadcastHistory?.announcements?.length ?? 0) > 0 ? (
+            <>
+              <div className="divide-y divide-gray-100">
+                {broadcastHistory!.announcements.map((a) => (
+                  <div key={a.id} className="px-5 py-4 hover:bg-gray-50/60 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 mb-0.5">{a.title}</p>
+                        <p className="text-xs text-gray-500 line-clamp-2">{a.body}</p>
+                        {(a.data as any)?.sentBy && (
+                          <p className="text-[10px] text-gray-400 mt-1">Sent by: {(a.data as any).sentBy}</p>
                         )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-gray-400">{formatTime(a.createdAt)}</p>
+                        <p className="text-[10px] text-gray-300 mt-0.5">{new Date(a.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
-                <p className="text-sm text-gray-500">
-                  Showing{' '}
-                  <span className="font-medium text-gray-700">{(page - 1) * limit + 1}</span>–
-                  <span className="font-medium text-gray-700">{Math.min(page * limit, total)}</span>{' '}
-                  of <span className="font-medium text-gray-700">{total}</span>
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-medium text-gray-600 px-3 min-w-[100px] text-center">
-                    Page {page} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                ))}
               </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <FiBell className="w-8 h-8 text-gray-400" />
+              {(broadcastHistory?.pagination?.totalPages ?? 1) > 1 && (
+                <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                  <p className="text-sm text-gray-500">Page {historyPage} of {broadcastHistory!.pagination.totalPages}</p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setHistoryPage((p) => Math.max(1, p - 1))} disabled={historyPage === 1} className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition-colors"><FiChevronLeft className="w-4 h-4" /></button>
+                    <button onClick={() => setHistoryPage((p) => Math.min(broadcastHistory!.pagination.totalPages, p + 1))} disabled={historyPage === broadcastHistory!.pagination.totalPages} className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition-colors"><FiChevronRight className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><FiGlobe className="w-8 h-8 text-gray-400" /></div>
+              <p className="text-gray-900 font-semibold mb-1">No broadcasts yet</p>
+              <p className="text-sm text-gray-400">Send your first broadcast from the Broadcast tab</p>
             </div>
-            <p className="text-gray-900 font-semibold mb-1">No notifications</p>
-            <p className="text-sm text-gray-400">
-              {typeFilter || readFilter || debouncedSearch
-                ? 'Try adjusting your filters'
-                : activeTab === 'all'
-                ? 'No notifications have been sent to any user yet'
-                : "You're all caught up!"}
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

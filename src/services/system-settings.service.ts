@@ -124,6 +124,24 @@ class SystemSettingsService {
     const response = await apiClient.get<any>('/system-settings/available-payment-gateways');
     return unwrapResponse<PaymentGatewayStatus[]>(response.data);
   }
+
+  // POST /system-settings (SUPER_ADMIN)
+  async createSetting(data: {
+    key: string;
+    value: string;
+    type?: 'boolean' | 'string' | 'number' | 'json';
+    category?: 'feature' | 'payment' | 'security' | 'general';
+    description?: string;
+  }): Promise<SystemSetting> {
+    const response = await apiClient.post<any>('/system-settings', data);
+    return unwrapResponse<SystemSetting>(response.data);
+  }
+
+  // DELETE /system-settings/:key (SUPER_ADMIN)
+  async deleteSetting(key: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.delete<any>(`/system-settings/${key}`);
+    return unwrapResponse<{ success: boolean; message: string }>(response.data);
+  }
 }
 
 export const systemSettingsService = new SystemSettingsService();

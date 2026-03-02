@@ -225,6 +225,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         items: [
                             { label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: disputesCount > 0 ? disputesCount : undefined },
                             { label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: refundsCount > 0 ? refundsCount : undefined },
+                            { label: 'Notifications', icon: <FiBell />, path: '/dashboard/notifications' },
                         ],
                     },
                 ];

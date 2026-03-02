@@ -27,6 +27,8 @@ import {
   FiAlertTriangle,
   FiCreditCard,
   FiSlash,
+  FiTrash2,
+  FiPlus,
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
@@ -44,6 +46,15 @@ export default function SettingsPage() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [editingSetting, setEditingSetting] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null);
+  const [createForm, setCreateForm] = useState({
+    key: '',
+    value: '',
+    type: 'string' as 'boolean' | 'string' | 'number' | 'json',
+    category: 'general' as 'feature' | 'payment' | 'security' | 'general',
+    description: '',
+  });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -181,6 +192,33 @@ export default function SettingsPage() {
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: () => systemSettingsService.createSetting(createForm),
+    onSuccess: () => {
+      toast.success('Setting created');
+      setShowCreateModal(false);
+      setCreateForm({ key: '', value: '', type: 'string', category: 'general', description: '' });
+      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to create setting');
+    },
+  });
+
+  const deleteSettingMutation = useMutation({
+    mutationFn: (key: string) => systemSettingsService.deleteSetting(key),
+    onSuccess: () => {
+      toast.success('Setting deleted');
+      setDeleteConfirmKey(null);
+      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to delete setting');
+    },
+  });
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await Promise.all([
@@ -276,6 +314,14 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             {isSuperAdmin && (
               <>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:opacity-90 transition-all shadow-sm shadow-violet-500/25"
+                  title="Add a new system setting"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Setting</span>
+                </button>
                 <button
                   onClick={() => initializeMutation.mutate()}
                   disabled={initializeMutation.isPending}
@@ -632,6 +678,33 @@ export default function SettingsPage() {
                                         <FiEdit className="w-3.5 h-3.5" />
                                       </button>
                                     )}
+                                    {isSuperAdmin && !setting.isDefault && (
+                                      deleteConfirmKey === setting.key ? (
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            onClick={() => deleteSettingMutation.mutate(setting.key)}
+                                            disabled={deleteSettingMutation.isPending}
+                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                                          >
+                                            Yes
+                                          </button>
+                                          <button
+                                            onClick={() => setDeleteConfirmKey(null)}
+                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                                          >
+                                            No
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => setDeleteConfirmKey(setting.key)}
+                                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                          title="Delete setting"
+                                        >
+                                          <FiTrash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      )
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -674,6 +747,103 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-400">
               System settings can only be managed by administrators
             </p>
+          </div>
+        )}
+
+        {/* Create Setting Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-sm">
+                    <FiPlus className="w-4 h-4" />
+                  </div>
+                  <h2 className="font-semibold text-gray-900">Add Setting</h2>
+                </div>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Key <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={createForm.key}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, key: e.target.value }))}
+                    placeholder="e.g. max_login_attempts"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Value <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={createForm.value}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, value: e.target.value }))}
+                    placeholder="e.g. 5"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Type</label>
+                    <select
+                      value={createForm.type}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value as any }))}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
+                    >
+                      <option value="string">String</option>
+                      <option value="number">Number</option>
+                      <option value="boolean">Boolean</option>
+                      <option value="json">JSON</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category</label>
+                    <select
+                      value={createForm.category}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, category: e.target.value as any }))}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white"
+                    >
+                      <option value="general">General</option>
+                      <option value="feature">Feature</option>
+                      <option value="payment">Payment</option>
+                      <option value="security">Security</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Description</label>
+                  <input
+                    type="text"
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+                    placeholder="Optional description"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => createMutation.mutate()}
+                  disabled={createMutation.isPending || !createForm.key.trim() || !createForm.value.trim()}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {createMutation.isPending ? 'Creating...' : 'Create Setting'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

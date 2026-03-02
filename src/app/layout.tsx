@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import dynamic from 'next/dynamic';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryProvider } from '@/providers/QueryProvider';
 import './globals.css';
 
@@ -29,11 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <QueryProvider>
-          <MaintenanceBanner />
-          {children}
-          <Toaster position="top-right" />
-        </QueryProvider>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+          <QueryProvider>
+            <MaintenanceBanner />
+            {children}
+            <Toaster position="top-right" />
+          </QueryProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

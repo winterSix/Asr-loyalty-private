@@ -404,13 +404,13 @@ export default function AdminDashboard() {
 
   // Get actual values with nullish coalescing to preserve 0 values
   const totalUsers = dashboardSummary?.users?.total ?? userStats?.total ?? 0;
-  const totalRevenue = dashboardSummary?.revenue?.thisMonth ?? '0';
+  const totalRevenue = dashboardSummary?.revenue?.thisMonth ?? 0;
+  const lastMonthRevenue = dashboardSummary?.revenue?.lastMonth ?? 0;
   const totalTransactions = transactionStats?.totalCount ?? 0;
   const walletBalance = dashboardSummary?.totalWalletBalance ?? '0';
   const pendingDisputes = dashboardSummary?.pendingActions?.disputes ?? disputes?.total ?? 0;
   const pendingRefunds = dashboardSummary?.pendingActions?.refunds ?? refunds?.total ?? 0;
   const newUsersThisMonth = dashboardSummary?.users?.newThisMonth ?? 0;
-  const revenueGrowth = dashboardSummary?.revenue?.growthPercentage ?? 0;
   const successRate = transactionStats?.successRate ?? 0;
 
   const usersToDisplay = recentUsers?.data ?? [];
@@ -430,13 +430,13 @@ export default function AdminDashboard() {
       href: '/dashboard/users',
     },
     {
-      label: 'Total Revenue',
+      label: 'This Month Revenue',
       value: totalRevenue,
       icon: <FiWallet className="w-6 h-6" />,
       gradient: 'from-emerald-500 to-emerald-600',
       bgGlow: 'bg-emerald-500/20',
-      change: `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% growth`,
-      trend: revenueGrowth >= 0 ? 'up' as const : 'down' as const,
+      change: `Last month: ₦${Number(lastMonthRevenue).toLocaleString()}`,
+      trend: totalRevenue >= lastMonthRevenue ? 'up' as const : 'down' as const,
       isAmount: true,
       href: '/dashboard/reports',
     },

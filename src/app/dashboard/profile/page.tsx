@@ -33,6 +33,79 @@ import {
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
+function SecurityTab({ user, queryClient, router }: { user: any; queryClient: any; router: any }) {
+  const twoFAMutation = useMutation({
+    mutationFn: (enabled: boolean) => userService.toggle2FA(enabled),
+    onSuccess: (data) => {
+      toast.success(data.message || (data.twoFactorEnabled ? '2FA enabled' : '2FA disabled'));
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+    onError: () => toast.error('Failed to update 2FA setting'),
+  });
+
+  const securityLinks = [
+    {
+      label: 'Change Password',
+      desc: 'Update your account password for better security',
+      icon: FiLock,
+      gradient: 'from-rose-500 to-pink-600',
+      shadow: 'shadow-rose-500/20',
+      path: '/dashboard/profile/change-password',
+    },
+    {
+      label: 'Payment PIN',
+      desc: 'Set or update your transaction PIN',
+      icon: FiKey,
+      gradient: 'from-violet-500 to-purple-600',
+      shadow: 'shadow-violet-500/20',
+      path: '/dashboard/profile/payment-pin',
+    },
+  ];
+
+  return (
+    <div className="p-5 sm:p-6 space-y-3">
+      {securityLinks.map((item) => (
+        <button
+          key={item.label}
+          onClick={() => router.push(item.path)}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all group"
+        >
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.gradient} text-white flex items-center justify-center shadow-md ${item.shadow} shrink-0`}>
+            <item.icon className="w-4.5 h-4.5" />
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors">{item.label}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+          </div>
+          <FiArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+        </button>
+      ))}
+
+      {/* 2FA toggle — only for CUSTOMER role */}
+      {user?.role === 'CUSTOMER' && (
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+            <FiShield className="w-4.5 h-4.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Two-Factor Authentication</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {user?.twoFactorEnabled ? 'Enabled — extra security on every login' : 'Add an extra layer of login security'}
+            </p>
+          </div>
+          <button
+            onClick={() => twoFAMutation.mutate(!user?.twoFactorEnabled)}
+            disabled={twoFAMutation.isPending}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${user?.twoFactorEnabled ? 'bg-emerald-500' : 'bg-gray-200'}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${user?.twoFactorEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const router = useRouter();
@@ -416,41 +489,7 @@ export default function ProfilePage() {
 
               {/* Tab: Security */}
               {activeTab === 'security' && (
-                <div className="p-5 sm:p-6 space-y-3">
-                  {[
-                    {
-                      label: 'Change Password',
-                      desc: 'Update your account password for better security',
-                      icon: FiLock,
-                      gradient: 'from-rose-500 to-pink-600',
-                      shadow: 'shadow-rose-500/20',
-                      path: '/dashboard/profile/change-password',
-                    },
-                    {
-                      label: 'Payment PIN',
-                      desc: 'Set or update your transaction PIN',
-                      icon: FiKey,
-                      gradient: 'from-violet-500 to-purple-600',
-                      shadow: 'shadow-violet-500/20',
-                      path: '/dashboard/profile/payment-pin',
-                    },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={() => router.push(item.path)}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all group"
-                    >
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.gradient} text-white flex items-center justify-center shadow-md ${item.shadow} shrink-0`}>
-                        <item.icon className="w-4.5 h-4.5" />
-                      </div>
-                      <div className="text-left flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors">{item.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
-                      </div>
-                      <FiArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
-                    </button>
-                  ))}
-                </div>
+                <SecurityTab user={user} queryClient={queryClient} router={router} />
               )}
 
               {/* Tab: Notifications */}

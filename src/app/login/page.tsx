@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
@@ -18,6 +19,7 @@ import {
   FiCheckCircle,
   FiShield,
   FiAlertTriangle,
+  FiArrowLeft,
 } from '@/utils/icons';
 
 const loginSchema = z.object({
@@ -37,6 +39,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [twoFactorPending, setTwoFactorPending] = useState(false);
+  const [twoFactorEmail, setTwoFactorEmail] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -82,86 +88,27 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('[Login] ========== STARTING LOGIN ==========');
-      console.log('[Login] Email:', data.email);
-
       const response = await authService.login(data);
-      console.log('[Login] Login API response received (full):', response);
-      console.log('[Login] Login API response received (parsed):', {
-        hasAccessToken: !!response?.accessToken,
-        hasRefreshToken: !!response?.refreshToken,
-        hasUser: !!response?.user,
-        userRole: response?.user?.role,
-        accessTokenPreview: response?.accessToken?.substring(0, 30) + '...' || 'MISSING',
-        responseKeys: response ? Object.keys(response) : 'NO RESPONSE'
-      });
-      
+
+      // 2FA required — switch to code entry view
+      if (response.requiresTwoFactor) {
+        setTwoFactorPending(true);
+        setTwoFactorEmail(response.email || data.email);
+        setIsLoading(false);
+        return;
+      }
+
       if (!response.accessToken || !response.refreshToken) {
         throw new Error('Invalid response from server - missing tokens');
       }
       
-      // Update auth state
-      console.log('[Login] Calling login() in store...');
-      login(
-        response.accessToken,
-        response.refreshToken,
-        response.user
-      );
-      console.log('[Login] Auth state updated in store');
-
-      // Wait a bit for state to propagate
+      login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Verify token storage
-      const storedToken = localStorage.getItem('accessToken');
-      const cookieToken = Cookies.get('accessToken');
-      const cookieFromDoc = document.cookie.split(';').find(c => c.trim().startsWith('accessToken='));
-      
-      console.log('[Login] Token storage verification:', {
-        localStorage: !!storedToken,
-        localStorageLength: storedToken?.length || 0,
-        cookieFromJsCookie: !!cookieToken,
-        cookieFromDoc: !!cookieFromDoc,
-        allCookies: document.cookie
-      });
-
-      if (!storedToken) {
-        throw new Error('Token not stored in localStorage');
-      }
-
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
       toast.success('Login successful!');
-      console.log('[Login] Toast shown, preparing redirect...');
-
-      // Force cookie setting one more time before redirect
-      Cookies.set('accessToken', response.accessToken, {
-        expires: 7,
-        path: '/',
-        sameSite: 'lax',
-        secure: false // Set to false for localhost
-      });
-      Cookies.set('refreshToken', response.refreshToken, {
-        expires: 30,
-        path: '/',
-        sameSite: 'lax',
-        secure: false
-      });
-
-      console.log('[Login] Cookies set again before redirect');
-      console.log('[Login] Final cookie check:', {
-        accessToken: Cookies.get('accessToken')?.substring(0, 30) + '...' || 'NOT SET',
-        allCookies: document.cookie
-      });
-
-      // If user must change password, redirect to force-change-password page
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
-      const redirectPath = mustChange ? '/force-change-password' : '/dashboard';
-
-      // Use window.location.href for full page reload so middleware can see cookies
-      console.log(`[Login] Redirecting to ${redirectPath} in 500ms...`);
-      setTimeout(() => {
-        console.log('[Login] ========== REDIRECTING NOW ==========');
-        window.location.href = redirectPath;
-      }, 500);
+      setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
     } catch (err: any) {
       console.error('[Login] Login error:', err);
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
@@ -185,6 +132,51 @@ export default function LoginPage() {
         setError(displayMessage);
         toast.error(displayMessage);
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FASubmit = async () => {
+    if (!twoFactorCode.trim()) return;
+    try {
+      setTwoFactorLoading(true);
+      setError(null);
+      const response = await authService.verify2FA(twoFactorEmail, twoFactorCode.trim());
+      if (!response.accessToken || !response.refreshToken) throw new Error('Invalid 2FA response');
+      login(response.accessToken, response.refreshToken, response.user);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      toast.success('Login successful!');
+      const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
+      setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Invalid verification code. Please try again.';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async (idToken: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await authService.googleLogin(idToken);
+      if (!response.accessToken || !response.refreshToken) throw new Error('Invalid response from server');
+      login(response.accessToken, response.refreshToken, response.user);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      toast.success('Login successful!');
+      const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
+      setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Google sign-in failed. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -249,6 +241,60 @@ export default function LoginPage() {
         {/* Right Side - Login Form */}
         <div className="flex items-center justify-center p-6 lg:p-12 bg-white">
           <div className="w-full max-w-md">
+
+            {/* ── 2FA Step ── */}
+            {twoFactorPending ? (
+              <div>
+                <button
+                  onClick={() => { setTwoFactorPending(false); setTwoFactorCode(''); setError(null); }}
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-8 transition-colors"
+                >
+                  <FiArrowLeft className="w-4 h-4" /> Back to login
+                </button>
+                <div className="mb-10">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
+                    <FiShield className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Two-Factor Verification</h2>
+                  <p className="text-gray-600 text-base">
+                    Enter the 6-digit code sent to <span className="font-semibold text-gray-800">{twoFactorEmail}</span>
+                  </p>
+                </div>
+                {error && (
+                  <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Verification Code</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                      className="input-field h-14 text-center text-2xl font-bold tracking-[0.5em] focus:border-primary focus:ring-primary/20"
+                      placeholder="000000"
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    onClick={handle2FASubmit}
+                    disabled={twoFactorLoading || twoFactorCode.length < 6}
+                    className="btn-primary w-full h-14 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  >
+                    {twoFactorLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Verifying...
+                      </span>
+                    ) : 'Verify & Sign In'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+            <>
             <div className="mb-10">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Sign in to continue
@@ -379,6 +425,30 @@ export default function LoginPage() {
                 </p>
               </div>
             </form>
+
+            {/* Google OAuth */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-3 bg-white text-gray-500 font-medium">or continue with</span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    handleGoogleLogin(credentialResponse.credential);
+                  }
+                }}
+                onError={() => toast.error('Google sign-in failed. Please try again.')}
+                useOneTap={false}
+                width="400"
+              />
+            </div>
+            </>
+            )}
           </div>
         </div>
       </div>

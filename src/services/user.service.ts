@@ -108,6 +108,12 @@ class UserService {
     return unwrapResponse(response.data);
   }
 
+  // PATCH /users/me/two-factor
+  async toggle2FA(enabled: boolean): Promise<{ message: string; twoFactorEnabled: boolean }> {
+    const response = await apiClient.patch<any>('/users/me/two-factor', { enabled });
+    return unwrapResponse<{ message: string; twoFactorEnabled: boolean }>(response.data);
+  }
+
   // Admin methods - These endpoints don't exist in the current controller
   // They would need to be added to the backend
   async getAllUsers(params?: {
