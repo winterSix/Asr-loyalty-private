@@ -83,7 +83,7 @@ export default function PermissionsPage() {
 
   const filteredGrouped = useMemo(() => {
     const gp = groupedPermissions || {};
-    let result = selectedResource
+    const result = selectedResource
       ? { [selectedResource]: gp[selectedResource] || [] }
       : gp;
 

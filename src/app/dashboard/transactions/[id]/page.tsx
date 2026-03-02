@@ -433,7 +433,7 @@ export default function TransactionDetailPage() {
               <div className="flex items-start gap-3">
                 <FiAlertTriangle className="w-5 h-5 mt-0.5 text-orange-500" />
                 <p className="text-sm text-orange-700">
-                  This will reverse the payment of <strong>₦{parseFloat(transaction?.amount || '0').toLocaleString()}</strong> and return funds to the user's wallet. This action cannot be undone.
+                  This will reverse the payment of <strong>₦{parseFloat(transaction?.amount || '0').toLocaleString()}</strong> and return funds to the user&apos;s wallet. This action cannot be undone.
                 </p>
               </div>
             </div>
