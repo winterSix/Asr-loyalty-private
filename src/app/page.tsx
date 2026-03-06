@@ -94,7 +94,7 @@ const TIERS = [
 ];
 
 const STEPS = [
-  { n: '01', title: 'Create Account', desc: 'Sign up in seconds with your phone number or email. No long forms.' },
+  { n: '01', title: 'Create Account', desc: 'Enter your name, email, and a secure password. Optionally add your phone number to get started.' },
   { n: '02', title: 'Fund Your Wallet', desc: 'Top up via card, bank transfer, USSD or Monnify. Instant crediting.' },
   { n: '03', title: 'Pay & Earn', desc: 'Shop with your QR code or wallet. Watch loyalty points stack up automatically.' },
 ];
@@ -233,7 +233,7 @@ export default function LandingPage() {
           <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
             <span className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 text-xs font-bold px-4 py-1.5 rounded-full mb-8 tracking-wide uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              Nigeria&apos;s #1 Loyalty Platform
+              The Smart Loyalty Platform
             </span>
           </motion.div>
 
@@ -272,7 +272,7 @@ export default function LandingPage() {
           {/* Trust badges */}
           <motion.div variants={fadeIn} initial="hidden" animate="visible"
             className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400 dark:text-gray-500">
-            {['🔒 Bank-Grade Security', '⚡ Instant Setup', '🇳🇬 Made for Nigeria', '✅ No Monthly Fees'].map((b) => (
+            {['🔒 Bank-Grade Security', '⚡ Instant Setup', '🌍 Available Everywhere', '✅ No Monthly Fees'].map((b) => (
               <span key={b} className="font-medium">{b}</span>
             ))}
           </motion.div>
@@ -350,7 +350,7 @@ export default function LandingPage() {
           className="text-center mb-16">
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">What we offer</span>
           <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white mb-4">Everything you need to reward smarter</h2>
-          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">A complete loyalty ecosystem built for Nigerian businesses and their customers.</p>
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">A complete loyalty ecosystem built for forward-thinking businesses and their customers.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -434,7 +434,7 @@ export default function LandingPage() {
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Ready to start earning?</h2>
               <p className="text-indigo-100/80 mb-10 text-base max-w-lg mx-auto">
-                Join thousands of Nigerians already turning everyday transactions into meaningful rewards.
+                Join thousands of users already turning everyday transactions into meaningful rewards.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/register"
@@ -464,7 +464,7 @@ export default function LandingPage() {
             <span className="font-extrabold text-gray-900 dark:text-white">ASR<span className="text-indigo-500">Loyalty</span></span>
           </div>
           <p className="text-sm text-gray-400 text-center">
-            © {new Date().getFullYear()} ASR Loyalty. Built with ❤️ for Nigeria.
+            © {new Date().getFullYear()} ASR Loyalty. Rewards that move with you.
           </p>
           <div className="flex items-center gap-6 text-sm text-gray-400">
             <Link href="/login" className="hover:text-indigo-500 transition-colors">Login</Link>
