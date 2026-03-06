@@ -12,6 +12,7 @@ export interface DashboardSummary {
     today: number;
     thisMonth: number;
     lastMonth: number;
+    rolling30Days: number;
     growthPercentage: number;
   };
   pendingActions: {

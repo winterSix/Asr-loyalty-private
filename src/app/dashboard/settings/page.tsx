@@ -307,7 +307,7 @@ export default function SettingsPage() {
               <FiSettings className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Settings</h1>
               <p className="text-gray-500 text-sm">Manage system configuration and feature flags</p>
             </div>
           </div>

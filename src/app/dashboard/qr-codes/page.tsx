@@ -106,7 +106,7 @@ export default function QRCodesPage() {
               <FiQrCode className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">QR Payments</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">QR Payments</h1>
               <p className="text-gray-500 text-sm">Overview of the QR-based payment system</p>
             </div>
           </div>

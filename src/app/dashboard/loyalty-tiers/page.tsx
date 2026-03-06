@@ -187,7 +187,7 @@ export default function LoyaltyTiersPage() {
               <FiAward className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Loyalty Tiers</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Loyalty Tiers</h1>
               <p className="text-gray-500 text-sm">Manage tier configurations, requirements, and benefits</p>
             </div>
           </div>
@@ -211,7 +211,7 @@ export default function LoyaltyTiersPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
               <FiAward className="w-5 h-5" />

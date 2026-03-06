@@ -57,7 +57,7 @@ export default function AuditLogsPage() {
             <FiFileText className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Audit Logs</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Audit Logs</h1>
             <p className="text-gray-500 text-sm">System activity and audit trail</p>
           </div>
         </div>
@@ -95,46 +95,46 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Audit Logs Table */}
-        <div className="card">
+        <div className="card flex flex-col">
           {auditLogs?.data && auditLogs.data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto min-w-0">
+              <table className="w-full table-auto">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Action</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Resource</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Performed By</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">IP Address</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[160px]">Action</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[130px]">Resource</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[150px]">Performed By</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[130px]">IP Address</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[60px]">View</th>
                   </tr>
                 </thead>
                 <tbody>
                   {auditLogs.data.map((log) => (
-                    <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
+                    <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getActionColor(log.action)}`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
-                        <p className="text-sm font-medium text-gray-900">{log.resource}</p>
+                      <td className="py-3 px-4">
+                        <p className="text-sm font-medium text-gray-900 whitespace-nowrap">{log.resource}</p>
                         {log.resourceId && (
-                          <p className="text-xs text-gray-500 font-mono">{log.resourceId.substring(0, 12)}...</p>
+                          <p className="text-xs text-gray-400 font-mono">{log.resourceId.substring(0, 10)}...</p>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-700">
+                      <td className="py-3 px-4 text-sm text-gray-700 whitespace-nowrap">
                         {log.performer
                           ? `${log.performer.firstName} ${log.performer.lastName}`
                           : log.performerFullName || 'System'}
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-500 font-mono">
+                      <td className="py-3 px-4 text-sm text-gray-500 font-mono whitespace-nowrap">
                         {log.ipAddress || '—'}
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-500">
-                        {new Date(log.createdAt).toLocaleString()}
+                      <td className="py-3 px-4 text-sm text-gray-500 whitespace-nowrap">
+                        {new Date(log.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3 px-4">
                         <button
                           onClick={() => router.push(`/dashboard/audit/${log.id}`)}
                           className="text-primary hover:text-primary-light"

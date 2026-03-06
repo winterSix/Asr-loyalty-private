@@ -64,7 +64,7 @@ export default function QRScannerPage() {
               <FiQrCode className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">QR Scanner</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">QR Scanner</h1>
               <p className="text-gray-500 text-sm">How the cashier QR scanning process works</p>
             </div>
           </div>

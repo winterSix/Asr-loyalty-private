@@ -75,7 +75,7 @@ export default function WalletsPage() {
       totalWallets += wallets.length;
       wallets.forEach((w: any) => {
         const bal = parseFloat(w.balance || '0');
-        if (w.currency === 'POINTS' || w.currency === 'REWARD') {
+        if (w.type === 'REWARD') {
           totalRewardPoints += bal;
         } else {
           totalMainBalance += bal;
@@ -106,22 +106,22 @@ export default function WalletsPage() {
   const total = usersData?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
-  const getMainBalance = (wallets?: Array<{ balance: string; currency: string }>) => {
+  const getMainBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
-    const main = wallets.find(w => w.currency === 'NGN') || wallets[0];
+    const main = wallets.find(w => w.type !== 'REWARD') || wallets[0];
     return parseFloat(main?.balance || '0');
   };
 
-  const getRewardBalance = (wallets?: Array<{ balance: string; currency: string }>) => {
+  const getRewardBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
-    const reward = wallets.find(w => w.currency === 'POINTS' || w.currency === 'REWARD');
+    const reward = wallets.find(w => w.type === 'REWARD');
     return parseFloat(reward?.balance || '0');
   };
 
-  const getTotalBalance = (wallets?: Array<{ balance: string; currency: string }>) => {
+  const getTotalBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
     return wallets.reduce((sum, w) => {
-      if (w.currency === 'POINTS' || w.currency === 'REWARD') return sum;
+      if (w.type === 'REWARD') return sum;
       return sum + parseFloat(w.balance || '0');
     }, 0);
   };
@@ -174,14 +174,14 @@ export default function WalletsPage() {
               <FiWallet className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Wallets Management</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Wallets Management</h1>
               <p className="text-gray-500 text-sm">View and manage all user wallets</p>
             </div>
           </div>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+            className="self-start p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
             title="Refresh"
           >
             <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -189,7 +189,7 @@ export default function WalletsPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {summaryCards.map((card) => (
             <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
               <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
@@ -218,23 +218,23 @@ export default function WalletsPage() {
         </div>
 
         {/* Wallets Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
           {usersLoading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : users.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto min-w-0">
                 <table className="w-full table-auto">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[200px]">User</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[120px]">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Main Wallet</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Reward Points</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Total Balance</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[90px]">Wallets</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[200px]">User</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[120px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Main Wallet</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Reward Points</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Total Balance</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[90px]">Wallets</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -283,10 +283,9 @@ export default function WalletsPage() {
                             </p>
                           </td>
                           <td className="py-4 px-4 whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                              <FiStar className="w-3 h-3" />
-                              {rewardBalance.toLocaleString()} pts
-                            </span>
+                            <p className="font-bold text-amber-600">
+                              ₦{rewardBalance.toLocaleString()}
+                            </p>
                           </td>
                           <td className="py-4 px-4 whitespace-nowrap">
                             <p className="font-bold text-gray-900">

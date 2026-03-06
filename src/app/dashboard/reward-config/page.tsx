@@ -196,7 +196,7 @@ export default function RewardConfigPage() {
               <FiGift className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reward Configuration</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Reward Configuration</h1>
               <p className="text-gray-500 text-sm">Manage reward percentages, tier multipliers, and expiry settings</p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function RewardConfigPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {summaryCards.map((card) => (
             <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
               <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>

@@ -122,7 +122,7 @@ export default function CustomerDashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">
           Welcome back, {user?.firstName}!
         </h1>
         <p className="text-gray-600">Here&apos;s your account overview</p>

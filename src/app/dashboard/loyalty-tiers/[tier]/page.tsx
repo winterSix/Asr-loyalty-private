@@ -172,7 +172,7 @@ export default function EditTierPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{style.icon}</span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit {tierName} Tier</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Edit {tierName} Tier</h1>
               </div>
               <p className="text-gray-500 text-sm">{style.label} — Configure requirements and benefits</p>
             </div>

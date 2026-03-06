@@ -153,15 +153,15 @@ function AdminRewardsView() {
     return [...configs].sort((a: LoyaltyTierConfig, b: LoyaltyTierConfig) => order.indexOf(a.tier) - order.indexOf(b.tier));
   }, [tierConfigs]);
 
-  const getRewardBalance = (wallets?: Array<{ balance: string; currency: string }>) => {
+  const getRewardBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
-    const reward = wallets.find(w => w.currency === 'POINTS' || w.currency === 'REWARD');
+    const reward = wallets.find(w => w.type === 'REWARD');
     return parseFloat(reward?.balance || '0');
   };
 
-  const getMainBalance = (wallets?: Array<{ balance: string; currency: string }>) => {
+  const getMainBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
-    const main = wallets.find(w => w.currency === 'NGN') || wallets[0];
+    const main = wallets.find(w => w.type !== 'REWARD') || wallets[0];
     return parseFloat(main?.balance || '0');
   };
 
@@ -173,8 +173,8 @@ function AdminRewardsView() {
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25">
             <FiGift className="w-6 h-6" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Rewards Overview</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Rewards Overview</h1>
             <p className="text-gray-500 text-sm">Manage reward configurations and track loyalty performance</p>
           </div>
         </div>
@@ -198,7 +198,7 @@ function AdminRewardsView() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
             <FiZap className="w-5 h-5" />
@@ -395,7 +395,7 @@ function AdminRewardsView() {
       </div>
 
       {/* User Reward Balances Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
         <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <FiStar className="w-5 h-5 text-primary" />
@@ -419,16 +419,16 @@ function AdminRewardsView() {
           </div>
         ) : users.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[650px]">
+            <div className="overflow-x-auto min-w-0">
+              <table className="w-full table-auto">
                 <thead>
                   <tr className="bg-gray-50/80">
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Main Wallet</th>
-                    <th className="text-right py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reward Points</th>
-                    <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tier</th>
-                    <th className="text-center py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[180px]">User</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[110px]">Status</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[130px]">Main Wallet</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[140px]">Reward Points</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[100px]">Tier</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -442,14 +442,14 @@ function AdminRewardsView() {
                       <tr key={u.id} className="hover:bg-gray-50/60 transition-colors group">
                         <td className="py-4 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
                               {u.firstName?.[0]}{u.lastName?.[0]}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                              <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors whitespace-nowrap">
                                 {u.firstName} {u.lastName}
                               </p>
-                              <p className="text-xs text-gray-500">{u.email || u.phoneNumber}</p>
+                              <p className="text-xs text-gray-500 whitespace-nowrap">{u.email || u.phoneNumber}</p>
                             </div>
                           </div>
                         </td>
@@ -467,21 +467,18 @@ function AdminRewardsView() {
                             {u.status}
                           </span>
                         </td>
-                        <td className="py-4 px-5 text-right">
-                          <p className="font-bold text-gray-900">₦{mainBal.toLocaleString()}</p>
+                        <td className="py-4 px-5">
+                          <p className="font-bold text-gray-900 whitespace-nowrap">₦{mainBal.toLocaleString()}</p>
                         </td>
-                        <td className="py-4 px-5 text-right">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                            <FiStar className="w-3 h-3" />
-                            {rewardBal.toLocaleString()} pts
-                          </span>
+                        <td className="py-4 px-5 whitespace-nowrap">
+                          <p className="font-bold text-amber-600">₦{rewardBal.toLocaleString()}</p>
                         </td>
-                        <td className="py-4 px-5 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${style.bg} ${style.text} ring-1 ring-inset ${style.ring}`}>
+                        <td className="py-4 px-5">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${style.bg} ${style.text} ring-1 ring-inset ${style.ring}`}>
                             {style.icon} {tier}
                           </span>
                         </td>
-                        <td className="py-4 px-5 text-center">
+                        <td className="py-4 px-5">
                           <button
                             onClick={() => router.push(`/dashboard/users/${u.id}`)}
                             className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/5 transition-all"
@@ -571,7 +568,7 @@ function CustomerRewardsView({ userId }: { userId: string }) {
           <FiGift className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Rewards</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">My Rewards</h1>
           <p className="text-gray-500 text-sm">View and redeem your reward points</p>
         </div>
       </div>
