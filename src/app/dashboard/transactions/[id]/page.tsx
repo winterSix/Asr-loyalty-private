@@ -108,13 +108,13 @@ export default function TransactionDetailPage() {
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-[#F1F5F9] transition-colors mb-4"
           >
             <FiArrowLeft className="w-4 h-4" />
             Back to Transactions
           </button>
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Transaction Details</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">Transaction Details</h1>
             {isAdmin && transaction?.status === 'SUCCESSFUL' && (
               <button
                 onClick={() => setShowReverseModal(true)}
@@ -143,23 +143,23 @@ export default function TransactionDetailPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* Transaction Info Card */}
               <div className="card">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center text-white">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center text-white flex-shrink-0">
                       <FiCreditCard className="w-6 h-6" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-gray-900">
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap">
                         ₦{parseFloat(transaction.amount).toLocaleString()}
                       </h2>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}>
+                      <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getTypeColor(transaction.type)}`}>
                         {transaction.type?.replace(/_/g, ' ')}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0 mt-1">
                     {getStatusIcon(transaction.status)}
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(transaction.status)}`}>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getStatusColor(transaction.status)}`}>
                       {transaction.status}
                     </span>
                   </div>

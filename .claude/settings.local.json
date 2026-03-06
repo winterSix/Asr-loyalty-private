@@ -18,7 +18,9 @@
       "Bash(npx tsc:*)",
       "Bash(find:*)",
       "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(sed:*)",
+      "Bash(node:*)"
     ]
   }
 }

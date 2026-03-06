@@ -91,7 +91,7 @@ export default function AuditDetailPage() {
               <FiFileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Audit Log Detail</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Audit Log Detail</h1>
               <p className="text-gray-500 text-sm font-mono mt-0.5">{id}</p>
             </div>
           </div>

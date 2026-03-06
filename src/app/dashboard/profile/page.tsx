@@ -299,7 +299,7 @@ export default function ProfilePage() {
 
               {/* Name & Meta */}
               <div className="flex-1 min-w-0 sm:pb-0.5">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate leading-tight">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#E5B887] truncate leading-tight">
                   {user?.firstName} {user?.lastName}
                 </h1>
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">

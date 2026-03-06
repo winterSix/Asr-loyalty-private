@@ -62,7 +62,7 @@ export default function LoyaltyPage() {
   return (
       <div>
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Loyalty Program</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">Loyalty Program</h1>
           <p className="text-gray-600">Your loyalty tier and benefits</p>
         </div>
 

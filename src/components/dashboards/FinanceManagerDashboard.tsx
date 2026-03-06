@@ -66,7 +66,7 @@ export default function FinanceManagerDashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Finance Dashboard</h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">Finance Dashboard</h1>
         <p className="text-gray-600">Financial overview and transaction management</p>
       </div>
 

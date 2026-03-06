@@ -292,7 +292,7 @@ export default function NotificationsPage() {
             )}
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Notifications</h1>
             <p className="text-gray-500 text-sm">
               {isAdmin ? 'Manage your notifications and system-wide alerts' : 'View and manage your notifications'}
             </p>
@@ -313,37 +313,39 @@ export default function NotificationsPage() {
 
       {/* Tabs — admin gets 5 tabs, others get none */}
       {isAdmin && (
-        <div className="flex flex-wrap gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
-          {([
-            { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
-            { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
-            { id: 'send' as Tab, label: 'Send', icon: FiSend },
-            { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe },
-            { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock },
-          ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-              {tab.id === 'mine' && unread > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">{unread}</span>
-              )}
-            </button>
-          ))}
+        <div className="overflow-x-auto min-w-0 mb-6">
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-max">
+            {([
+              { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
+              { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
+              { id: 'send' as Tab, label: 'Send', icon: FiSend },
+              { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe },
+              { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock },
+            ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <tab.icon className="w-4 h-4 flex-shrink-0" />
+                {tab.label}
+                {tab.id === 'mine' && unread > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">{unread}</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* ── Mine & All tabs: stat cards + filters + list ── */}
       {(activeTab === 'mine' || activeTab === 'all') && (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
             {statCards.map((card) => (
-              <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
-                  <card.icon className="w-5 h-5" />
+              <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
+                <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow} flex-shrink-0`}>
+                  <card.icon className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500">{card.label}</p>

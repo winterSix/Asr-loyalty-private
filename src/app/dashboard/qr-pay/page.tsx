@@ -32,9 +32,9 @@ export default function QRPayPage() {
 
   return (
       <div>
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">QR Pay</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">QR Pay</h1>
             <p className="text-gray-600">Generate QR codes for payments</p>
           </div>
           <button

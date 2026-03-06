@@ -6,9 +6,11 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import { walletService } from '@/services/wallet.service';
+import CustomSelect from '@/components/ui/CustomSelect';
 import toast from 'react-hot-toast';
 import {
   FiUsers,
+  FiUser,
   FiArrowLeft,
   FiMail,
   FiPhone,
@@ -159,15 +161,20 @@ export default function UserDetailPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/dashboard/users')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-[#F1F5F9] mb-4 transition-colors"
           >
             <FiArrowLeft className="w-5 h-5" />
             Back to Users
           </button>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">User Details</h1>
-              <p className="text-gray-600">View and manage user information</p>
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
+                <FiUser className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">User Details</h1>
+                <p className="text-gray-600 text-sm">View and manage user information</p>
+              </div>
             </div>
             {/* Action Buttons */}
             {userData && (
@@ -325,36 +332,35 @@ export default function UserDetailPage() {
                     {wallets.map((wallet: any) => {
                       const wType: 'MAIN' | 'REWARDS' = wallet.type === 'MAIN' ? 'MAIN' : 'REWARDS';
                       const isFrozen = wallet.isActive === false;
+                      const isMain = wType === 'MAIN';
                       return (
-                        <div key={wallet.id} className="p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                        <div key={wallet.id} className={`p-4 rounded-xl text-white ${isMain ? 'bg-gradient-primary' : 'bg-gradient-warm'}`}>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <FiCreditCard className="w-4 h-4 text-gray-500" />
-                              <p className="font-semibold text-gray-700 text-sm">
+                              <FiCreditCard className="w-4 h-4 text-white/80" />
+                              <p className="font-semibold text-white/90 text-sm">
                                 {wallet.type || wallet.currency} Wallet
                               </p>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${
-                              isFrozen ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                            }`}>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">
                               {isFrozen ? 'Frozen' : 'Active'}
                             </span>
                           </div>
-                          <p className="text-2xl font-bold text-gray-900">
+                          <p className="text-2xl font-bold text-white">
                             {wallet.currency === 'NGN' ? '₦' : ''}{parseFloat(wallet.balance).toLocaleString()}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1 mb-3">{wallet.currency}</p>
+                          <p className="text-xs text-white/60 mt-1 mb-3">{wallet.currency}</p>
                           {isFrozen ? (
                             <button
                               onClick={() => openFreezeModal('unfreeze', wType)}
-                              className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors"
+                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
                             >
                               <FiUnlock className="w-3.5 h-3.5" /> Unfreeze Wallet
                             </button>
                           ) : (
                             <button
                               onClick={() => openFreezeModal('freeze', wType)}
-                              className="flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
                             >
                               <FiLock className="w-3.5 h-3.5" /> Freeze Wallet
                             </button>
@@ -718,17 +724,17 @@ export default function UserDetailPage() {
                 <label className="text-sm font-semibold text-gray-700 block mb-2">
                   New Role
                 </label>
-                <select
+                <CustomSelect
                   value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Select role...</option>
-                  <option value="CUSTOMER">Customer</option>
-                  <option value="CASHIER">Cashier</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                </select>
+                  onChange={setSelectedRole}
+                  options={[
+                    { value: '', label: 'Select role...' },
+                    { value: 'CUSTOMER', label: 'Customer' },
+                    { value: 'CASHIER', label: 'Cashier' },
+                    { value: 'ADMIN', label: 'Admin' },
+                    { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center gap-3 justify-end">

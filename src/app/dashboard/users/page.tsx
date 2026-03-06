@@ -175,7 +175,7 @@ export default function UsersPage() {
               <FiUsers className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Users Management</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Users Management</h1>
               <p className="text-gray-500 text-sm">Manage all system users ({total} total)</p>
             </div>
           </div>
@@ -192,20 +192,18 @@ export default function UsersPage() {
 
         {/* Search & Filters */}
         <div className="card mb-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or phone..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="input-field pl-10"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or phone..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="input-field pl-10"
+              />
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <FiFilter className="text-gray-400 w-4 h-4" />
               <CustomSelect
                 value={roleFilter}
@@ -245,24 +243,24 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="card overflow-x-hidden">
+        <div className="card flex flex-col">
           {usersLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : users.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-0">
+              <div className="overflow-x-auto min-w-0">
+                <table className="w-full table-auto">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">User</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden md:table-cell">Email</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Phone</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Role</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Tier</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Joined</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[160px]">User</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[180px]">Email</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Phone</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[120px]">Role</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[100px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[100px]">Tier</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[110px]">Joined</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -278,7 +276,7 @@ export default function UsersPage() {
                               {u.firstName?.[0]}{u.lastName?.[0]}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 whitespace-nowrap">
                                 {u.firstName} {u.lastName}
                               </p>
                               <p className="text-xs text-gray-500 font-mono">
@@ -287,8 +285,8 @@ export default function UsersPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-700 hidden md:table-cell whitespace-nowrap">{u.email || '—'}</td>
-                        <td className="py-4 px-4 text-sm text-gray-700 hidden lg:table-cell whitespace-nowrap">{u.phoneNumber}</td>
+                        <td className="py-4 px-4 text-sm text-gray-700 whitespace-nowrap">{u.email || '—'}</td>
+                        <td className="py-4 px-4 text-sm text-gray-700 whitespace-nowrap">{u.phoneNumber}</td>
                         <td className="py-4 px-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getRoleColor(u.role)}`}>
@@ -306,12 +304,12 @@ export default function UsersPage() {
                             {u.status}
                           </span>
                         </td>
-                        <td className="py-4 px-4 hidden lg:table-cell whitespace-nowrap">
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTierColor(u.tier || 'BRONZE')}`}>
                             {u.tier || 'BRONZE'}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 hidden sm:table-cell whitespace-nowrap">
+                        <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
                           {new Date(u.createdAt).toLocaleDateString()}
                         </td>
                       </tr>

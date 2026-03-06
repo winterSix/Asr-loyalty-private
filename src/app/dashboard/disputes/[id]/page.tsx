@@ -139,12 +139,12 @@ export default function DisputeDetailPage() {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-[#F1F5F9] mb-4"
           >
             <FiArrowLeft className="w-5 h-5" />
             Back to Disputes
           </button>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dispute Details</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">Dispute Details</h1>
           <p className="text-gray-600">View and manage dispute information</p>
         </div>
 

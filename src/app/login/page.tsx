@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
+import { GoogleLoginWrapper } from '@/components/ui/GoogleLoginWrapper';
 import {
   FiMail,
   FiLock,
@@ -101,7 +102,7 @@ export default function LoginPage() {
       if (!response.accessToken || !response.refreshToken) {
         throw new Error('Invalid response from server - missing tokens');
       }
-      
+
       login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
       Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
@@ -189,7 +190,7 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-stretch">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:bg-[#0F172A] dark:from-[#0F172A] dark:via-[#0F172A] dark:to-[#0F172A] flex items-stretch transition-colors duration-300">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
         {/* Left Side - Branding */}
         <div className="hidden lg:flex flex-col justify-center gap-8 p-8 lg:p-16 bg-gradient-primary text-white relative overflow-hidden">
@@ -197,7 +198,7 @@ export default function LoginPage() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-2xl -translate-y-1/2 -translate-x-1/2"></div>
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2"></div>
-          
+
           <div className="relative z-10">
             <div className="mb-10">
               <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-white/20">
@@ -221,7 +222,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-4 mb-10">
-              {highlightItems.map((item, index) => (
+              {highlightItems.map((item) => (
                 <div key={item} className="flex items-center gap-4 group">
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-all">
                     <FiCheckCircle className="w-5 h-5 text-white" />
@@ -239,7 +240,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="flex items-center justify-center p-6 lg:p-12 bg-white">
+        <div className="flex items-center justify-center p-6 lg:p-12 bg-white dark:bg-[#1E293B] transition-colors duration-300">
           <div className="w-full max-w-md">
 
             {/* ── 2FA Step ── */}
@@ -247,7 +248,7 @@ export default function LoginPage() {
               <div>
                 <button
                   onClick={() => { setTwoFactorPending(false); setTwoFactorCode(''); setError(null); }}
-                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-8 transition-colors"
+                  className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#64748B] hover:text-gray-700 dark:hover:text-[#c9d1e5] mb-8 transition-colors"
                 >
                   <FiArrowLeft className="w-4 h-4" /> Back to login
                 </button>
@@ -255,19 +256,19 @@ export default function LoginPage() {
                   <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
                     <FiShield className="w-7 h-7 text-primary" />
                   </div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Two-Factor Verification</h2>
-                  <p className="text-gray-600 text-base">
-                    Enter the 6-digit code sent to <span className="font-semibold text-gray-800">{twoFactorEmail}</span>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-[#F1F5F9] mb-2">Two-Factor Verification</h2>
+                  <p className="text-gray-600 dark:text-[#64748B] text-base">
+                    Enter the 6-digit code sent to <span className="font-semibold text-gray-800 dark:text-[#CBD5E1]">{twoFactorEmail}</span>
                   </p>
                 </div>
                 {error && (
-                  <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
+                  <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border-l-4 border-red-500 text-red-700 dark:text-red-400 text-sm shadow-sm">
                     {error}
                   </div>
                 )}
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2.5">Verification Code</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">Verification Code</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -296,21 +297,21 @@ export default function LoginPage() {
             ) : (
             <>
             <div className="mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-[#F1F5F9] mb-2">
                 Sign in to continue
               </h2>
-              <p className="text-gray-600 text-base">
+              <p className="text-gray-600 dark:text-[#64748B] text-base">
                 Access your dashboard, wallets, and rewards.
               </p>
             </div>
 
             {isMaintenanceMode && (
-              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 shadow-sm">
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border-l-4 border-amber-500 shadow-sm">
                 <div className="flex items-start gap-3">
                   <FiAlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-amber-900 text-sm">System Under Maintenance</p>
-                    <p className="text-amber-700 text-sm mt-0.5">
+                    <p className="font-semibold text-amber-900 dark:text-amber-400 text-sm">System Under Maintenance</p>
+                    <p className="text-amber-700 dark:text-amber-500 text-sm mt-0.5">
                       The system is currently undergoing maintenance. Only administrators can sign in at this time. Please check back later.
                     </p>
                   </div>
@@ -319,15 +320,15 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
+              <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border-l-4 border-red-500 text-red-700 dark:text-red-400 text-sm shadow-sm">
                 {error}
               </div>
             )}
 
             {verificationAlert === 'email' && (
-              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-sm shadow-sm">
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-sm shadow-sm">
                 <p className="font-semibold mb-1">Email verification required</p>
-                <p className="text-amber-700 mb-3">Your email address has not been verified. Please check your inbox for the verification code.</p>
+                <p className="text-amber-700 dark:text-amber-500 mb-3">Your email address has not been verified. Please check your inbox for the verification code.</p>
                 <a
                   href={`/verify-otp?email=${encodeURIComponent(pendingEmail)}`}
                   className="inline-block px-4 py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors"
@@ -338,20 +339,20 @@ export default function LoginPage() {
             )}
 
             {verificationAlert === 'phone' && (
-              <div className="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-sm shadow-sm">
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-sm shadow-sm">
                 <p className="font-semibold mb-1">Phone verification required</p>
-                <p className="text-amber-700">Your phone number must be verified before you can sign in. Please verify it from your mobile app profile, or contact support.</p>
+                <p className="text-amber-700 dark:text-amber-500">Your phone number must be verified before you can sign in. Please verify it from your mobile app profile, or contact support.</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">
                   Email Address
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <FiMail className="w-5 h-5 text-gray-400" />
+                    <FiMail className="w-5 h-5 text-gray-400 dark:text-[#64748B]" />
                   </div>
                   <input
                     {...register('email')}
@@ -361,17 +362,17 @@ export default function LoginPage() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">
                   Password
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <FiLock className="w-5 h-5 text-gray-400" />
+                    <FiLock className="w-5 h-5 text-gray-400 dark:text-[#64748B]" />
                   </div>
                   <input
                     {...register('password')}
@@ -382,13 +383,13 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-[#64748B] hover:text-gray-600 dark:hover:text-[#a8b4cc] transition-colors"
                   >
                     {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
                 )}
               </div>
 
@@ -417,7 +418,7 @@ export default function LoginPage() {
               </button>
 
               <div className="text-center mt-6">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-[#64748B]">
                   Don&apos;t have an account?{' '}
                   <Link href="/register" className="text-primary hover:text-primary-light font-bold transition-colors">
                     Sign up
@@ -429,23 +430,26 @@ export default function LoginPage() {
             {/* Google OAuth */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+                <div className="w-full border-t border-gray-200 dark:border-white/10"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-500 font-medium">or continue with</span>
+                <span className="px-3 bg-white dark:bg-[#1E293B] text-gray-500 dark:text-[#64748B] font-medium">or continue with</span>
               </div>
             </div>
+
             <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  if (credentialResponse.credential) {
-                    handleGoogleLogin(credentialResponse.credential);
-                  }
-                }}
-                onError={() => toast.error('Google sign-in failed. Please try again.')}
-                useOneTap={false}
-                width="400"
-              />
+              <GoogleLoginWrapper>
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    if (credentialResponse.credential) {
+                      handleGoogleLogin(credentialResponse.credential);
+                    }
+                  }}
+                  onError={() => toast.error('Google sign-in failed. Please try again.')}
+                  useOneTap={false}
+                  width="400"
+                />
+              </GoogleLoginWrapper>
             </div>
             </>
             )}

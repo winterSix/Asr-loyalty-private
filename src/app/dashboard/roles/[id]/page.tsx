@@ -105,15 +105,20 @@ export default function RoleDetailPage() {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:hover:text-[#F1F5F9] mb-4"
           >
             <FiArrowLeft className="w-5 h-5" />
             Back to Roles
           </button>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Role Details</h1>
-              <p className="text-gray-600">View and manage role information</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
+                <FiLayers className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Role Details</h1>
+                <p className="text-gray-500 text-sm">View and manage role information</p>
+              </div>
             </div>
             {canEdit && (
               <div className="flex gap-3">

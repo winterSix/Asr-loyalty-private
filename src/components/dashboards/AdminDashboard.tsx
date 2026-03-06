@@ -140,11 +140,12 @@ const renderActiveDot = (props: any) => {
 // Custom tooltip component
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
   if (active && payload && payload.length) {
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
     return (
-      <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
-        <p className="text-sm font-semibold text-gray-900 mb-1">{label}</p>
+      <div style={{ backgroundColor: isDark ? '#1E293B' : '#ffffff', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#f0f0f0'}`, borderRadius: 12, padding: '10px 14px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#F1F5F9' : '#111827', marginBottom: 6 }}>{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
+          <p key={index} style={{ fontSize: 12, color: entry.color }}>
             {entry.name}: ₦{Number(entry.value).toLocaleString()}
           </p>
         ))}
@@ -164,28 +165,35 @@ const RevenueTooltip = ({ active, payload, label }: {
   const fees = payload.find((p) => p.dataKey === 'fees')?.value ?? 0;
   const net = payload.find((p) => p.dataKey === 'net')?.value ?? 0;
   const gross = fees + net;
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const bg = isDark ? '#1E293B' : '#ffffff';
+  const border = isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb';
+  const divider = isDark ? 'rgba(255,255,255,0.08)' : '#f3f4f6';
+  const labelCol = isDark ? '#F1F5F9' : '#374151';
+  const mutedCol = isDark ? '#94A3B8' : '#6b7280';
+  const boldCol  = isDark ? '#F1F5F9' : '#111827';
   return (
-    <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 14, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '14px 18px', minWidth: 218 }}>
-      <p style={{ color: '#374151', fontWeight: 700, marginBottom: 10, fontSize: 12 }}>{label}</p>
+    <div style={{ backgroundColor: bg, border: `1px solid ${border}`, borderRadius: 14, boxShadow: '0 10px 25px rgba(0,0,0,0.25)', padding: '14px 18px', minWidth: 218 }}>
+      <p style={{ color: labelCol, fontWeight: 700, marginBottom: 10, fontSize: 12 }}>{label}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 12, height: 8, borderRadius: 2, background: 'linear-gradient(90deg,#f59e0b,#10b981)' }} />
-            <span style={{ color: '#6b7280', fontSize: 12 }}>Gross Revenue</span>
+            <span style={{ color: mutedCol, fontSize: 12 }}>Gross Revenue</span>
           </div>
-          <span style={{ color: '#111827', fontSize: 13, fontWeight: 700 }}>₦{Number(gross).toLocaleString()}</span>
+          <span style={{ color: boldCol, fontSize: 13, fontWeight: 700 }}>₦{Number(gross).toLocaleString()}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
-            <span style={{ color: '#6b7280', fontSize: 12 }}>Net Revenue</span>
+            <span style={{ color: mutedCol, fontSize: 12 }}>Net Revenue</span>
           </div>
           <span style={{ color: '#10b981', fontSize: 13, fontWeight: 700 }}>₦{Number(net).toLocaleString()}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: '1px solid #f3f4f6' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: `1px solid ${divider}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: '#f59e0b' }} />
-            <span style={{ color: '#6b7280', fontSize: 12 }}>Paystack Fees</span>
+            <span style={{ color: mutedCol, fontSize: 12 }}>Paystack Fees</span>
           </div>
           <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 700 }}>₦{Number(fees).toLocaleString()}</span>
         </div>
@@ -404,8 +412,8 @@ export default function AdminDashboard() {
 
   // Get actual values with nullish coalescing to preserve 0 values
   const totalUsers = dashboardSummary?.users?.total ?? userStats?.total ?? 0;
-  const totalRevenue = dashboardSummary?.revenue?.thisMonth ?? 0;
-  const lastMonthRevenue = dashboardSummary?.revenue?.lastMonth ?? 0;
+  const totalRevenue = dashboardSummary?.revenue?.rolling30Days ?? dashboardSummary?.revenue?.thisMonth ?? 0;
+  const growthPercentage = dashboardSummary?.revenue?.growthPercentage ?? 0;
   const totalTransactions = transactionStats?.totalCount ?? 0;
   const walletBalance = dashboardSummary?.totalWalletBalance ?? '0';
   const pendingDisputes = dashboardSummary?.pendingActions?.disputes ?? disputes?.total ?? 0;
@@ -430,13 +438,13 @@ export default function AdminDashboard() {
       href: '/dashboard/users',
     },
     {
-      label: 'This Month Revenue',
+      label: 'Last 30 Days Revenue',
       value: totalRevenue,
       icon: <FiWallet className="w-6 h-6" />,
       gradient: 'from-emerald-500 to-emerald-600',
       bgGlow: 'bg-emerald-500/20',
-      change: `Last month: ₦${Number(lastMonthRevenue).toLocaleString()}`,
-      trend: totalRevenue >= lastMonthRevenue ? 'up' as const : 'down' as const,
+      change: `${growthPercentage >= 0 ? '+' : ''}${growthPercentage}% vs prev. month`,
+      trend: growthPercentage >= 0 ? 'up' as const : 'down' as const,
       isAmount: true,
       href: '/dashboard/reports',
     },
@@ -499,7 +507,7 @@ export default function AdminDashboard() {
             <FiActivity className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Admin Dashboard</h1>
             <p className="text-gray-500 text-sm">System overview and management</p>
           </div>
         </div>
@@ -658,7 +666,7 @@ export default function AdminDashboard() {
                       <stop offset="100%" stopColor="#10b981" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" vertical={false} />
                   <XAxis
                     dataKey="name"
                     tick={{ fontSize: 11, fill: '#9ca3af' }}
@@ -683,10 +691,10 @@ export default function AdminDashboard() {
                   />
                   <ReferenceLine
                     y={chartAvgRevenue}
-                    stroke="#d1d5db"
+                    stroke="rgba(148,163,184,0.4)"
                     strokeDasharray="6 3"
-                    strokeWidth={1.5}
-                    label={{ value: 'Avg', fill: '#9ca3af', fontSize: 10, position: 'insideTopRight' }}
+                    strokeWidth={1}
+                    label={{ value: 'Avg', fill: '#94A3B8', fontSize: 10, position: 'insideTopRight' }}
                   />
                   {/* Bottom slice: Paystack Fees */}
                   <Area
@@ -802,7 +810,7 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => [(value as number).toLocaleString(), 'Count']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', backgroundColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#1E293B' : '#ffffff', color: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#111827' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -829,7 +837,7 @@ export default function AdminDashboard() {
             {userRoleData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={userRoleData} layout="vertical" barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" horizontal={true} vertical={false} />
                   <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={70} />
                   <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} />
@@ -885,7 +893,7 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => [(value as number).toLocaleString(), 'Users']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', backgroundColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#1E293B' : '#ffffff', color: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#111827' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -912,7 +920,7 @@ export default function AdminDashboard() {
             {transactionStatusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={transactionStatusData} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} />

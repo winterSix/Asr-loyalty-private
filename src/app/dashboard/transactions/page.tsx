@@ -196,7 +196,7 @@ export default function TransactionsPage() {
               <FiCreditCard className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Transactions</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Transactions</h1>
               <p className="text-gray-500 text-sm">
                 {isAdmin ? 'Manage all transactions' : 'View your transaction history'}
                 {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
@@ -320,25 +320,25 @@ export default function TransactionsPage() {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
           {txLoading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : transactions.length > 0 ? (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto min-w-0">
                 <table className="w-full table-auto">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[180px]">Reference</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[180px]">Reference</th>
                       {isAdmin && (
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[180px]">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[180px]">User</th>
                       )}
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[160px]">Type</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Amount</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[140px]">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 min-w-[130px]">Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[160px]">Type</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Amount</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[130px]">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
