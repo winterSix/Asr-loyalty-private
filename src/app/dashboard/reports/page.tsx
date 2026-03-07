@@ -89,7 +89,7 @@ export default function ReportsPage() {
             <FiBarChart className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887] dark:text-[#e6edf3]">Reports</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Reports</h1>
             <p className="text-gray-500 dark:text-[#8b949e] text-sm">Generate and view system reports</p>
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function ReportsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200 dark:border-[#30363d]">
+                        <tr className="border-b border-gray-200 dark:border-white/5">
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[120px]">Period</th>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[140px]">Revenue</th>
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[130px]">Fees</th>
@@ -237,7 +237,7 @@ export default function ReportsPage() {
                       </thead>
                       <tbody>
                         {revenueData.breakdown.map((row, i) => (
-                          <tr key={i} className="border-b border-gray-100 dark:border-[#21262d] hover:bg-gray-50 dark:hover:bg-[#21262d] transition-colors">
+                          <tr key={i} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
                             <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">{row.period}</td>
                             <td className="py-3 px-4 text-sm font-bold text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">
                               ₦{Number(row.revenue ?? 0).toLocaleString()}

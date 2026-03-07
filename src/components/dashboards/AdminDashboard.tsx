@@ -84,13 +84,17 @@ const PIE_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b8
 
 // Dedicated color palettes
 const LOYALTY_TIER_COLORS: Record<string, string> = {
-  Bronze: '#CD7F32',
-  Silver: '#94A3B8',
-  Gold: '#F59E0B',
-  Platinum: '#6366f1',
+  BRONZE: '#F97316',
+  SILVER: '#38BDF8',
+  GOLD: '#FACC15',
+  PLATINUM: '#A78BFA',
 };
 
-const TRANSACTION_TYPE_COLORS = ['#6366f1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
+const TRANSACTION_TYPE_COLORS: Record<string, string> = {
+  'WALLET FUNDING': '#6366f1',
+  'PAYMENT': '#f97316',
+};
+const TRANSACTION_TYPE_COLORS_FALLBACK = ['#6366f1', '#f97316', '#10b981', '#ec4899', '#ef4444', '#3b82f6'];
 
 // Custom pie chart label with connector lines colored to match each slice
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,6 +111,8 @@ const renderOuterLabel = (props: any) => {
   const ey = my;
   const textAnchor = cos >= 0 ? 'start' : 'end';
   const lineColor = fill || '#b0b8c4';
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const labelColor = isDark ? '#F1F5F9' : '#374151';
 
   if (percent < 0.03) return null;
 
@@ -114,7 +120,7 @@ const renderOuterLabel = (props: any) => {
     <g>
       <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={lineColor} fill="none" strokeWidth={1.5} opacity={0.7} />
       <circle cx={ex} cy={ey} r={3} fill={lineColor} />
-      <text x={ex + (cos >= 0 ? 8 : -8)} y={ey - 1} textAnchor={textAnchor} fill="#374151" fontSize={11} fontWeight={600}>
+      <text x={ex + (cos >= 0 ? 8 : -8)} y={ey - 1} textAnchor={textAnchor} fill={labelColor} fontSize={11} fontWeight={600}>
         {name}
       </text>
       <text x={ex + (cos >= 0 ? 8 : -8)} y={ey + 13} textAnchor={textAnchor} fill={lineColor} fontSize={10} fontWeight={500}>
@@ -805,7 +811,7 @@ export default function AdminDashboard() {
                     animationDuration={1500}
                   >
                     {transactionTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={TRANSACTION_TYPE_COLORS[index % TRANSACTION_TYPE_COLORS.length]} strokeWidth={0} />
+                      <Cell key={`cell-${index}`} fill={TRANSACTION_TYPE_COLORS[entry.name] ?? TRANSACTION_TYPE_COLORS_FALLBACK[index % TRANSACTION_TYPE_COLORS_FALLBACK.length]} strokeWidth={0} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -1056,43 +1062,56 @@ export default function AdminDashboard() {
             );
           })()}
 
-          {/* Moniepoint (mock) */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden">
-            <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-purple-500/10 blur-xl" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md">M</div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">Moniepoint</p>
-                    <div className="flex items-center gap-1 mt-0.5 text-amber-500">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                      <span className="text-[10px] font-semibold">Coming soon</span>
+          {/* Moniepoint */}
+          {(() => {
+            const gw = gatewayStats?.gateways?.find((g: any) => g.gateway?.toLowerCase().includes('moniepoint') || g.gateway?.toLowerCase().includes('monnify'));
+            const successRate = gw && gw.totalTransactions > 0
+              ? ((gw.successfulTransactions / gw.totalTransactions) * 100).toFixed(1)
+              : '0';
+            const failedCount = gw?.byStatus
+              ? Object.entries(gw.byStatus)
+                  .filter(([s]) => s === 'FAILED' || s === 'failed')
+                  .reduce((sum, [, v]: [string, any]) => sum + (v?.count ?? 0), 0)
+              : 0;
+            return (
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-purple-500/10 blur-xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center text-white font-black text-xs shadow-md">M</div>
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">Moniepoint</p>
+                        <div className={`flex items-center gap-1 mt-0.5 ${gw ? 'text-emerald-500' : 'text-gray-400'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${gw ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
+                          <span className="text-[10px] font-semibold">{gw ? 'Live' : 'No data'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">{successRate}%</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-2.5 bg-gray-50 rounded-xl">
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Transactions</p>
+                      <p className="text-lg font-bold text-gray-900 mt-0.5">{(gw?.totalTransactions ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="p-2.5 bg-gray-50 rounded-xl">
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Volume</p>
+                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.totalVolume ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="p-2.5 bg-emerald-50 rounded-xl">
+                      <p className="text-[10px] text-emerald-600 uppercase tracking-wide font-semibold">Successful</p>
+                      <p className="text-lg font-bold text-emerald-700 mt-0.5">{(gw?.successfulTransactions ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="p-2.5 bg-red-50 rounded-xl">
+                      <p className="text-[10px] text-red-500 uppercase tracking-wide font-semibold">Failed</p>
+                      <p className="text-lg font-bold text-red-600 mt-0.5">{failedCount.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">—</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-2.5 bg-gray-50 rounded-xl">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Transactions</p>
-                  <p className="text-lg font-bold text-gray-400 mt-0.5">—</p>
-                </div>
-                <div className="p-2.5 bg-gray-50 rounded-xl">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Volume</p>
-                  <p className="text-lg font-bold text-gray-400 mt-0.5">—</p>
-                </div>
-                <div className="p-2.5 bg-gray-50 rounded-xl">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Successful</p>
-                  <p className="text-lg font-bold text-gray-400 mt-0.5">—</p>
-                </div>
-                <div className="p-2.5 bg-gray-50 rounded-xl">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Failed</p>
-                  <p className="text-lg font-bold text-gray-400 mt-0.5">—</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </motion.div>
 

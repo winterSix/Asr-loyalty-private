@@ -366,7 +366,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                                 ${isColl ? 'justify-center py-2.5 px-0' : 'gap-3 px-3 py-2.5'}
                                                                 ${active
                                                                     ? 'text-primary dark:text-indigo-400'
-                                                                    : 'text-gray-600 dark:text-[#94A3B8] hover:text-gray-900 dark:hover:text-[#F1F5F9] hover:bg-gray-50 dark:hover:bg-[#334155]'
+                                                                    : 'text-gray-600 dark:text-[#94A3B8] hover:text-gray-900 dark:hover:text-[#F1F5F9] hover:bg-gray-50 dark:hover:bg-[#2D3F55]'
                                                                 }
                                                             `}
                                                         >
@@ -416,7 +416,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {/* Left */}
                         <div className="flex items-center gap-4">
                             <button onClick={() => setMobileOpen(!mobileOpen)}
-                                className="lg:hidden p-2.5 rounded-xl text-gray-600 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors">
+                                className="lg:hidden p-2.5 rounded-xl text-gray-600 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                 {mobileOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
                             </button>
                             <div>
@@ -431,13 +431,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="flex items-center gap-1 lg:gap-2">
 
                             {/* Search */}
-                            <button onClick={() => setSearchOpen(true)} className="flex p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors">
+                            <button onClick={() => setSearchOpen(true)} className="flex p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                 <FiSearch className="w-5 h-5" />
                             </button>
 
                             {/* Bell */}
                             <button onClick={() => router.push('/dashboard/notifications')}
-                                className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors">
+                                className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                 <FiBell className="w-5 h-5" />
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] animate-pulse" />
                             </button>
@@ -445,7 +445,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {/* Theme toggle */}
                             <div className="relative block" ref={themeRef}>
                                 <button onClick={() => setThemeMenu(!themeMenu)}
-                                    className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors"
+                                    className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors"
                                     title="Change theme">
                                     <ThemeIcon />
                                 </button>
@@ -461,7 +461,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 className={`w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm transition-colors
                                                     ${theme === id
                                                         ? 'text-primary dark:text-indigo-400 bg-primary/8 dark:bg-indigo-500/[0.12] font-semibold'
-                                                        : 'text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#334155] hover:text-gray-900 dark:hover:text-[#F1F5F9]'
+                                                        : 'text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#2D3F55] hover:text-gray-900 dark:hover:text-[#F1F5F9]'
                                                     }`}
                                             >
                                                 <Icon className="w-4 h-4" /> {label}
@@ -476,7 +476,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {/* User menu */}
                             <div className="relative" ref={userMenuRef}>
                                 <button onClick={() => setUserMenu(!userMenu)}
-                                    className="flex items-center gap-2 p-1.5 lg:p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#334155] transition-colors">
+                                    className="flex items-center gap-2 p-1.5 lg:p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                     <div className="relative">
                                         <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-primary-lighter rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md shadow-primary/20">
                                             {initials()}
@@ -506,7 +506,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             ]).map(({ label, Icon, path }) => (
                                                 <button key={path}
                                                     onClick={() => { router.push(path); setUserMenu(false); }}
-                                                    className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#334155] hover:text-gray-900 dark:hover:text-[#F1F5F9] transition-colors">
+                                                    className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#2D3F55] hover:text-gray-900 dark:hover:text-[#F1F5F9] transition-colors">
                                                     <Icon className="w-4 h-4" /> {label}
                                                 </button>
                                             ))}

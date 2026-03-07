@@ -338,7 +338,6 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-y-2 md:divide-y-0 md:divide-x divide-white/10">
             <StatCard label="Active Users" value={stats?.totalUsers ?? 0} />
             <StatCard label="Transactions Done" value={stats?.totalTransactions ?? 0} />
-            <StatCard label="Volume Processed" value={stats?.totalVolumeProcessed ?? 0} isAmount />
             <StatCard label="Rewards Given" value={stats?.totalRewardsGiven ?? 0} isAmount />
           </div>
         </div>

@@ -68,7 +68,7 @@ function SecurityTab({ user, queryClient, router }: { user: any; queryClient: an
         <button
           key={item.label}
           onClick={() => router.push(item.path)}
-          className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-all group"
+          className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-gray-200 hover:bg-gray-50/50 dark:hover:bg-white/[0.04] transition-all group"
         >
           <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.gradient} text-white flex items-center justify-center shadow-md ${item.shadow} shrink-0`}>
             <item.icon className="w-4.5 h-4.5" />
@@ -83,7 +83,7 @@ function SecurityTab({ user, queryClient, router }: { user: any; queryClient: an
 
       {/* 2FA toggle — only for CUSTOMER role */}
       {user?.role === 'CUSTOMER' && (
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100">
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-white/5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
             <FiShield className="w-4.5 h-4.5" />
           </div>
@@ -235,7 +235,7 @@ export default function ProfilePage() {
       <div className="w-full space-y-6 animate-fade-in">
 
         {/* ─── Profile Card with Banner ─── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
           {/* Banner */}
           <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${tierConfig.gradient}`}>
             <svg className="absolute inset-0 w-full h-full opacity-[0.08]" viewBox="0 0 800 200" preserveAspectRatio="none">
@@ -345,7 +345,7 @@ export default function ProfilePage() {
             { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border border-gray-200/70 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div key={s.label} className="bg-white rounded-xl border border-gray-200/70 dark:border-white/10 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center gap-2.5 mb-2.5">
                 <div className={`w-8 h-8 rounded-lg ${s.bg} ${s.color} flex items-center justify-center`}>
                   <s.icon className="w-4 h-4" />
@@ -362,8 +362,8 @@ export default function ProfilePage() {
           {/* Left: Main Content (3/5) */}
           <div className="xl:col-span-3 space-y-6">
             {/* Tab Navigation */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 overflow-hidden">
-              <div className="flex border-b border-gray-100">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
+              <div className="flex border-b border-gray-100 dark:border-white/5">
                 {[
                   { id: 'info' as const, label: 'Personal Info', icon: FiUser },
                   { id: 'security' as const, label: 'Security', icon: FiLock },
@@ -494,7 +494,7 @@ export default function ProfilePage() {
 
               {/* Tab: Notifications */}
               {activeTab === 'notifications' && (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-white/5">
                   {[
                     { key: 'pushNotifications', label: 'Push Notifications', desc: 'Receive push notifications on your devices', icon: FiSmartphone, color: 'text-blue-500', bg: 'bg-blue-50' },
                     { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive notifications via email', icon: FiMail, color: 'text-violet-500', bg: 'bg-violet-50' },
@@ -503,7 +503,7 @@ export default function ProfilePage() {
                   ].map((pref) => {
                     const isEnabled = (preferences as any)?.[pref.key];
                     return (
-                      <div key={pref.key} className="flex items-center justify-between px-5 sm:px-6 py-4 hover:bg-gray-50/40 transition-colors">
+                      <div key={pref.key} className="flex items-center justify-between px-5 sm:px-6 py-4 hover:bg-gray-50/40 dark:hover:bg-white/[0.04] transition-colors">
                         <div className="flex items-center gap-3.5">
                           <div className={`w-9 h-9 rounded-lg ${pref.bg} ${pref.color} flex items-center justify-center`}>
                             <pref.icon className="w-4 h-4" />
@@ -533,8 +533,8 @@ export default function ProfilePage() {
           {/* Right: Sidebar (2/5) */}
           <div className="xl:col-span-2 space-y-6">
             {/* Account Overview */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5">
                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                   <FiShield className="w-4 h-4 text-primary" /> Account Overview
                 </h3>
@@ -550,14 +550,14 @@ export default function ProfilePage() {
                     {user?.status || 'ACTIVE'}
                   </span>
                 </div>
-                <div className="h-px bg-gray-100" />
+                <div className="h-px bg-gray-100 dark:bg-white/5" />
 
                 {/* Verifications */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500 font-medium">Phone Verification</span>
                   <VerifiedBadge verified={user?.phoneVerified} />
                 </div>
-                <div className="h-px bg-gray-100" />
+                <div className="h-px bg-gray-100 dark:bg-white/5" />
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500 font-medium">Email Verification</span>
                   <VerifiedBadge verified={user?.emailVerified} />
@@ -566,9 +566,9 @@ export default function ProfilePage() {
             </div>
 
             {/* Loyalty Tier Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
               <div className={`h-1 bg-gradient-to-r ${tierConfig.gradient}`} />
-              <div className="px-5 py-4 border-b border-gray-100">
+              <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5">
                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                   <FiStar className="w-4 h-4 text-amber-500" /> Loyalty Progress
                 </h3>
@@ -598,7 +598,7 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                <div className="h-px bg-gray-100" />
+                <div className="h-px bg-gray-100 dark:bg-white/5" />
 
                 {/* Quick stats */}
                 <div className="grid grid-cols-2 gap-3">
@@ -616,8 +616,8 @@ export default function ProfilePage() {
 
             {/* Active Devices */}
             {devicesArray.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
                   <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <FiSmartphone className="w-4 h-4 text-gray-400" /> Devices
                   </h3>
@@ -625,9 +625,9 @@ export default function ProfilePage() {
                     {devicesArray.length}
                   </span>
                 </div>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-white/5">
                   {devicesArray.slice(0, 3).map((device: any) => (
-                    <div key={device.id} className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+                    <div key={device.id} className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/50 dark:hover:bg-white/[0.04] transition-colors">
                       <div className="relative">
                         <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
                           <FiSmartphone className="w-3.5 h-3.5 text-gray-400" />
@@ -645,7 +645,7 @@ export default function ProfilePage() {
             )}
 
             {/* Member Info Card - Mobile */}
-            <div className="lg:hidden bg-white rounded-2xl shadow-sm border border-gray-200/70 p-5">
+            <div className="lg:hidden bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 p-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <FiCalendar className="w-5 h-5 text-primary" />

@@ -314,7 +314,7 @@ export default function NotificationsPage() {
       {/* Tabs — admin gets 5 tabs, others get none */}
       {isAdmin && (
         <div className="overflow-x-auto min-w-0 mb-6">
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-max">
+          <div className="flex gap-1 bg-gray-100 dark:bg-[#1E293B] rounded-xl p-1 w-max">
             {([
               { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
               { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
@@ -325,7 +325,7 @@ export default function NotificationsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white dark:bg-[#2D3F55] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-[#94A3B8] hover:text-gray-700 dark:hover:text-[#F1F5F9] hover:bg-white/50 dark:hover:bg-[#2D3F55]/60'}`}
               >
                 <tab.icon className="w-4 h-4 flex-shrink-0" />
                 {tab.label}
