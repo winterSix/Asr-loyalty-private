@@ -341,7 +341,7 @@ function AdminRewardsView() {
                 const percentage = totalUsersInTiers > 0 ? Math.round((count / totalUsersInTiers) * 100) : 0;
 
                 return (
-                  <div key={config.tier} className="p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition-all group">
+                  <div key={config.tier} className="p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 transition-all group">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.gradient} ${style.shadow} shadow-lg flex items-center justify-center text-lg`}>
@@ -422,16 +422,16 @@ function AdminRewardsView() {
             <div className="overflow-x-auto min-w-0">
               <table className="w-full table-auto">
                 <thead>
-                  <tr className="bg-gray-50/80">
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[180px]">User</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[110px]">Status</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[130px]">Main Wallet</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[140px]">Reward Points</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[100px]">Tier</th>
-                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[80px]">Actions</th>
+                  <tr className="bg-gray-50/80 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/5">
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[180px]">User</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[110px]">Status</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[130px]">Main Wallet</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[140px]">Reward Points</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[100px]">Tier</th>
+                    <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-[#94A3B8] uppercase tracking-wider whitespace-nowrap min-w-[80px]">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {users.map((u: any) => {
                     const rewardBal = getRewardBalance(u.wallets);
                     const mainBal = getMainBalance(u.wallets);
@@ -439,14 +439,14 @@ function AdminRewardsView() {
                     const style = getTierStyle(tier);
 
                     return (
-                      <tr key={u.id} className="hover:bg-gray-50/60 transition-colors group">
+                      <tr key={u.id} className="hover:bg-gray-50/60 dark:hover:bg-white/[0.04] transition-colors group">
                         <td className="py-4 px-5">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
                               {u.firstName?.[0]}{u.lastName?.[0]}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors whitespace-nowrap">
+                              <p className="font-semibold text-gray-900 dark:text-[#F1F5F9] whitespace-nowrap">
                                 {u.firstName} {u.lastName}
                               </p>
                               <p className="text-xs text-gray-500 whitespace-nowrap">{u.email || u.phoneNumber}</p>

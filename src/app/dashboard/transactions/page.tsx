@@ -330,22 +330,22 @@ export default function TransactionsPage() {
               <div className="overflow-x-auto min-w-0">
                 <table className="w-full table-auto">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[180px]">Reference</th>
+                    <tr className="border-b border-gray-200 dark:border-white/5">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[180px]">Reference</th>
                       {isAdmin && (
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[180px]">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[180px]">User</th>
                       )}
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[160px]">Type</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Amount</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[130px]">Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[160px]">Type</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[140px]">Amount</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[140px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[130px]">Date</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                     {transactions.map((tx: any) => (
                       <tr
                         key={tx.id}
-                        className="hover:bg-gray-50/60 transition-colors cursor-pointer group"
+                        className="hover:bg-gray-50/60 dark:hover:bg-white/[0.04] transition-colors cursor-pointer group"
                         onClick={() => router.push(`/dashboard/transactions/${tx.id}`)}
                       >
                         <td className="py-3.5 px-4">

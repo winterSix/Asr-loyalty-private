@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
@@ -12,6 +12,9 @@ export function useAuthGuard() {
   const router = useRouter();
   const hasInitializedRef = useRef(false);
   const redirectingRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => { setHydrated(true); }, []);
 
   // Initialize auth state on mount
   useEffect(() => {
@@ -67,6 +70,6 @@ export function useAuthGuard() {
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  return { user, isAuthenticated, isLoading };
+  return { user, isAuthenticated, isLoading: isLoading || !hydrated };
 }
 

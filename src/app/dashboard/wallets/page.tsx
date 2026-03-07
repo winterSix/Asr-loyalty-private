@@ -228,16 +228,16 @@ export default function WalletsPage() {
               <div className="overflow-x-auto min-w-0">
                 <table className="w-full table-auto">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[200px]">User</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[120px]">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Main Wallet</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Reward Points</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">Total Balance</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 whitespace-nowrap min-w-[90px]">Wallets</th>
+                    <tr className="border-b border-gray-200 dark:border-white/5">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[200px]">User</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[120px]">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[140px]">Main Wallet</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[140px]">Reward Points</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[140px]">Total Balance</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[90px]">Wallets</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                     {users.map((u) => {
                       const mainBalance = getMainBalance(u.wallets);
                       const rewardBalance = getRewardBalance(u.wallets);
@@ -247,7 +247,7 @@ export default function WalletsPage() {
                       return (
                         <tr
                           key={u.id}
-                          className="hover:bg-gray-50/60 transition-colors cursor-pointer group"
+                          className="hover:bg-gray-50/60 dark:hover:bg-white/[0.04] transition-colors cursor-pointer group"
                           onClick={() => router.push(`/dashboard/users/${u.id}`)}
                         >
                           <td className="py-4 px-4">
@@ -256,7 +256,7 @@ export default function WalletsPage() {
                                 {u.firstName?.[0]}{u.lastName?.[0]}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-semibold text-gray-900 group-hover:text-primary transition-colors whitespace-nowrap">
+                                <p className="font-semibold text-gray-900 dark:text-[#F1F5F9] whitespace-nowrap">
                                   {u.firstName} {u.lastName}
                                 </p>
                                 <p className="text-xs text-gray-500 whitespace-nowrap">{u.email || u.phoneNumber}</p>
