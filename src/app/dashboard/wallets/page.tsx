@@ -120,10 +120,7 @@ export default function WalletsPage() {
 
   const getTotalBalance = (wallets?: Array<{ balance: string; currency: string; type?: string }>) => {
     if (!wallets || wallets.length === 0) return 0;
-    return wallets.reduce((sum, w) => {
-      if (w.type === 'REWARD') return sum;
-      return sum + parseFloat(w.balance || '0');
-    }, 0);
+    return wallets.reduce((sum, w) => sum + parseFloat(w.balance || '0'), 0);
   };
 
   const summaryCards = [

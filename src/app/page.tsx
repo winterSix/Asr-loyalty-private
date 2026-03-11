@@ -189,11 +189,11 @@ function StatCard({ label, value, prefix = '', isAmount = false }: { label: stri
   const counted = useCountUp(value);
   const display = isAmount ? formatBig(counted) : counted.toLocaleString();
   return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">
         {prefix}{display}
       </span>
-      <span className="text-sm text-gray-400 font-medium">{label}</span>
+      <span className="text-sm text-slate-400 font-medium">{label}</span>
     </div>
   );
 }
@@ -328,17 +328,35 @@ export default function LandingPage() {
       </section>
 
       {/* ── LIVE STATS ───────────────────────────────────────────────────── */}
-      <section className="relative py-16 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 overflow-hidden">
-        <div className="absolute inset-0 [background-image:radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:20px_20px]" />
+      <section className="relative py-20 bg-[#080D1A] dark:bg-[#111827] overflow-hidden border-y border-white/[0.06] dark:border-indigo-500/[0.15]">
+        {/* Background glow blobs */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 bg-indigo-600/25 dark:bg-indigo-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-80 h-80 bg-violet-600/25 dark:bg-violet-500/20 rounded-full blur-3xl" />
+        </div>
+        {/* Dot grid */}
+        <div className="absolute inset-0 [background-image:radial-gradient(rgba(99,102,241,0.1)_1px,transparent_1px)] dark:[background-image:radial-gradient(rgba(99,102,241,0.12)_1px,transparent_1px)] [background-size:28px_28px]" />
+
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
           <motion.p variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-            className="text-center text-white/60 text-sm font-semibold uppercase tracking-widest mb-10">
+            className="text-center text-indigo-400/70 text-xs font-bold uppercase tracking-[0.2em] mb-12">
             Platform in numbers
           </motion.p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-y-2 md:divide-y-0 md:divide-x divide-white/10">
-            <StatCard label="Active Users" value={stats?.totalUsers ?? 0} />
-            <StatCard label="Transactions Done" value={stats?.totalTransactions ?? 0} />
-            <StatCard label="Rewards Given" value={stats?.totalRewardsGiven ?? 0} isAmount />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { label: 'Active Users', value: stats?.totalUsers ?? 0, icon: '👥', isAmount: false },
+              { label: 'Transactions Done', value: stats?.totalTransactions ?? 0, icon: '⚡', isAmount: false },
+              { label: 'Rewards Given', value: stats?.totalRewardsGiven ?? 0, icon: '🎁', isAmount: true },
+            ].map((item, i) => (
+              <motion.div key={item.label} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i}
+                className="relative bg-white/[0.05] dark:bg-white/[0.07] border border-white/[0.1] dark:border-indigo-400/[0.2] rounded-2xl p-8 flex flex-col items-center text-center backdrop-blur-sm hover:bg-white/[0.1] hover:border-indigo-400/50 transition-all duration-300 group">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 dark:bg-indigo-500/25 border border-indigo-500/30 dark:border-indigo-400/40 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform duration-300">
+                  {item.icon}
+                </div>
+                <StatCard label={item.label} value={item.value} isAmount={item.isAmount} />
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -455,12 +473,18 @@ export default function LandingPage() {
 
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
       <footer className="border-t border-gray-100 dark:border-gray-800 py-10 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-              <span className="text-white font-black text-xs">A</span>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                <span className="text-white font-black text-xs">A</span>
+              </div>
+              <span className="font-extrabold text-gray-900 dark:text-white">ASR<span className="text-indigo-500">Loyalty</span></span>
             </div>
-            <span className="font-extrabold text-gray-900 dark:text-white">ASR<span className="text-indigo-500">Loyalty</span></span>
+            <div className="flex flex-col items-center sm:items-start gap-1 text-sm text-gray-400">
+              <a href="tel:+2349167217393" className="hover:text-indigo-500 transition-colors">+234 916 721 7393</a>
+              <span>Abimbola street, Isolo road, Isolo, Lagos</span>
+            </div>
           </div>
           <p className="text-sm text-gray-400 text-center">
             © {new Date().getFullYear()} ASR Loyalty. Rewards that move with you.

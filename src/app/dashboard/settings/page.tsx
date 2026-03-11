@@ -141,15 +141,22 @@ export default function SettingsPage() {
   const toggleMutation = useMutation({
     mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
       systemSettingsService.toggleFeature(key, enabled),
-    onSuccess: () => {
-      toast.success('Setting toggled');
+    onSuccess: (_, { key, enabled }) => {
+      if (key === MAINTENANCE_KEY) {
+        toast.success(
+          enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled',
+          { id: 'maintenance-toggle', duration: 4000 }
+        );
+      } else {
+        toast.success('Setting toggled', { id: 'toggle-setting', duration: 3000 });
+      }
       queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
       queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
       queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
       queryClient.invalidateQueries({ queryKey: ['system-status'] });
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || 'Failed to toggle setting');
+      toast.error(err?.response?.data?.message || 'Failed to toggle setting', { id: 'toggle-error', duration: 4000 });
     },
   });
 
@@ -379,13 +386,15 @@ export default function SettingsPage() {
           <div
             className={`rounded-2xl border shadow-sm overflow-hidden mb-6 ${
               isMaintenanceActive
-                ? 'border-red-200 bg-red-50'
-                : 'border-amber-100 bg-amber-50/40'
+                ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30'
+                : 'border-amber-100 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20'
             }`}
           >
             <div
               className={`px-6 py-4 flex items-center justify-between border-b ${
-                isMaintenanceActive ? 'border-red-200 bg-red-100/60' : 'border-amber-100 bg-amber-50'
+                isMaintenanceActive
+                  ? 'border-red-200 dark:border-red-900/50 bg-red-100/60 dark:bg-red-950/40'
+                  : 'border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -403,7 +412,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <div>
-                  <h2 className={`font-semibold ${isMaintenanceActive ? 'text-red-900' : 'text-amber-900'}`}>
+                  <h2 className={`font-semibold ${isMaintenanceActive ? 'text-red-900 dark:text-red-300' : 'text-amber-900 dark:text-amber-300'}`}>
                     Maintenance Mode
                     {isMaintenanceActive && (
                       <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white animate-pulse">
@@ -411,7 +420,7 @@ export default function SettingsPage() {
                       </span>
                     )}
                   </h2>
-                  <p className={`text-xs mt-0.5 ${isMaintenanceActive ? 'text-red-600' : 'text-amber-700'}`}>
+                  <p className={`text-xs mt-0.5 ${isMaintenanceActive ? 'text-red-600 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
                     {isMaintenanceActive
                       ? 'All API requests are returning 503. Only admins can access the system.'
                       : 'Enabling this will block all non-admin API requests with a 503 response.'}
@@ -437,7 +446,7 @@ export default function SettingsPage() {
                 )}
               </button>
             </div>
-            <div className={`px-6 py-3 text-xs ${isMaintenanceActive ? 'text-red-700' : 'text-amber-700'}`}>
+            <div className={`px-6 py-3 text-xs ${isMaintenanceActive ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
               <strong>Impact:</strong> When active, all public and authenticated API endpoints return HTTP 503.
               Admin and Super Admin bypass this restriction. Use with caution.
             </div>
@@ -447,7 +456,7 @@ export default function SettingsPage() {
         {/* ── Payment Gateways ─────────────────────────────────────── */}
         {isAdmin && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:bg-transparent">
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <FiCreditCard className="w-4 h-4 text-emerald-500" />
                 Payment Gateways
@@ -455,9 +464,9 @@ export default function SettingsPage() {
               <p className="text-xs text-gray-400 mt-0.5">Enable or disable individual payment processors</p>
             </div>
             {paymentGateways.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
                 {paymentGateways.map((gw: any) => (
-                  <div key={gw.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                  <div key={gw.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 dark:hover:bg-white/[0.04] transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 text-sm capitalize">
                         {gw.key?.replace(/_enabled$/, '').replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
@@ -507,16 +516,16 @@ export default function SettingsPage() {
         {/* ── Feature Flags ────────────────────────────────────────── */}
         {isAdmin && filteredFeatures.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:bg-transparent">
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <FiZap className="w-4 h-4 text-amber-500" />
                 Feature Flags
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">Toggle system features on or off</p>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
               {filteredFeatures.map((feature: any) => (
-                <div key={feature.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                <div key={feature.key} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 dark:hover:bg-white/[0.04] transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">
                       {feature.key?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
@@ -578,7 +587,7 @@ export default function SettingsPage() {
                   <div key={category} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50/50 transition-colors"
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50/50 dark:hover:bg-white/[0.04] transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg bg-gradient-to-br ${catMeta.color} text-white shadow-sm`}>
@@ -600,7 +609,7 @@ export default function SettingsPage() {
                       )}
                     </button>
                     {isExpanded && (
-                      <div className="border-t border-gray-100 divide-y divide-gray-100">
+                      <div className="border-t border-gray-100 dark:border-slate-700/50 divide-y divide-gray-100 dark:divide-slate-700/50">
                         {(settings as any[]).map((setting: any) => {
                           const isBoolean = isBooleanValue(setting.value);
                           const boolVal = setting.value === 'true';
