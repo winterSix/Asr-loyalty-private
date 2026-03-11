@@ -20,7 +20,8 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(sed:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(del \"C:\\\\Users\\\\HP\\\\Desktop\\\\PROJECTS\\\\Hands-on\\\\ASR-LOYALTY\\\\asr-loyalty.web\\\\src\\\\app\\\\icon.png\")"
     ]
   }
 }
