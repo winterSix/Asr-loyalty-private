@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
@@ -101,14 +102,23 @@ export default function ReportsPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                className={`relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'bg-white dark:bg-[#21262d] text-gray-900 dark:text-[#e6edf3] shadow-sm dark:shadow-none dark:border dark:border-[#30363d]'
-                    : 'text-gray-500 dark:text-[#8b949e] hover:text-gray-700 dark:hover:text-[#c9d1d9] hover:bg-white/50 dark:hover:bg-[#21262d]/50'
+                    ? 'text-gray-900 dark:text-[#e6edf3]'
+                    : 'text-gray-500 dark:text-[#8b949e] hover:text-gray-700 dark:hover:text-[#c9d1d9]'
                 }`}
               >
-                {tab.icon}
-                {tab.label}
+                {activeTab === tab.key && (
+                  <motion.span
+                    layoutId="reports-tab-pill"
+                    className="absolute inset-0 rounded-lg bg-white dark:bg-[#21262d] shadow-sm dark:border dark:border-[#30363d]"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab.icon}
+                  {tab.label}
+                </span>
               </button>
             ))}
           </div>
