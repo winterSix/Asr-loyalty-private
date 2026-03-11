@@ -125,7 +125,7 @@ function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
-          {['Features', 'How It Works', 'Tiers'].map((item) => (
+          {['Features', 'How It Works', 'Tiers', 'About'].map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase().replace(/ /g, '-')}`}
@@ -167,7 +167,7 @@ function Navbar() {
             className="md:hidden bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 px-4 pb-4"
           >
             <div className="flex flex-col gap-2 pt-3">
-              {['Features', 'How It Works', 'Tiers'].map((item) => (
+              {['Features', 'How It Works', 'Tiers', 'About'].map((item) => (
                 <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMobileOpen(false)}
                   className="px-3 py-2.5 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-medium text-sm">
                   {item}
@@ -469,6 +469,137 @@ export default function LandingPage() {
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* ── ABOUT ────────────────────────────────────────────────────────── */}
+      <section id="about" className="relative py-28 px-4 sm:px-6 bg-[#080D1A] dark:bg-[#0B1120] overflow-hidden border-y border-white/[0.06]">
+        {/* Background effects */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-indigo-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-800/10 rounded-full blur-3xl" />
+        </div>
+        <div className="absolute inset-0 [background-image:linear-gradient(rgba(99,102,241,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
+
+        <div className="relative max-w-6xl mx-auto">
+
+          {/* Top label */}
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="flex items-center justify-center gap-3 mb-10">
+            <div className="h-px w-12 bg-gradient-to-r from-transparent to-indigo-500" />
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-indigo-400">Who we are</span>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent to-indigo-500" />
+          </motion.div>
+
+          {/* Big company name */}
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={1}
+            className="text-center mb-6">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/40">
+                <span className="text-white font-black text-lg">A</span>
+              </div>
+              <span className="text-xs font-bold text-indigo-400/70 uppercase tracking-widest">ASR Loyalty</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
+              AS-SUDAISY
+              <br />
+              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+                RESOURCES LIMITED
+              </span>
+            </h2>
+          </motion.div>
+
+          {/* What they do pills */}
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={2}
+            className="flex flex-wrap items-center justify-center gap-3 mb-8">
+            {[
+              { label: 'Plywood & Timber', icon: '🪵' },
+              { label: 'Foodstuff & Provisions', icon: '🛒' },
+              { label: 'Loyalty Rewards', icon: '🎯' },
+            ].map((tag) => (
+              <span key={tag.label}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.1] text-slate-300 text-sm font-medium">
+                <span>{tag.icon}</span>
+                {tag.label}
+              </span>
+            ))}
+          </motion.div>
+
+          {/* Mission quote */}
+          <motion.p variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={3}
+            className="text-center text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-16">
+            A trusted Nigerian trading company dealing in{' '}
+            <span className="text-white font-semibold">plywood, timber</span> and{' '}
+            <span className="text-white font-semibold">foodstuff</span> — now rewarding every
+            purchase through the <span className="text-indigo-400 font-semibold">ASR Loyalty</span> platform.
+          </motion.p>
+
+          {/* Contact strip */}
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={3}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ),
+                label: 'Office',
+                value: 'Abimbola St, Isolo Road, Isolo, Lagos',
+                color: 'from-indigo-500 to-blue-600',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                ),
+                label: 'Phone',
+                value: '+234 916 721 7393',
+                href: 'tel:+2349167217393',
+                color: 'from-violet-500 to-purple-600',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                ),
+                label: 'Registered Name',
+                value: 'AS-SUDAISY RESOURCES LIMITED',
+                color: 'from-emerald-500 to-teal-600',
+              },
+              {
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+                label: 'Country',
+                value: 'Federal Republic of Nigeria',
+                color: 'from-amber-500 to-orange-600',
+              },
+            ].map((item) => (
+              <div key={item.label}
+                className="group relative bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 hover:bg-white/[0.08] hover:border-indigo-500/30 transition-all duration-300 overflow-hidden">
+                {/* Glow on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-[0.06] transition-opacity rounded-2xl`} />
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  {item.icon}
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">{item.label}</p>
+                {item.href ? (
+                  <a href={item.href} className="text-sm font-semibold text-slate-200 hover:text-indigo-400 transition-colors leading-snug block">
+                    {item.value}
+                  </a>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-200 leading-snug">{item.value}</p>
+                )}
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────── */}
