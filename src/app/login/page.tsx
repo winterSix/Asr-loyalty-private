@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -201,10 +202,8 @@ export default function LoginPage() {
 
           <div className="relative z-10">
             <div className="mb-10">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-white/20">
-                <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center">
-                  <span className="text-2xl font-black text-primary">ASR</span>
-                </div>
+              <div className="mb-6">
+                <Image src="/logo.png" alt="ASR Loyalty" width={80} height={80} className="w-20 h-20 object-contain" />
               </div>
               <h1 className="text-5xl font-black uppercase tracking-wider text-white drop-shadow-2xl mb-3">
                 ASR Loyalty

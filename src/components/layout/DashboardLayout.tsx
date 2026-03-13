@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
 import { refundService } from '@/services/refund.service';
+import { notificationService } from '@/services/notification.service';
 import {
     FiBarChart, FiBell, FiChevronDown, FiChevronLeft, FiChevronRight,
     FiCreditCard, FiDollarSign, FiFileText, FiGift, FiHome, FiKey,
@@ -12,6 +13,7 @@ import {
 } from '@/utils/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { adminService } from '@/services/admin.service';
 
@@ -36,7 +38,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [searchIndex,   setSearchIndex]   = useState(0);
+    const [notifOpen,     setNotifOpen]     = useState(false);
+    const [notifTab,      setNotifTab]      = useState<'mine' | 'all'>('mine');
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const notifRef       = useRef<HTMLDivElement>(null);
 
     const router   = useRouter();
     const pathname = usePathname();
@@ -140,15 +145,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const dCount = dDisputes?.total ?? 0;
     const rCount = dRefunds?.total  ?? 0;
 
+    const { data: unreadData } = useQuery({
+        queryKey: ['notifications', 'unread-count'],
+        queryFn:  () => notificationService.getUnreadCount(),
+        staleTime: 30000, retry: 1, enabled: !!user,
+        refetchInterval: 60000,
+    });
+    const unreadCount = unreadData?.unreadCount ?? 0;
+
+    const { data: myNotifs } = useQuery({
+        queryKey: ['notifications', 'dropdown-mine'],
+        queryFn:  () => notificationService.getNotifications({ page: 1, limit: 5 }),
+        enabled: notifOpen && notifTab === 'mine', staleTime: 10000,
+    });
+    const { data: allNotifs } = useQuery({
+        queryKey: ['notifications', 'dropdown-all'],
+        queryFn:  () => notificationService.getAllNotifications({ page: 1, limit: 5 }),
+        enabled: notifOpen && notifTab === 'all' && isAdmin, staleTime: 10000,
+    });
+
     // Close menus on outside click
     useEffect(() => {
         const h = (e: MouseEvent) => {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenu(false);
             if (themeRef.current    && !themeRef.current.contains(e.target as Node))    setThemeMenu(false);
+            if (notifRef.current    && !notifRef.current.contains(e.target as Node))    setNotifOpen(false);
         };
-        if (userMenu || themeMenu) document.addEventListener('mousedown', h);
+        if (userMenu || themeMenu || notifOpen) document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
-    }, [userMenu, themeMenu]);
+    }, [userMenu, themeMenu, notifOpen]);
 
     // Restore sidebar scroll
     useEffect(() => {
@@ -305,9 +330,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="relative h-[72px] flex items-center border-b border-gray-100 dark:border-white/10"
                         style={{ padding: isColl ? '0 12px' : '0 20px' }}>
                         <div className={`flex items-center gap-3 transition-all duration-300 ${isColl ? 'w-full justify-center' : ''}`}>
-                            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary to-primary-lighter rounded-xl flex items-center justify-center shadow-md shadow-primary/25">
-                                <span className="text-lg font-black text-white tracking-tight">A</span>
-                            </div>
+                            <Image src="/logo.png" alt="ASR Loyalty" width={40} height={40} className="flex-shrink-0 w-10 h-10 object-contain" />
                             {!isColl && (
                                 <div className="overflow-hidden">
                                     <h1 className="text-[17px] font-bold text-gray-900 dark:text-[#F1F5F9] whitespace-nowrap tracking-tight">ASR Loyalty</h1>
@@ -436,11 +459,73 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </button>
 
                             {/* Bell */}
-                            <button onClick={() => router.push('/dashboard/notifications')}
-                                className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
-                                <FiBell className="w-5 h-5" />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] animate-pulse" />
-                            </button>
+                            <div className="relative" ref={notifRef}>
+                                <button onClick={() => setNotifOpen(!notifOpen)}
+                                    className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
+                                    <FiBell className="w-5 h-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white px-1 leading-none animate-pulse">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {notifOpen && (
+                                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#263349] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden z-[36] animate-slide-down">
+                                        {/* Tooltip arrow */}
+                                        <div className="absolute -top-[7px] right-5 w-3.5 h-3.5 bg-white dark:bg-[#263349] border-l border-t border-gray-100 dark:border-white/10 rotate-45" />
+
+                                        {/* Tabs */}
+                                        <div className="flex border-b border-gray-100 dark:border-white/10 pt-1">
+                                            <button
+                                                onClick={() => setNotifTab('mine')}
+                                                className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 ${notifTab === 'mine' ? 'text-primary dark:text-indigo-400 border-primary dark:border-indigo-400' : 'text-gray-500 dark:text-[#94A3B8] border-transparent hover:text-gray-700 dark:hover:text-[#CBD5E1]'}`}>
+                                                My Notifications
+                                            </button>
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={() => setNotifTab('all')}
+                                                    className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 ${notifTab === 'all' ? 'text-primary dark:text-indigo-400 border-primary dark:border-indigo-400' : 'text-gray-500 dark:text-[#94A3B8] border-transparent hover:text-gray-700 dark:hover:text-[#CBD5E1]'}`}>
+                                                    All Notifications
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* List */}
+                                        <div className="max-h-64 overflow-y-auto">
+                                            {(notifTab === 'mine' ? myNotifs?.data : allNotifs?.data)?.length ? (
+                                                (notifTab === 'mine' ? myNotifs?.data : allNotifs?.data)!.map(notif => (
+                                                    <div key={notif.id}
+                                                        className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#2D3F55] cursor-pointer transition-colors border-b border-gray-50 dark:border-white/5 last:border-0 ${notif.status !== 'READ' ? 'bg-primary/[0.04] dark:bg-indigo-500/[0.06]' : ''}`}
+                                                        onClick={() => { router.push(`/dashboard/notifications?tab=${notifTab}`); setNotifOpen(false); }}>
+                                                        <div className="flex items-start gap-2">
+                                                            {notif.status !== 'READ' && <div className="mt-1.5 w-1.5 h-1.5 bg-primary dark:bg-indigo-400 rounded-full flex-shrink-0" />}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-800 dark:text-[#F1F5F9] truncate">{notif.title}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-[#64748B] truncate mt-0.5">{notif.body}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="py-10 text-center">
+                                                    <FiBell className="w-8 h-8 text-gray-200 dark:text-[#334155] mx-auto mb-2" />
+                                                    <p className="text-sm text-gray-400 dark:text-[#64748B]">No notifications</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="border-t border-gray-100 dark:border-white/10 px-4 py-2.5">
+                                            <button
+                                                onClick={() => { router.push(`/dashboard/notifications?tab=${notifTab}`); setNotifOpen(false); }}
+                                                className="w-full text-center text-sm text-primary dark:text-indigo-400 font-semibold hover:underline">
+                                                View all notifications →
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Theme toggle */}
                             <div className="relative block" ref={themeRef}>
