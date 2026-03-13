@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -42,7 +42,7 @@ const CHANNELS: NotificationType[] = ['IN_APP', 'PUSH', 'EMAIL', 'SMS'];
 const TARGET_ROLES = ['CUSTOMER', 'CASHIER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT'];
 const TARGET_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
 
-export default function NotificationsPage() {
+function NotificationsContent() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -774,5 +774,13 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" /></div>}>
+      <NotificationsContent />
+    </Suspense>
   );
 }
