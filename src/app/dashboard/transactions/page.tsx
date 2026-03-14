@@ -224,7 +224,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* Filters Card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
           <div className="space-y-4">
             {/* Search */}
             <div className="relative">
@@ -234,7 +234,7 @@ export default function TransactionsPage() {
                 placeholder={isAdmin ? 'Search by reference...' : 'Search transactions...'}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm placeholder:text-gray-400"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -320,7 +320,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col">
           {txLoading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -406,26 +406,26 @@ export default function TransactionsPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
-                  <p className="text-sm text-gray-500">
-                    Showing <span className="font-semibold text-gray-700">{(page - 1) * limit + 1}</span>–<span className="font-semibold text-gray-700">{Math.min(page * limit, total)}</span> of <span className="font-semibold text-gray-700">{total}</span>
+              {transactions.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/30 gap-3">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Showing <span className="font-semibold text-gray-700 dark:text-gray-300">{(page - 1) * limit + 1}</span>–<span className="font-semibold text-gray-700 dark:text-gray-300">{Math.min(page * limit, total)}</span> of <span className="font-semibold text-gray-700 dark:text-gray-300">{total}</span>
                   </p>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                     >
                       <FiChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="text-sm font-medium text-gray-600 px-3 min-w-[100px] text-center">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 px-3 min-w-[100px] text-center">
                       Page {page} of {totalPages}
                     </span>
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                     >
                       <FiChevronRight className="w-4 h-4" />
                     </button>

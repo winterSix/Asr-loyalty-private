@@ -395,9 +395,9 @@ function AdminRewardsView() {
       </div>
 
       {/* User Reward Balances Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-        <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm flex flex-col">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <FiStar className="w-5 h-5 text-primary" />
             User Reward Balances
           </h2>
@@ -408,7 +408,7 @@ function AdminRewardsView() {
               placeholder="Search users..."
               value={usersSearch}
               onChange={(e) => setUsersSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+              className="w-full pl-9 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
             />
           </div>
         </div>
@@ -495,26 +495,26 @@ function AdminRewardsView() {
             </div>
 
             {/* Pagination */}
-            {usersTotalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
-                <p className="text-sm text-gray-500">
+            {users.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/30 gap-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Showing <span className="font-medium text-gray-700">{(usersPage - 1) * usersLimit + 1}</span>–<span className="font-medium text-gray-700">{Math.min(usersPage * usersLimit, usersTotal)}</span> of <span className="font-medium text-gray-700">{usersTotal}</span> users
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setUsersPage(p => Math.max(1, p - 1))}
                     disabled={usersPage === 1}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <FiChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-sm font-medium text-gray-600 px-3 min-w-[100px] text-center">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 px-3 min-w-[100px] text-center">
                     Page {usersPage} of {usersTotalPages}
                   </span>
                   <button
                     onClick={() => setUsersPage(p => Math.min(usersTotalPages, p + 1))}
                     disabled={usersPage === usersTotalPages}
-                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <FiChevronRight className="w-4 h-4" />
                   </button>
