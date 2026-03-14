@@ -20,7 +20,7 @@ export default function AuditLogsPage() {
   const router = useRouter();
   const [actionFilter, setActionFilter] = useState<string>('');
   const [page, setPage] = useState(1);
-  const limit = 15;
+  const limit = 10;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

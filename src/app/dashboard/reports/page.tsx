@@ -34,7 +34,7 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day');
   const [breakdownPage, setBreakdownPage] = useState(1);
-  const breakdownLimit = 20;
+  const breakdownLimit = 10;
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 

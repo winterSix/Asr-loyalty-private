@@ -36,7 +36,7 @@ export default function TransactionsPage() {
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
-  const limit = 20;
+  const limit = 10;
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 

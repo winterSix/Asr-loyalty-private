@@ -74,7 +74,7 @@ function AdminRewardsView() {
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const usersLimit = 8;
+  const usersLimit = 10;
 
   useEffect(() => {
     const t = setTimeout(() => {
