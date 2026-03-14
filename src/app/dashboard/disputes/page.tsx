@@ -310,7 +310,7 @@ export default function DisputesPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {disputes.length > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/50 gap-3">
                   <p className="text-sm text-gray-500">
                     Showing <span className="font-medium text-gray-700">{(page - 1) * limit + 1}</span>–<span className="font-medium text-gray-700">{Math.min(page * limit, total)}</span> of <span className="font-medium text-gray-700">{total}</span>

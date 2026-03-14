@@ -319,7 +319,7 @@ export default function UsersPage() {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {users.length > 0 && (
                 <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-600">
                     Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}

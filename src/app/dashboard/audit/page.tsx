@@ -10,6 +10,8 @@ import {
   FiSearch,
   FiFilter,
   FiEye,
+  FiChevronLeft,
+  FiChevronRight,
 } from '@/utils/icons';
 import CustomSelect from '@/components/ui/CustomSelect';
 
@@ -17,6 +19,8 @@ export default function AuditLogsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const router = useRouter();
   const [actionFilter, setActionFilter] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const limit = 15;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -27,8 +31,8 @@ export default function AuditLogsPage() {
   }, [isLoading, isAuthenticated, router, checkAuth]);
 
   const { data: auditLogs, isLoading: auditLoading } = useQuery({
-    queryKey: ['audit-logs', actionFilter],
-    queryFn: () => auditService.getAuditLogs({ action: actionFilter || undefined, page: 1, limit: 50 }),
+    queryKey: ['audit-logs', actionFilter, page],
+    queryFn: () => auditService.getAuditLogs({ action: actionFilter || undefined, page, limit }),
     enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
   });
 
@@ -79,7 +83,7 @@ export default function AuditLogsPage() {
               <FiFilter className="text-gray-400" />
               <CustomSelect
                 value={actionFilter}
-                onChange={(v) => setActionFilter(v)}
+                onChange={(v) => { setActionFilter(v); setPage(1); }}
                 options={[
                   { value: '', label: 'All Actions' },
                   { value: 'CREATE', label: 'Create' },
@@ -97,6 +101,7 @@ export default function AuditLogsPage() {
         {/* Audit Logs Table */}
         <div className="card flex flex-col">
           {auditLogs?.data && auditLogs.data.length > 0 ? (
+            <>
             <div className="overflow-x-auto min-w-0">
               <table className="w-full table-auto">
                 <thead>
@@ -147,6 +152,33 @@ export default function AuditLogsPage() {
                 </tbody>
               </table>
             </div>
+            {auditLogs?.total != null && auditLogs.data.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] gap-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Showing <span className="font-semibold text-gray-700 dark:text-gray-300">{(page - 1) * limit + 1}</span>–<span className="font-semibold text-gray-700 dark:text-gray-300">{Math.min(page * limit, auditLogs.total)}</span> of <span className="font-semibold text-gray-700 dark:text-gray-300">{auditLogs.total}</span>
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <FiChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400 px-3 min-w-[100px] text-center">
+                    Page {page} of {Math.ceil((auditLogs.total || 0) / limit)}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(Math.ceil((auditLogs.total || 0) / limit), p + 1))}
+                    disabled={page >= Math.ceil((auditLogs.total || 0) / limit)}
+                    className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <FiChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <div className="text-center py-12">
               <FiFileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
