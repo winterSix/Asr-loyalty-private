@@ -189,8 +189,19 @@ export function unwrapResponse<T>(responseData: any): T {
   // Only strip the OUTER interceptor wrapper which has BOTH success AND statusCode.
   // Inner service responses (e.g. { success, data, pagination }) only have success,
   // so they won't be incorrectly unwrapped.
-  if (responseData?.data && typeof responseData.data === 'object' &&
+  if (responseData?.data !== undefined && typeof responseData.data === 'object' &&
       responseData.success !== undefined && responseData.statusCode !== undefined) {
+    // When pagination is present, return normalized { data, total, page, limit }
+    // so callers don't lose pagination info (interceptor strips the backend pagination object)
+    if (responseData.pagination) {
+      return {
+        data: responseData.data,
+        total: responseData.pagination.total ?? 0,
+        page: responseData.pagination.page ?? 1,
+        limit: responseData.pagination.limit ?? 10,
+        totalPages: responseData.pagination.totalPages,
+      } as T;
+    }
     return responseData.data as T;
   }
   // Return as-is if not wrapped
