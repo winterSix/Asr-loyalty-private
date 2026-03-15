@@ -236,7 +236,7 @@ export default function RolesPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {statCards.map((card) => (
-            <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+            <div key={card.label} className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 flex items-center gap-4">
               <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
                 <card.icon className="w-5 h-5" />
               </div>
@@ -249,7 +249,7 @@ export default function RolesPage() {
         </div>
 
         {/* Search */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 mb-6">
           <div className="relative">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -257,7 +257,7 @@ export default function RolesPage() {
               placeholder="Search roles by name or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
             />
           </div>
         </div>
@@ -272,7 +272,7 @@ export default function RolesPage() {
             {filteredRoles.map((roleItem: any) => {
               const rc = getRoleColor(roleItem.name);
               return (
-                <div key={roleItem.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all group overflow-hidden">
+                <div key={roleItem.id} className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all group overflow-hidden">
                   {/* Color bar */}
                   <div className={`h-1.5 bg-gradient-to-r ${rc.bg}`}></div>
                   <div className="p-5">
@@ -290,23 +290,23 @@ export default function RolesPage() {
                       </div>
                     </div>
                     <div className="mb-4">
-                      <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
                         {roleItem.name?.replace(/_/g, ' ')}
                       </h3>
                       {roleItem.description && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{roleItem.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{roleItem.description}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 text-xs font-medium text-gray-600">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-400">
                         <FiKey className="w-3.5 h-3.5" />
                         {roleItem.permissions?.length || 0} permissions
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                       <button
                         onClick={() => router.push(`/dashboard/roles/${roleItem.id}`)}
-                        className="flex-1 px-3 py-2 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"
+                        className="flex-1 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-1.5"
                       >
                         <FiEye className="w-4 h-4" />
                         View
@@ -362,7 +362,7 @@ export default function RolesPage() {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-16">
+          <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm text-center py-16">
             <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FiLayers className="w-8 h-8 text-gray-400" />
             </div>
@@ -377,21 +377,21 @@ export default function RolesPage() {
       {/* Create Role Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
                   <FiLayers className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Create Role</h2>
-                  <p className="text-xs text-gray-400">Define a new system role</p>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Create Role</h2>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Define a new system role</p>
                 </div>
               </div>
               <button
                 onClick={() => { setShowCreateModal(false); setCreateForm({ name: '', description: '' }); setSelectedPermissions([]); }}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
               >
                 <FiX className="w-5 h-5" />
               </button>
@@ -402,7 +402,7 @@ export default function RolesPage() {
               <div className="p-6 space-y-5 overflow-y-auto flex-1">
                 {/* Role Name */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                     Role Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -411,20 +411,20 @@ export default function RolesPage() {
                     value={createForm.name}
                     onChange={(e) => setCreateForm(f => ({ ...f, name: e.target.value }))}
                     required
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-mono uppercase"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-mono uppercase text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Will be saved as UPPER_SNAKE_CASE automatically</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Will be saved as UPPER_SNAKE_CASE automatically</p>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
                   <textarea
                     rows={2}
                     placeholder="Brief description of this role's responsibilities..."
                     value={createForm.description}
                     onChange={(e) => setCreateForm(f => ({ ...f, description: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm resize-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   />
                 </div>
 
@@ -432,9 +432,9 @@ export default function RolesPage() {
                 {Object.keys(permissionsByResource).length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-semibold text-gray-700">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Permissions
-                        <span className="ml-2 text-xs text-gray-400 font-normal">
+                        <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 font-normal">
                           {selectedPermissions.length} selected
                         </span>
                       </label>
@@ -456,16 +456,16 @@ export default function RolesPage() {
                         const allSelected = resourcePerms.every((p: any) => selectedPermissions.includes(p.id));
                         const someSelected = resourcePerms.some((p: any) => selectedPermissions.includes(p.id));
                         return (
-                          <div key={resource} className="border border-gray-100 rounded-xl overflow-hidden">
+                          <div key={resource} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
                             {/* Resource header — click to toggle all */}
                             <button
                               type="button"
                               onClick={() => toggleResource(resourcePerms)}
                               className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
-                                allSelected ? 'bg-violet-50' : someSelected ? 'bg-gray-50' : 'bg-gray-50/50'
+                                allSelected ? 'bg-violet-50 dark:bg-violet-900/20' : someSelected ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-50/50 dark:bg-gray-800/50'
                               }`}
                             >
-                              <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{resource}</span>
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{resource}</span>
                               <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                                 allSelected
                                   ? 'bg-violet-500 border-violet-500'
@@ -487,8 +487,8 @@ export default function RolesPage() {
                                     onClick={() => togglePermission(p.id)}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
                                       checked
-                                        ? 'bg-violet-100 text-violet-700 ring-1 ring-violet-400/40'
-                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                        ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 ring-1 ring-violet-400/40'
+                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                                     }`}
                                   >
                                     {checked && <FiCheck className="w-3 h-3" />}
@@ -506,11 +506,11 @@ export default function RolesPage() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => { setShowCreateModal(false); setCreateForm({ name: '', description: '' }); setSelectedPermissions([]); }}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>

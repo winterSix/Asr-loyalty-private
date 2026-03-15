@@ -16,6 +16,8 @@ import {
   FiActivity,
   FiCheckCircle,
   FiXCircle,
+  FiChevronLeft,
+  FiChevronRight,
 } from '@/utils/icons';
 import CustomSelect from '@/components/ui/CustomSelect';
 
@@ -31,6 +33,8 @@ export default function ReportsPage() {
   const [startDate, setStartDate] = useState(thirtyDaysAgo.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day');
+  const [breakdownPage, setBreakdownPage] = useState(1);
+  const breakdownLimit = 10;
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -234,38 +238,61 @@ export default function ReportsPage() {
               <div className="card">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-[#e6edf3] mb-4">Revenue Breakdown</h3>
                 {revenueData.breakdown && revenueData.breakdown.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200 dark:border-white/5">
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[120px]">Period</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[140px]">Revenue</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[130px]">Fees</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[130px]">Rewards</th>
-                          <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[80px]">Count</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {revenueData.breakdown.map((row, i) => (
-                          <tr key={i} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
-                            <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">{row.period}</td>
-                            <td className="py-3 px-4 text-sm font-bold text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">
-                              ₦{Number(row.revenue ?? 0).toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-600 dark:text-[#c9d1d9] whitespace-nowrap">
-                              ₦{Number(row.fees ?? 0).toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-purple-600 dark:text-purple-400 whitespace-nowrap">
-                              ₦{Number(row.rewardsGiven ?? row.rewards ?? 0).toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-700 dark:text-[#c9d1d9] whitespace-nowrap">
-                              {row.count}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  (() => {
+                    const pagedBreakdown = revenueData.breakdown.slice((breakdownPage - 1) * breakdownLimit, breakdownPage * breakdownLimit);
+                    return (
+                      <>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b border-gray-200 dark:border-white/5">
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[120px]">Period</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[140px]">Revenue</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[130px]">Fees</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[130px]">Rewards</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#c9d1d9] min-w-[80px]">Count</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {pagedBreakdown.map((row, i) => (
+                                <tr key={i} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-colors">
+                                  <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">{row.period}</td>
+                                  <td className="py-3 px-4 text-sm font-bold text-gray-900 dark:text-[#e6edf3] whitespace-nowrap">
+                                    ₦{Number(row.revenue ?? 0).toLocaleString()}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-[#c9d1d9] whitespace-nowrap">
+                                    ₦{Number(row.fees ?? 0).toLocaleString()}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                                    ₦{Number(row.rewardsGiven ?? row.rewards ?? 0).toLocaleString()}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm text-gray-700 dark:text-[#c9d1d9] whitespace-nowrap">
+                                    {row.count}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {revenueData.breakdown.length > breakdownLimit && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] gap-3 mt-2">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Showing {(breakdownPage - 1) * breakdownLimit + 1}–{Math.min(breakdownPage * breakdownLimit, revenueData.breakdown.length)} of {revenueData.breakdown.length}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => setBreakdownPage((p) => Math.max(1, p - 1))} disabled={breakdownPage === 1} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <FiChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                              </button>
+                              <span className="text-sm text-gray-600 dark:text-gray-400 px-3">Page {breakdownPage} of {Math.ceil(revenueData.breakdown.length / breakdownLimit)}</span>
+                              <button onClick={() => setBreakdownPage((p) => Math.min(Math.ceil(revenueData.breakdown.length / breakdownLimit), p + 1))} disabled={breakdownPage >= Math.ceil(revenueData.breakdown.length / breakdownLimit)} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <FiChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()
                 ) : (
                   <p className="text-gray-500 dark:text-[#8b949e] text-center py-8">No revenue data for this period</p>
                 )}

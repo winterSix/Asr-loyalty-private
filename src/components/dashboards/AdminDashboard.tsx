@@ -199,7 +199,7 @@ const RevenueTooltip = ({ active, payload, label }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, paddingTop: 7, borderTop: `1px solid ${divider}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: '#f59e0b' }} />
-            <span style={{ color: mutedCol, fontSize: 12 }}>Paystack Fees</span>
+            <span style={{ color: mutedCol, fontSize: 12 }}>Fees</span>
           </div>
           <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 700 }}>₦{Number(fees).toLocaleString()}</span>
         </div>
@@ -245,6 +245,44 @@ export default function AdminDashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [feeRateHovered, setFeeRateHovered] = useState(false);
+  const [feeTooltipLeft, setFeeTooltipLeft] = useState('50%');
+  const feeRateCardRef = useRef<HTMLDivElement>(null);
+  const feeRateHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showFeeTooltip = () => {
+    if (feeRateHideTimer.current) clearTimeout(feeRateHideTimer.current);
+    if (feeRateCardRef.current) {
+      const card = feeRateCardRef.current;
+      const wrapper = card.closest('.relative') as HTMLElement;
+      if (wrapper) {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        setFeeTooltipLeft(`${cardCenter}px`);
+      }
+    }
+    setFeeRateHovered(true);
+  };
+  const hideFeeTooltip = () => {
+    feeRateHideTimer.current = setTimeout(() => setFeeRateHovered(false), 150);
+  };
+  const feesCardRef = useRef<HTMLDivElement>(null);
+  const feesHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [feesCardHovered, setFeesCardHovered] = useState(false);
+  const [feesTooltipLeft, setFeesTooltipLeft] = useState('50%');
+  const showFeesTooltip = () => {
+    if (feesHideTimer.current) clearTimeout(feesHideTimer.current);
+    if (feesCardRef.current) {
+      const card = feesCardRef.current;
+      const wrapper = card.closest('.relative') as HTMLElement;
+      if (wrapper) {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        setFeesTooltipLeft(`${cardCenter}px`);
+      }
+    }
+    setFeesCardHovered(true);
+  };
+  const hideFeesTooltip = () => {
+    feesHideTimer.current = setTimeout(() => setFeesCardHovered(false), 150);
+  };
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersSearch, setUsersSearch] = useState('');
   const [usersSearchInput, setUsersSearchInput] = useState('');
@@ -379,6 +417,19 @@ export default function AdminDashboard() {
   const chartTotalNet = chartTotalRevenue - chartTotalFees;
   const chartFeePercentage = chartTotalRevenue > 0 ? (chartTotalFees / chartTotalRevenue) * 100 : 0;
   const chartAvgPerDay = revenueChartData.length > 0 ? Math.round(chartTotalRevenue / revenueChartData.length) : 0;
+
+  // Per-period fee rates for the hover tooltip
+  const periodFeeRates = revenueChartData.map((d) => ({
+    name: d.name,
+    fees: d.fees,
+    revenue: d.revenue,
+    rate: d.revenue > 0 ? (d.fees / d.revenue) * 100 : 0,
+  }));
+  const highestFeeRateDay = periodFeeRates.length > 0 ? periodFeeRates.reduce((best, d) => (d.rate > best.rate ? d : best)) : null;
+  const lowestFeeRateDay = periodFeeRates.length > 0 ? periodFeeRates.reduce((best, d) => (d.rate < best.rate ? d : best)) : null;
+  const firstHalfRate = periodFeeRates.slice(0, Math.ceil(periodFeeRates.length / 2)).reduce((s, d) => s + d.rate, 0) / (Math.ceil(periodFeeRates.length / 2) || 1);
+  const secondHalfRate = periodFeeRates.slice(Math.ceil(periodFeeRates.length / 2)).reduce((s, d) => s + d.rate, 0) / (Math.floor(periodFeeRates.length / 2) || 1);
+  const feeRateTrend: 'up' | 'down' | 'stable' = secondHalfRate > firstHalfRate + 0.5 ? 'up' : secondHalfRate < firstHalfRate - 0.5 ? 'down' : 'stable';
   const chartHighestDay = revenueChartData.reduce(
     (best, d) => (d.revenue > best.revenue ? d : best),
     { name: '–', revenue: 0, fees: 0, net: 0, count: 0 },
@@ -617,45 +668,223 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
                   <div className="w-3 h-2 rounded-sm bg-amber-400" />
-                  <span className="text-amber-700 font-medium">Paystack Fees</span>
+                  <span className="text-amber-700 font-medium">Fees</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 5-metric summary strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-gray-100 rounded-xl overflow-hidden mb-6 border border-gray-100">
-            <div className="bg-white p-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Gross Revenue</p>
-              <p className="text-xl font-bold text-gray-900 mt-1">₦{chartTotalRevenue.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Total received</p>
+          <div className="relative mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 p-4">
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Gross Revenue</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">₦{chartTotalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Total received</p>
             </div>
-            <div className="bg-white p-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Net Revenue</p>
+            <div className="bg-white dark:bg-gray-800 p-4">
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Net Revenue</p>
               <p className="text-xl font-bold text-indigo-600 mt-1">₦{chartTotalNet.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-0.5">After fees</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">After fees</p>
             </div>
-            <div className="bg-white p-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Paystack Fees</p>
+            <div
+              ref={feesCardRef}
+              className="bg-white dark:bg-gray-800 p-4 cursor-default"
+              onMouseEnter={showFeesTooltip}
+              onMouseLeave={hideFeesTooltip}
+            >
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Fees</p>
               <p className="text-xl font-bold text-amber-500 mt-1">₦{chartTotalFees.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Processing cost</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Processing costs (all gateways)</p>
             </div>
-            <div className="bg-white p-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Fee Rate</p>
-              <p className="text-xl font-bold text-rose-500 mt-1">{chartFeePercentage.toFixed(2)}%</p>
-              <div className="w-full h-1 bg-gray-100 rounded-full mt-2">
+            {/* Fee Rate card */}
+            <div
+              ref={feeRateCardRef}
+              className="bg-white dark:bg-gray-800 p-4 cursor-default"
+              onMouseEnter={showFeeTooltip}
+              onMouseLeave={hideFeeTooltip}
+            >
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Fee Rate</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <p className="text-xl font-bold text-rose-500">{chartFeePercentage.toFixed(2)}%</p>
+                {feeRateTrend === 'up' && <FiTrendingUp className="w-4 h-4 text-rose-400" />}
+                {feeRateTrend === 'down' && <FiTrendingDown className="w-4 h-4 text-emerald-500" />}
+              </div>
+              <div className="w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full mt-2">
                 <div
                   className="h-1 bg-gradient-to-r from-amber-400 to-rose-400 rounded-full"
                   style={{ width: `${Math.min(chartFeePercentage * 10, 100)}%` }}
                 />
               </div>
             </div>
-            <div className="bg-white p-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Avg / Period</p>
+            <div className="bg-white dark:bg-gray-800 p-4">
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Avg / Period</p>
               <p className="text-xl font-bold text-emerald-600 mt-1">₦{chartAvgPerDay.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Per day</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Per day</p>
             </div>
           </div>
+
+          {/* Fee Rate hover tooltip — outside overflow-hidden grid */}
+          <AnimatePresence>
+            {feeRateHovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute -translate-x-1/2 top-full mt-1 z-50 w-72 pointer-events-auto"
+              style={{ left: feeTooltipLeft }}
+                onMouseEnter={showFeeTooltip}
+                onMouseLeave={hideFeeTooltip}
+              >
+                <div className="bg-gray-900 text-white rounded-xl shadow-2xl p-4 text-xs">
+                  <p className="font-semibold text-sm mb-3 text-white">Fee Rate Breakdown</p>
+
+                  {/* Trend summary */}
+                  <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg ${feeRateTrend === 'up' ? 'bg-rose-500/20 text-rose-300' : feeRateTrend === 'down' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-700 text-gray-300'}`}>
+                    {feeRateTrend === 'up' && <FiTrendingUp className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {feeRateTrend === 'down' && <FiTrendingDown className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {feeRateTrend === 'stable' && <FiActivity className="w-3.5 h-3.5 flex-shrink-0" />}
+                    <span className="leading-tight">
+                      {feeRateTrend === 'up' && <><b>Rising</b> {firstHalfRate.toFixed(1)}% → {secondHalfRate.toFixed(1)}%</>}
+                      {feeRateTrend === 'down' && <><b>Falling</b> {firstHalfRate.toFixed(1)}% → {secondHalfRate.toFixed(1)}%</>}
+                      {feeRateTrend === 'stable' && `Stable across period`}
+                    </span>
+                  </div>
+
+                  {/* Key stats */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="bg-gray-800 rounded-lg p-2">
+                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Overall Rate</p>
+                      <p className="text-rose-400 font-bold text-sm mt-0.5">{chartFeePercentage.toFixed(2)}%</p>
+                      <p className="text-gray-500 text-[10px]">₦{chartTotalFees.toLocaleString()} fees</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-2">
+                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Net Retained</p>
+                      <p className="text-emerald-400 font-bold text-sm mt-0.5">{chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}%</p>
+                      <p className="text-gray-500 text-[10px]">₦{chartTotalNet.toLocaleString()} net</p>
+                    </div>
+                    {highestFeeRateDay && (
+                      <div className="bg-gray-800 rounded-lg p-2">
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">Highest Rate</p>
+                        <p className="text-amber-400 font-bold text-sm mt-0.5">{highestFeeRateDay.rate.toFixed(2)}%</p>
+                        <p className="text-gray-500 text-[10px]">{highestFeeRateDay.name}</p>
+                      </div>
+                    )}
+                    {lowestFeeRateDay && (
+                      <div className="bg-gray-800 rounded-lg p-2">
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">Lowest Rate</p>
+                        <p className="text-sky-400 font-bold text-sm mt-0.5">{lowestFeeRateDay.rate.toFixed(2)}%</p>
+                        <p className="text-gray-500 text-[10px]">{lowestFeeRateDay.name}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Per-period bars */}
+                  {periodFeeRates.length > 0 && (() => {
+                    const maxRate = Math.max(...periodFeeRates.map(p => p.rate), 1);
+                    return (
+                      <div>
+                        <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1.5">Per Period</p>
+                        <div
+                          className="space-y-1.5 max-h-32 overflow-y-auto pr-1"
+                          style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+                        >
+                          {periodFeeRates.map((p) => (
+                            <div key={p.name} className="flex items-center gap-2">
+                              <span className="text-gray-400 text-[10px] w-12 flex-shrink-0">{p.name}</span>
+                              <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-1.5 rounded-full transition-all duration-300"
+                                  style={{
+                                    width: `${(p.rate / maxRate) * 100}%`,
+                                    background: p.rate > chartFeePercentage
+                                      ? 'linear-gradient(to right, #f59e0b, #f43f5e)'
+                                      : 'linear-gradient(to right, #34d399, #10b981)',
+                                  }}
+                                />
+                              </div>
+                              <span className={`text-[10px] font-medium w-12 text-right flex-shrink-0 ${p.rate > chartFeePercentage ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                {p.rate.toFixed(1)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Arrow pointing up */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {feesCardHovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute -translate-x-1/2 top-full mt-1 z-50 w-72 pointer-events-auto"
+                style={{ left: feesTooltipLeft }}
+                onMouseEnter={showFeesTooltip}
+                onMouseLeave={hideFeesTooltip}
+              >
+                <div className="bg-gray-900 text-white rounded-xl shadow-2xl p-4 text-xs">
+                  <p className="font-semibold text-sm mb-3 text-white">Fees by Gateway</p>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="bg-gray-800 rounded-lg p-2">
+                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Total Fees</p>
+                      <p className="text-amber-400 font-bold text-sm mt-0.5">₦{chartTotalFees.toLocaleString()}</p>
+                      <p className="text-gray-500 text-[10px]">{chartFeePercentage.toFixed(2)}% of gross</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-2">
+                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Net Retained</p>
+                      <p className="text-emerald-400 font-bold text-sm mt-0.5">₦{chartTotalNet.toLocaleString()}</p>
+                      <p className="text-gray-500 text-[10px]">{chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}% retained</p>
+                    </div>
+                  </div>
+                  {gatewayStats?.gateways && gatewayStats.gateways.length > 0 ? (
+                    <div>
+                      <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-2">By Gateway</p>
+                      <div className="space-y-2">
+                        {gatewayStats.gateways.map((gw: any) => {
+                          const gwFees = Number(gw.totalFees) || 0;
+                          const gwVol = Number(gw.totalVolume) || 0;
+                          const gwRate = gwVol > 0 ? (gwFees / gwVol) * 100 : 0;
+                          const maxFees = Math.max(...gatewayStats.gateways.map((g: any) => Number(g.totalFees) || 0), 1);
+                          return (
+                            <div key={gw.gateway}>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-gray-300 text-[11px] font-medium">{gw.gateway}</span>
+                                <span className="text-amber-400 text-[11px] font-semibold">₦{gwFees.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500"
+                                    style={{ width: `${(gwFees / maxFees) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-gray-500 text-[10px] w-12 text-right">{gwRate.toFixed(1)}% rate</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-[10px]">Gateway breakdown available in Reports → Gateway Stats</p>
+                  )}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          </div>{/* end relative wrapper */}
 
           {/* Stacked Area Chart — fees (amber, bottom) + net (emerald, top) = gross revenue */}
           <div className="h-72">

@@ -63,7 +63,7 @@ function NotificationsContent() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const limit = 15;
+  const limit = 10;
 
   // Delete confirm: stores notification id pending confirmation
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
