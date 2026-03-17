@@ -330,7 +330,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="relative h-[72px] flex items-center border-b border-gray-100 dark:border-white/10"
                         style={{ padding: isColl ? '0 12px' : '0 20px' }}>
                         <div className={`flex items-center gap-3 transition-all duration-300 ${isColl ? 'w-full justify-center' : ''}`}>
-                            <Image src="/logo.png" alt="ASR Loyalty" width={40} height={40} className="flex-shrink-0 w-10 h-10 object-contain" />
+                            <Image src="/logo.svg" alt="ASR Loyalty" width={40} height={40} className="flex-shrink-0 w-10 h-10 object-contain" />
                             {!isColl && (
                                 <div className="overflow-hidden">
                                     <h1 className="text-[17px] font-bold text-gray-900 dark:text-[#F1F5F9] whitespace-nowrap tracking-tight">ASR Loyalty</h1>

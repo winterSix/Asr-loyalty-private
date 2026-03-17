@@ -203,7 +203,7 @@ export default function LoginPage() {
           <div className="relative z-10">
             <div className="mb-10">
               <div className="mb-6">
-                <Image src="/logo.png" alt="ASR Loyalty" width={80} height={80} className="w-20 h-20 object-contain" />
+                <Image src="/logo.svg" alt="ASR Loyalty" width={80} height={80} className="w-20 h-20 object-contain" />
               </div>
               <h1 className="text-5xl font-black uppercase tracking-wider text-white drop-shadow-2xl mb-3">
                 ASR Loyalty
