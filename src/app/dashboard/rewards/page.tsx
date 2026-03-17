@@ -710,16 +710,14 @@ function CustomerRewardsView({ userId }: { userId: string }) {
 
 // ─── Main Page ──────────────────────────────────────────────────────────
 export default function RewardsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (

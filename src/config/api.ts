@@ -11,6 +11,7 @@ export const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+  timeout: 15000,
 });
 
 // Request interceptor to add auth token
@@ -27,18 +28,6 @@ apiClient.interceptors.request.use(
       // Remove any existing Bearer prefix if present (to avoid double prefixing)
       const cleanToken = token.startsWith('Bearer ') ? token.substring(7) : token;
       config.headers.Authorization = `Bearer ${cleanToken}`;
-      
-      // Debug log for /auth/me requests
-      if (config.url?.includes('/auth/me')) {
-        console.log('Sending /auth/me request with token:', cleanToken.substring(0, 20) + '...');
-      }
-    } else {
-      // Log if token is missing
-      if (config.url?.includes('/auth/me')) {
-        console.error('No access token found for /auth/me request');
-        console.log('localStorage accessToken:', localStorage.getItem('accessToken'));
-        console.log('Cookie accessToken:', Cookies.get('accessToken'));
-      }
     }
 
     // Add device info for mobile compatibility
@@ -63,19 +52,7 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => {
-    // Log auth responses for debugging
-    if (response.config.url?.includes('/auth/login')) {
-      console.log('[API Interceptor] Login response:', {
-        status: response.status,
-        dataKeys: Object.keys(response.data || {}),
-        hasAccessToken: !!(response.data as any)?.accessToken,
-        hasRefreshToken: !!(response.data as any)?.refreshToken,
-        data: response.data
-      });
-    }
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError<any>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

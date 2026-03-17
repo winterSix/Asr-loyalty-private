@@ -43,10 +43,7 @@ export function useAuthGuard() {
 
     // Only call checkAuth if we have a token but no user at all
     if (hasToken && !user && !storedUser) {
-      // Small delay to ensure token is fully available
-      setTimeout(() => {
-        checkAuth();
-      }, 200);
+      checkAuth();
     } else if (!hasToken && !storedUser) {
       // No token and no stored user, checkAuth will set loading to false
       checkAuth();

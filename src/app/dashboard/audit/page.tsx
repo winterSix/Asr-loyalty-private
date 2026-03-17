@@ -16,7 +16,7 @@ import {
 import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function AuditLogsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const [actionFilter, setActionFilter] = useState<string>('');
   const [page, setPage] = useState(1);
@@ -25,10 +25,8 @@ export default function AuditLogsPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: auditLogs, isLoading: auditLoading } = useQuery({
     queryKey: ['audit-logs', actionFilter, page],

@@ -43,7 +43,7 @@ const TARGET_ROLES = ['CUSTOMER', 'CASHIER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER
 const TARGET_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
 
 function NotificationsContent() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -91,8 +91,7 @@ function NotificationsContent() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push('/login');
-    else if (!isLoading && isAuthenticated) checkAuth();
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const tab = searchParams.get('tab') as Tab | null;

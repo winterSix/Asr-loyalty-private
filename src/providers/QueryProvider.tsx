@@ -11,6 +11,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           queries: {
             refetchOnWindowFocus: false,
             retry: 1,
+            staleTime: 30000, // 30 seconds — prevents refetch on every navigation
           },
         },
       })
