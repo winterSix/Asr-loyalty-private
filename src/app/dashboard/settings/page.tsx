@@ -561,7 +561,7 @@ export default function SettingsPage() {
             </div>
             <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
               {GATEWAY_FEE_ROWS.map(({ label, key }) => {
-                const config = feeConfigs[key] || { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 };
+                const config = (feeConfigs as Record<string, { percentage: number; flatFee: number; cap: number; flatFeeWaivedBelow: number }>)[key] || { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 };
                 const isEditing = editingFeeConfig === key;
                 return (
                   <div key={key} className="px-6 py-4">
