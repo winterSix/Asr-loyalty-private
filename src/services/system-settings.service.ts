@@ -11,6 +11,11 @@ export enum SystemSettingKey {
   // Payment gateways
   PAYSTACK_ENABLED = 'paystack_enabled',
   OPAY_ENABLED = 'opay_enabled',
+  MONIEPOINT_ENABLED = 'moniepoint_enabled',
+  // Payment gateway fee configs
+  PAYSTACK_FEE_CONFIG = 'paystack_fee_config',
+  OPAY_FEE_CONFIG = 'opay_fee_config',
+  MONIEPOINT_FEE_CONFIG = 'moniepoint_fee_config',
   // Security
   TWO_FACTOR_REQUIRED = 'two_factor_required',
   EMAIL_VERIFICATION_REQUIRED = 'email_verification_required',
@@ -51,6 +56,13 @@ export interface PaymentGatewayStatus {
   gateway: string;
   enabled: boolean;
   description?: string;
+}
+
+export interface GatewayFeeConfig {
+  percentage: number;
+  flatFee: number;
+  cap: number;
+  flatFeeWaivedBelow: number;
 }
 
 export interface BulkToggleItem {
@@ -123,6 +135,21 @@ class SystemSettingsService {
   async getAvailablePaymentGateways(): Promise<PaymentGatewayStatus[]> {
     const response = await apiClient.get<any>('/system-settings/available-payment-gateways');
     return unwrapResponse<PaymentGatewayStatus[]>(response.data);
+  }
+
+  // GET fee configs for all 3 gateways
+  async getFeeConfigs(): Promise<{ paystack: GatewayFeeConfig; opay: GatewayFeeConfig; moniepoint: GatewayFeeConfig }> {
+    const keys = [SystemSettingKey.PAYSTACK_FEE_CONFIG, SystemSettingKey.OPAY_FEE_CONFIG, SystemSettingKey.MONIEPOINT_FEE_CONFIG];
+    const all = await this.getAllSettings();
+    const parse = (key: string): GatewayFeeConfig => {
+      const s = all.find(x => x.key === key);
+      return s ? JSON.parse(s.value) : { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 };
+    };
+    return {
+      paystack: parse(SystemSettingKey.PAYSTACK_FEE_CONFIG),
+      opay: parse(SystemSettingKey.OPAY_FEE_CONFIG),
+      moniepoint: parse(SystemSettingKey.MONIEPOINT_FEE_CONFIG),
+    };
   }
 
   // POST /system-settings (SUPER_ADMIN)

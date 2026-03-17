@@ -34,8 +34,15 @@ import toast from 'react-hot-toast';
 
 // Keys shown in dedicated sections — excluded from the generic Feature Flags list
 const MAINTENANCE_KEY = SystemSettingKey.MAINTENANCE_MODE;
-const GATEWAY_KEYS = [SystemSettingKey.PAYSTACK_ENABLED, SystemSettingKey.OPAY_ENABLED];
-const DEDICATED_KEYS = [MAINTENANCE_KEY, ...GATEWAY_KEYS];
+const GATEWAY_KEYS = [SystemSettingKey.PAYSTACK_ENABLED, SystemSettingKey.OPAY_ENABLED, SystemSettingKey.MONIEPOINT_ENABLED];
+const FEE_CONFIG_KEYS = [SystemSettingKey.PAYSTACK_FEE_CONFIG, SystemSettingKey.OPAY_FEE_CONFIG, SystemSettingKey.MONIEPOINT_FEE_CONFIG];
+const DEDICATED_KEYS = [MAINTENANCE_KEY, ...GATEWAY_KEYS, ...FEE_CONFIG_KEYS];
+
+const GATEWAY_FEE_ROWS = [
+  { label: 'Paystack', key: SystemSettingKey.PAYSTACK_FEE_CONFIG },
+  { label: 'OPay', key: SystemSettingKey.OPAY_FEE_CONFIG },
+  { label: 'Moniepoint', key: SystemSettingKey.MONIEPOINT_FEE_CONFIG },
+];
 
 export default function SettingsPage() {
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -48,6 +55,8 @@ export default function SettingsPage() {
   const [editValue, setEditValue] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null);
+  const [editingFeeConfig, setEditingFeeConfig] = useState<string | null>(null);
+  const [feeConfigForm, setFeeConfigForm] = useState({ percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 });
   const [createForm, setCreateForm] = useState({
     key: '',
     value: '',
@@ -108,6 +117,20 @@ export default function SettingsPage() {
     if (Array.isArray(paymentGatewaysRaw)) return paymentGatewaysRaw;
     return (paymentGatewaysRaw as any)?.gateways || [];
   }, [paymentGatewaysRaw]);
+
+  const feeConfigs = useMemo(() => {
+    const paymentSettings: any[] = (grouped as any)['payment'] || [];
+    const parse = (key: string) => {
+      const s = paymentSettings.find((x: any) => x.key === key);
+      if (!s) return { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 };
+      try { return JSON.parse(s.value); } catch { return { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 }; }
+    };
+    return {
+      [SystemSettingKey.PAYSTACK_FEE_CONFIG]: parse(SystemSettingKey.PAYSTACK_FEE_CONFIG),
+      [SystemSettingKey.OPAY_FEE_CONFIG]: parse(SystemSettingKey.OPAY_FEE_CONFIG),
+      [SystemSettingKey.MONIEPOINT_FEE_CONFIG]: parse(SystemSettingKey.MONIEPOINT_FEE_CONFIG),
+    };
+  }, [grouped]);
 
   // Maintenance mode derived from the public status endpoint (bypasses maintenance guard)
   const isMaintenanceActive = systemStatus?.maintenanceMode ?? false;
@@ -223,6 +246,19 @@ export default function SettingsPage() {
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to delete setting');
+    },
+  });
+
+  const feeConfigMutation = useMutation({
+    mutationFn: ({ key, config }: { key: string; config: typeof feeConfigForm }) =>
+      systemSettingsService.updateSetting(key, JSON.stringify(config)),
+    onSuccess: () => {
+      toast.success('Fee configuration updated');
+      setEditingFeeConfig(null);
+      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to update fee configuration');
     },
   });
 
@@ -510,6 +546,91 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-400">No payment gateways configured</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Gateway Fee Configuration ────────────────────────────── */}
+        {isAdmin && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:bg-transparent">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <FiCreditCard className="w-4 h-4 text-blue-500" />
+                Gateway Fee Configuration
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">Set processing fee rates for each payment gateway</p>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
+              {GATEWAY_FEE_ROWS.map(({ label, key }) => {
+                const config = feeConfigs[key] || { percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 };
+                const isEditing = editingFeeConfig === key;
+                return (
+                  <div key={key} className="px-6 py-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium text-gray-900 text-sm">{label}</p>
+                      {isSuperAdmin && !isEditing && (
+                        <button
+                          onClick={() => { setEditingFeeConfig(key); setFeeConfigForm({ ...config }); }}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                          title="Edit fee config"
+                        >
+                          <FiEdit className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {isEditing && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => feeConfigMutation.mutate({ key, config: feeConfigForm })}
+                            disabled={feeConfigMutation.isPending}
+                            className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                            title="Save"
+                          >
+                            <FiCheck className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingFeeConfig(null)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+                            title="Cancel"
+                          >
+                            <FiX className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { field: 'percentage', label: 'Percentage (%)', step: '0.1' },
+                          { field: 'flatFee', label: 'Flat Fee (₦)', step: '1' },
+                          { field: 'cap', label: 'Cap (₦)', step: '1' },
+                          { field: 'flatFeeWaivedBelow', label: 'Waived Below (₦)', step: '1' },
+                        ].map(({ field, label: fieldLabel, step }) => (
+                          <div key={field}>
+                            <label className="block text-[10px] font-semibold text-gray-500 mb-1">{fieldLabel}</label>
+                            <input
+                              type="number"
+                              step={step}
+                              min="0"
+                              value={(feeConfigForm as any)[field]}
+                              onChange={(e) => setFeeConfigForm(f => ({ ...f, [field]: parseFloat(e.target.value) || 0 }))}
+                              className="w-full px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                        <span className="px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">{config.percentage}%</span>
+                        <span className="px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">+₦{config.flatFee} flat</span>
+                        <span className="px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">cap ₦{config.cap}</span>
+                        {config.flatFeeWaivedBelow > 0 && (
+                          <span className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-100 text-amber-700">flat waived ≤ ₦{config.flatFeeWaivedBelow}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
