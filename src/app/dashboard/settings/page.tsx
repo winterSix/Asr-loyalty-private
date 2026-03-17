@@ -45,7 +45,7 @@ const GATEWAY_FEE_ROWS = [
 ];
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,10 +68,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';

@@ -21,7 +21,7 @@ import {
 import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function PermissionsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grouped' | 'list'>('grouped');
@@ -33,10 +33,8 @@ export default function PermissionsPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: permissions, isLoading: permissionsLoading } = useQuery({
     queryKey: ['permissions'],

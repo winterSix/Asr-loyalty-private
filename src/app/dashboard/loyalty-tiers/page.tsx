@@ -63,7 +63,7 @@ const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; t
 const getTierStyle = (tier: string) => tierMeta[tier] || tierMeta.BRONZE;
 
 export default function LoyaltyTiersPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -71,10 +71,8 @@ export default function LoyaltyTiersPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({
     queryKey: ['loyalty-tier-configs'],

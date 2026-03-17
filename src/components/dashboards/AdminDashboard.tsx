@@ -283,6 +283,26 @@ export default function AdminDashboard() {
   const hideFeesTooltip = () => {
     feesHideTimer.current = setTimeout(() => setFeesCardHovered(false), 150);
   };
+  // Reactive dark-mode detection (updates when user toggles theme)
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const tooltipContentStyle = {
+    borderRadius: '12px',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb'}`,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+    backgroundColor: isDark ? '#1E293B' : '#ffffff',
+    color: isDark ? '#F1F5F9' : '#111827',
+  };
+  const tooltipLabelStyle = { color: isDark ? '#94a3b8' : '#6b7280', fontWeight: 600, marginBottom: 4 };
+  const tooltipItemStyle  = { color: isDark ? '#F1F5F9' : '#111827' };
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersSearch, setUsersSearch] = useState('');
   const [usersSearchInput, setUsersSearchInput] = useState('');
@@ -737,11 +757,11 @@ export default function AdminDashboard() {
                 onMouseEnter={showFeeTooltip}
                 onMouseLeave={hideFeeTooltip}
               >
-                <div className="bg-gray-900 text-white rounded-xl shadow-2xl p-4 text-xs">
-                  <p className="font-semibold text-sm mb-3 text-white">Fee Rate Breakdown</p>
+                <div className="rounded-xl shadow-2xl p-4 text-xs border" style={{ backgroundColor: isDark ? '#1E293B' : '#ffffff', borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb', color: isDark ? '#F1F5F9' : '#111827' }}>
+                  <p className="font-semibold text-sm mb-3" style={{ color: isDark ? '#F1F5F9' : '#111827' }}>Fee Rate Breakdown</p>
 
                   {/* Trend summary */}
-                  <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg ${feeRateTrend === 'up' ? 'bg-rose-500/20 text-rose-300' : feeRateTrend === 'down' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-700 text-gray-300'}`}>
+                  <div className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg ${feeRateTrend === 'up' ? 'bg-rose-500/20 text-rose-300' : feeRateTrend === 'down' ? 'bg-emerald-500/20 text-emerald-300' : isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
                     {feeRateTrend === 'up' && <FiTrendingUp className="w-3.5 h-3.5 flex-shrink-0" />}
                     {feeRateTrend === 'down' && <FiTrendingDown className="w-3.5 h-3.5 flex-shrink-0" />}
                     {feeRateTrend === 'stable' && <FiActivity className="w-3.5 h-3.5 flex-shrink-0" />}
@@ -754,28 +774,28 @@ export default function AdminDashboard() {
 
                   {/* Key stats */}
                   <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-gray-800 rounded-lg p-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Overall Rate</p>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                      <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Overall Rate</p>
                       <p className="text-rose-400 font-bold text-sm mt-0.5">{chartFeePercentage.toFixed(2)}%</p>
-                      <p className="text-gray-500 text-[10px]">₦{chartTotalFees.toLocaleString()} fees</p>
+                      <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>₦{chartTotalFees.toLocaleString()} fees</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Net Retained</p>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                      <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Net Retained</p>
                       <p className="text-emerald-400 font-bold text-sm mt-0.5">{chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}%</p>
-                      <p className="text-gray-500 text-[10px]">₦{chartTotalNet.toLocaleString()} net</p>
+                      <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>₦{chartTotalNet.toLocaleString()} net</p>
                     </div>
                     {highestFeeRateDay && (
-                      <div className="bg-gray-800 rounded-lg p-2">
-                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">Highest Rate</p>
+                      <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                        <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Highest Rate</p>
                         <p className="text-amber-400 font-bold text-sm mt-0.5">{highestFeeRateDay.rate.toFixed(2)}%</p>
-                        <p className="text-gray-500 text-[10px]">{highestFeeRateDay.name}</p>
+                        <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{highestFeeRateDay.name}</p>
                       </div>
                     )}
                     {lowestFeeRateDay && (
-                      <div className="bg-gray-800 rounded-lg p-2">
-                        <p className="text-gray-400 text-[10px] uppercase tracking-wider">Lowest Rate</p>
+                      <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                        <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Lowest Rate</p>
                         <p className="text-sky-400 font-bold text-sm mt-0.5">{lowestFeeRateDay.rate.toFixed(2)}%</p>
-                        <p className="text-gray-500 text-[10px]">{lowestFeeRateDay.name}</p>
+                        <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{lowestFeeRateDay.name}</p>
                       </div>
                     )}
                   </div>
@@ -785,15 +805,15 @@ export default function AdminDashboard() {
                     const maxRate = Math.max(...periodFeeRates.map(p => p.rate), 1);
                     return (
                       <div>
-                        <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-1.5">Per Period</p>
+                        <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Per Period</p>
                         <div
                           className="space-y-1.5 max-h-32 overflow-y-auto pr-1"
-                          style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+                          style={{ scrollbarWidth: 'thin', scrollbarColor: isDark ? '#4b5563 #1f2937' : '#d1d5db #f3f4f6' }}
                         >
                           {periodFeeRates.map((p) => (
                             <div key={p.name} className="flex items-center gap-2">
-                              <span className="text-gray-400 text-[10px] w-12 flex-shrink-0">{p.name}</span>
-                              <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                              <span className="text-[10px] w-12 flex-shrink-0" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>{p.name}</span>
+                              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#e5e7eb' }}>
                                 <div
                                   className="h-1.5 rounded-full transition-all duration-300"
                                   style={{
@@ -815,7 +835,7 @@ export default function AdminDashboard() {
                   })()}
 
                   {/* Arrow pointing up */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent" style={{ borderBottomColor: isDark ? '#1E293B' : '#ffffff' }} />
                 </div>
               </motion.div>
             )}
@@ -833,23 +853,23 @@ export default function AdminDashboard() {
                 onMouseEnter={showFeesTooltip}
                 onMouseLeave={hideFeesTooltip}
               >
-                <div className="bg-gray-900 text-white rounded-xl shadow-2xl p-4 text-xs">
-                  <p className="font-semibold text-sm mb-3 text-white">Fees by Gateway</p>
+                <div className="rounded-xl shadow-2xl p-4 text-xs border" style={{ backgroundColor: isDark ? '#1E293B' : '#ffffff', borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb', color: isDark ? '#F1F5F9' : '#111827' }}>
+                  <p className="font-semibold text-sm mb-3" style={{ color: isDark ? '#F1F5F9' : '#111827' }}>Fees by Gateway</p>
                   <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-gray-800 rounded-lg p-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Total Fees</p>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                      <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total Fees</p>
                       <p className="text-amber-400 font-bold text-sm mt-0.5">₦{chartTotalFees.toLocaleString()}</p>
-                      <p className="text-gray-500 text-[10px]">{chartFeePercentage.toFixed(2)}% of gross</p>
+                      <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{chartFeePercentage.toFixed(2)}% of gross</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wider">Net Retained</p>
+                    <div className="rounded-lg p-2" style={{ backgroundColor: isDark ? '#0F172A' : '#f9fafb' }}>
+                      <p className="text-[10px] uppercase tracking-wider" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Net Retained</p>
                       <p className="text-emerald-400 font-bold text-sm mt-0.5">₦{chartTotalNet.toLocaleString()}</p>
-                      <p className="text-gray-500 text-[10px]">{chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}% retained</p>
+                      <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{chartTotalRevenue > 0 ? ((chartTotalNet / chartTotalRevenue) * 100).toFixed(1) : '0'}% retained</p>
                     </div>
                   </div>
                   {gatewayStats?.gateways && gatewayStats.gateways.length > 0 ? (
                     <div>
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-2">By Gateway</p>
+                      <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>By Gateway</p>
                       <div className="space-y-2">
                         {gatewayStats.gateways.map((gw: any) => {
                           const gwFees = Number(gw.totalFees) || 0;
@@ -859,17 +879,17 @@ export default function AdminDashboard() {
                           return (
                             <div key={gw.gateway}>
                               <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-gray-300 text-[11px] font-medium">{gw.gateway}</span>
+                                <span className="text-[11px] font-medium" style={{ color: isDark ? '#cbd5e1' : '#374151' }}>{gw.gateway}</span>
                                 <span className="text-amber-400 text-[11px] font-semibold">₦{gwFees.toLocaleString()}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isDark ? '#374151' : '#e5e7eb' }}>
                                   <div
                                     className="h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500"
                                     style={{ width: `${(gwFees / maxFees) * 100}%` }}
                                   />
                                 </div>
-                                <span className="text-gray-500 text-[10px] w-12 text-right">{gwRate.toFixed(1)}% rate</span>
+                                <span className="text-[10px] w-12 text-right" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>{gwRate.toFixed(1)}% rate</span>
                               </div>
                             </div>
                           );
@@ -877,9 +897,9 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-[10px]">Gateway breakdown available in Reports → Gateway Stats</p>
+                    <p className="text-[10px]" style={{ color: isDark ? '#64748b' : '#9ca3af' }}>Gateway breakdown available in Reports → Gateway Stats</p>
                   )}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent" style={{ borderBottomColor: isDark ? '#1E293B' : '#ffffff' }} />
                 </div>
               </motion.div>
             )}
@@ -1045,7 +1065,9 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => [(value as number).toLocaleString(), 'Count']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', backgroundColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#1E293B' : '#ffffff', color: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#111827' }}
+                    contentStyle={tooltipContentStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipItemStyle}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -1075,7 +1097,7 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" horizontal={true} vertical={false} />
                   <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={70} />
-                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} />
+                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Users']} contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
                   <Bar
                     dataKey="value"
                     fill={CHART_COLORS.primary}
@@ -1128,7 +1150,9 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => [(value as number).toLocaleString(), 'Users']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', backgroundColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#1E293B' : '#ffffff', color: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#111827' }}
+                    contentStyle={tooltipContentStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipItemStyle}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -1158,7 +1182,7 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} />
+                  <Tooltip formatter={(value) => [(value as number).toLocaleString(), 'Count']} contentStyle={tooltipContentStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
                   <Bar dataKey="value" radius={[6, 6, 0, 0]} animationDuration={1500}>
                     {transactionStatusData.map((entry, index) => (
                       <Cell

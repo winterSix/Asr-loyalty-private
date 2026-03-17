@@ -28,7 +28,7 @@ const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; t
 };
 
 export default function EditTierPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
@@ -52,10 +52,8 @@ export default function EditTierPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: tierRaw, isLoading: tierLoading } = useQuery({
     queryKey: ['loyalty-tier-config', tierName],

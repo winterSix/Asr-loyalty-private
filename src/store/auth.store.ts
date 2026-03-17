@@ -17,7 +17,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: true,
@@ -46,65 +46,18 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: (accessToken, refreshToken, user) => {
-        console.log('[AuthStore] login() called:', {
-          hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
-          hasUser: !!user,
-          tokenLength: accessToken?.length || 0
-        });
-        
-        // Ensure tokens are strings and not undefined
         if (!accessToken || !refreshToken) {
-          console.error('[AuthStore] Login called with invalid tokens:', { accessToken, refreshToken });
+          console.error('[AuthStore] Login called with invalid tokens');
           return;
         }
-        
+
         authService.setTokens(accessToken, refreshToken);
-        console.log('[AuthStore] Tokens set in authService');
-        
         authService.setUser(user);
-        console.log('[AuthStore] User set in authService');
-        
-        // Also set in cookies for server-side access (middleware)
-        // Set path to '/' to ensure cookies are accessible to all routes
-        Cookies.set('accessToken', accessToken, { 
-          expires: 7,
-          path: '/',
-          sameSite: 'lax'
-        });
-        Cookies.set('refreshToken', refreshToken, { 
-          expires: 30,
-          path: '/',
-          sameSite: 'lax'
-        });
-        console.log('[AuthStore] Cookies set');
-        
-        // Verify token was stored
-        const storedToken = localStorage.getItem('accessToken');
-        const cookieToken = Cookies.get('accessToken');
-        console.log('[AuthStore] Token verification:', {
-          localStorageMatch: storedToken === accessToken,
-          cookieSet: !!cookieToken,
-          cookieMatch: cookieToken === accessToken
-        });
-        
-        if (storedToken !== accessToken) {
-          console.error('[AuthStore] Token storage verification failed - localStorage mismatch');
-        }
-        if (cookieToken !== accessToken) {
-          console.error('[AuthStore] Token storage verification failed - cookie mismatch');
-        }
-        
-        set({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        console.log('[AuthStore] State updated:', {
-          isAuthenticated: true,
-          isLoading: false,
-          hasUser: !!user
-        });
+
+        Cookies.set('accessToken', accessToken, { expires: 7, path: '/', sameSite: 'lax' });
+        Cookies.set('refreshToken', refreshToken, { expires: 30, path: '/', sameSite: 'lax' });
+
+        set({ user, isAuthenticated: true, isLoading: false });
       },
 
       logout: async () => {
@@ -144,11 +97,14 @@ export const useAuthStore = create<AuthState>()(
       checkAuth: async () => {
         // Don't check auth if we don't have a token
         if (!authService.isAuthenticated()) {
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
+          set({ user: null, isAuthenticated: false, isLoading: false });
+          return;
+        }
+
+        // If user is already loaded and authenticated, skip the API call
+        const { user: currentUser, isAuthenticated: currentAuth } = get();
+        if (currentUser && currentAuth) {
+          set({ isLoading: false });
           return;
         }
 

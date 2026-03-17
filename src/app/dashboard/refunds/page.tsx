@@ -22,7 +22,7 @@ import {
 import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function RefundsPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -35,10 +35,8 @@ export default function RefundsPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

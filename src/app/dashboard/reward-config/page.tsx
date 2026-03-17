@@ -31,7 +31,7 @@ const tierColors: Record<string, { bg: string; text: string; ring: string }> = {
 };
 
 export default function RewardConfigPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -48,10 +48,8 @@ export default function RewardConfigPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: configsRaw, isLoading: configsLoading } = useQuery({
     queryKey: ['reward-configs'],

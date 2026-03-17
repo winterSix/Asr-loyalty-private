@@ -20,7 +20,7 @@ import {
 import toast from 'react-hot-toast';
 
 export default function QRCodesPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const [qrLookupId, setQrLookupId] = useState('');
   const [lookupResult, setLookupResult] = useState<any>(null);
@@ -29,10 +29,8 @@ export default function QRCodesPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const handleLookup = async () => {
     if (!qrLookupId.trim()) {

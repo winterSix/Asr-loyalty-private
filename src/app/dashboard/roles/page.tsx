@@ -24,7 +24,7 @@ import {
 import toast from 'react-hot-toast';
 
 export default function RolesPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,10 +37,8 @@ export default function RolesPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: rolesRaw, isLoading: rolesLoading } = useQuery({
     queryKey: ['roles'],

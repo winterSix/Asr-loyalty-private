@@ -6,16 +6,14 @@ import { useAuthStore } from '@/store/auth.store';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   // Redirect to dashboard profile page
   useEffect(() => {

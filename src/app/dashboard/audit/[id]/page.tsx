@@ -17,7 +17,7 @@ import {
 } from '@/utils/icons';
 
 export default function AuditDetailPage() {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -25,10 +25,8 @@ export default function AuditDetailPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && isAuthenticated) {
-      checkAuth();
     }
-  }, [isLoading, isAuthenticated, router, checkAuth]);
+  }, [isLoading, isAuthenticated, router]);
 
   const { data: auditLog, isLoading: detailLoading, error } = useQuery({
     queryKey: ['audit-log', id],
