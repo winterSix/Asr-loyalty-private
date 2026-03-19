@@ -6,7 +6,7 @@ import { disputeService } from '@/services/dispute.service';
 import { refundService } from '@/services/refund.service';
 import { notificationService } from '@/services/notification.service';
 import {
-    FiBarChart, FiBell, FiChevronDown, FiChevronLeft, FiChevronRight,
+    FiBarChart, FiBell, FiBookOpen, FiChevronDown, FiChevronLeft, FiChevronRight,
     FiCreditCard, FiDollarSign, FiFileText, FiGift, FiHome, FiKey,
     FiArrowRight, FiLayers, FiLogOut, FiMenu, FiMoon, FiMonitor, FiQrCode, FiSearch,
     FiSettings, FiShield, FiStar, FiSun, FiUser, FiUsers, FiWallet, FiX,
@@ -71,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { label: 'Roles',           path: '/dashboard/roles',            icon: 'layers' },
         { label: 'Permissions',     path: '/dashboard/permissions',      icon: 'key' },
         { label: 'Profile',         path: '/dashboard/profile',          icon: 'user' },
+        { label: 'Legal Docs',      path: '/dashboard/legal',            icon: 'file' },
     ];
 
     // Ctrl+K / Cmd+K to open search
@@ -240,6 +241,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     { label: 'Disputes',      icon: <FiShield />,    path: '/dashboard/disputes',      badge: dCount > 0 ? dCount : undefined },
                     { label: 'Refunds',       icon: <FiDollarSign />,path: '/dashboard/refunds',       badge: rCount > 0 ? rCount : undefined },
                     { label: 'Notifications', icon: <FiBell />,      path: '/dashboard/notifications' },
+                ]},
+                { title: 'Content', items: [
+                    { label: 'Legal Docs', icon: <FiBookOpen />, path: '/dashboard/legal' },
                 ]},
             ];
             case 'CASHIER': return [{ title: 'Main', items: [
