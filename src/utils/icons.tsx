@@ -80,3 +80,4 @@ export { FiToggleRight } from 'react-icons/fi';
 export { FiSun } from 'react-icons/fi';
 export { FiMoon } from 'react-icons/fi';
 export { FiMonitor } from 'react-icons/fi';
+export { FiBookOpen } from 'react-icons/fi';

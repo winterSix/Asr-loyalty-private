@@ -6,7 +6,7 @@ import { disputeService } from '@/services/dispute.service';
 import { refundService } from '@/services/refund.service';
 import { notificationService } from '@/services/notification.service';
 import {
-    FiBarChart, FiBell, FiChevronDown, FiChevronLeft, FiChevronRight,
+    FiBarChart, FiBell, FiBookOpen, FiChevronDown, FiChevronLeft, FiChevronRight,
     FiCreditCard, FiDollarSign, FiFileText, FiGift, FiHome, FiKey,
     FiArrowRight, FiLayers, FiLogOut, FiMenu, FiMoon, FiMonitor, FiQrCode, FiSearch,
     FiSettings, FiShield, FiStar, FiSun, FiUser, FiUsers, FiWallet, FiX,
@@ -71,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { label: 'Roles',           path: '/dashboard/roles',            icon: 'layers' },
         { label: 'Permissions',     path: '/dashboard/permissions',      icon: 'key' },
         { label: 'Profile',         path: '/dashboard/profile',          icon: 'user' },
+        { label: 'Legal Docs',      path: '/dashboard/legal',            icon: 'file' },
     ];
 
     // Ctrl+K / Cmd+K to open search
@@ -240,6 +241,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     { label: 'Disputes',      icon: <FiShield />,    path: '/dashboard/disputes',      badge: dCount > 0 ? dCount : undefined },
                     { label: 'Refunds',       icon: <FiDollarSign />,path: '/dashboard/refunds',       badge: rCount > 0 ? rCount : undefined },
                     { label: 'Notifications', icon: <FiBell />,      path: '/dashboard/notifications' },
+                ]},
+                { title: 'Content', items: [
+                    { label: 'Legal Docs', icon: <FiBookOpen />, path: '/dashboard/legal' },
                 ]},
             ];
             case 'CASHIER': return [{ title: 'Main', items: [
@@ -464,7 +468,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                     <FiBell className="w-5 h-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white px-1 leading-none animate-pulse">
+                                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white px-1 leading-none animate-pulse">
                                             {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
