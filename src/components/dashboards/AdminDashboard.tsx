@@ -415,22 +415,53 @@ export default function AdminDashboard() {
     retry: 1,
   });
 
-  // Use API data with proper nullish coalescing (not ||, which treats 0 as falsy)
-  const revenueChartData = revenueReport?.breakdown?.length
-    ? revenueReport.breakdown.map((item) => {
-        const revenue = typeof item.revenue === 'number' ? item.revenue : parseFloat(String(item.revenue)) || 0;
-        const fees = typeof item.fees === 'number' ? item.fees : parseFloat(String(item.fees)) || 0;
+  // Build a lookup map from the API breakdown
+  const breakdownMap = new Map<string, { revenue: number; fees: number; count: number }>();
+  if (revenueReport?.breakdown?.length) {
+    for (const item of revenueReport.breakdown) {
+      // Normalise key to YYYY-MM or YYYY-MM-DD
+      const key = String(item.period).slice(0, selectedPeriod === 'year' ? 7 : 10);
+      breakdownMap.set(key, {
+        revenue: typeof item.revenue === 'number' ? item.revenue : parseFloat(String(item.revenue)) || 0,
+        fees: typeof item.fees === 'number' ? item.fees : parseFloat(String(item.fees)) || 0,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const count = typeof (item as any).count === 'number' ? (item as any).count as number : 0;
-        return {
-          name: new Date(item.period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          revenue,
-          fees,
-          net: revenue - fees,
-          count,
-        };
-      })
-    : [];
+        count: typeof (item as any).count === 'number' ? (item as any).count as number : 0,
+      });
+    }
+  }
+
+  // Generate every date/month in the selected range so the chart always fills the full period
+  const revenueChartData = (() => {
+    const result: { name: string; revenue: number; fees: number; net: number; count: number }[] = [];
+    const end = new Date(dateRange.endDate);
+    const cursor = new Date(dateRange.startDate);
+
+    if (selectedPeriod === 'year') {
+      // Monthly steps
+      cursor.setDate(1);
+      while (cursor <= end) {
+        const key = cursor.toISOString().slice(0, 7); // YYYY-MM
+        const d = breakdownMap.get(key) ?? { revenue: 0, fees: 0, count: 0 };
+        result.push({
+          name: cursor.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+          revenue: d.revenue, fees: d.fees, net: d.revenue - d.fees, count: d.count,
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    } else {
+      // Daily steps
+      while (cursor <= end) {
+        const key = cursor.toISOString().slice(0, 10); // YYYY-MM-DD
+        const d = breakdownMap.get(key) ?? { revenue: 0, fees: 0, count: 0 };
+        result.push({
+          name: cursor.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          revenue: d.revenue, fees: d.fees, net: d.revenue - d.fees, count: d.count,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+    return result;
+  })();
 
   const chartTotalRevenue = revenueChartData.reduce((sum, d) => sum + (d.revenue || 0), 0);
   const chartTotalFees = revenueChartData.reduce((sum, d) => sum + (d.fees || 0), 0);

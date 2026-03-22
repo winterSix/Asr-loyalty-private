@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { RichTextEditor, RichTextView } from '@/components/ui/RichTextEditor';
 import { legalService, LegalDocument, LegalDocumentType } from '@/services/legal.service';
 import { FiEdit, FiSave, FiX, FiFileText, FiClock, FiEye, FiEdit as FiEdit2 } from '@/utils/icons';
@@ -186,8 +185,7 @@ export default function LegalDocumentsPage() {
     new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
         {/* Page header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Legal Documents</h1>
@@ -343,6 +341,6 @@ export default function LegalDocumentsPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   );
 }
