@@ -130,14 +130,32 @@ const renderOuterLabel = (props: any) => {
   );
 };
 
-// Custom dot for revenue chart active points
+// Custom dot — only renders when value > 0
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderDot = (color: string) => {
+  // eslint-disable-next-line react/display-name
+  const Dot = (props: any) => {
+    const { cx, cy, value, key } = props;
+    if (!value || value === 0) return <g key={key} />;
+    return (
+      <g key={key}>
+        <circle cx={cx} cy={cy} r={6} fill={color} opacity={0.2} />
+        <circle cx={cx} cy={cy} r={3.5} fill="white" stroke={color} strokeWidth={2} />
+      </g>
+    );
+  };
+  return Dot;
+};
+
+// Custom active dot for revenue chart
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderActiveDot = (props: any) => {
   const { cx, cy, fill } = props;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={8} fill={fill} opacity={0.15} />
-      <circle cx={cx} cy={cy} r={5} fill="white" stroke={fill} strokeWidth={2.5} />
+      <circle cx={cx} cy={cy} r={10} fill={fill} opacity={0.12} />
+      <circle cx={cx} cy={cy} r={6} fill={fill} opacity={0.25} />
+      <circle cx={cx} cy={cy} r={4} fill="white" stroke={fill} strokeWidth={2.5} />
     </g>
   );
 };
@@ -992,7 +1010,7 @@ export default function AdminDashboard() {
                     fill="url(#feesStackGrad)"
                     name="fees"
                     animationDuration={1200}
-                    dot={{ r: 4, fill: '#f59e0b', stroke: '#ffffff', strokeWidth: 2 }}
+                    dot={renderDot('#f59e0b')}
                     activeDot={renderActiveDot}
                   />
                   {/* Top slice: Net Revenue */}
@@ -1005,7 +1023,7 @@ export default function AdminDashboard() {
                     fill="url(#netStackGrad)"
                     name="net"
                     animationDuration={1500}
-                    dot={{ r: 4, fill: '#10b981', stroke: '#ffffff', strokeWidth: 2 }}
+                    dot={renderDot('#10b981')}
                     activeDot={renderActiveDot}
                   />
                 </AreaChart>
