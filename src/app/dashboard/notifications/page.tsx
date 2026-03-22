@@ -144,7 +144,7 @@ function NotificationsContent() {
   });
 
   const { data: unreadCount } = useQuery({
-    queryKey: ['notifications-unread-count'],
+    queryKey: ['notifications', 'unread-count'],
     queryFn: () => notificationService.getUnreadCount(),
     enabled: !!user,
   });
@@ -158,7 +158,7 @@ function NotificationsContent() {
   // Mutations
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => notificationService.markAsRead(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] }); },
   });
 
   const markAllAsReadMutation = useMutation({
@@ -166,7 +166,7 @@ function NotificationsContent() {
     onSuccess: (data) => {
       toast.success(`Marked ${(data as any)?.count || 'all'} notifications as read`);
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
     onError: () => toast.error('Failed to mark all as read'),
   });
@@ -210,7 +210,7 @@ function NotificationsContent() {
     setIsRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['notifications'] }),
-      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] }),
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] }),
     ]);
     setTimeout(() => setIsRefreshing(false), 600);
   };

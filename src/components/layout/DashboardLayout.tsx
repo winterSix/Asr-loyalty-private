@@ -468,7 +468,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className="relative p-2.5 rounded-xl text-gray-500 dark:text-[#94A3B8] hover:bg-gray-100 dark:hover:bg-[#2D3F55] transition-colors">
                                     <FiBell className="w-5 h-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white px-1 leading-none animate-pulse">
+                                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full ring-2 ring-white dark:ring-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white px-1 leading-none animate-pulse">
                                             {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
