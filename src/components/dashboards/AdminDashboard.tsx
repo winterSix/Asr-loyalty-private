@@ -873,7 +873,7 @@ export default function AdminDashboard() {
                       <div className="space-y-2">
                         {gatewayStats.gateways.map((gw: any) => {
                           const gwFees = Number(gw.totalFees) || 0;
-                          const gwVol = Number(gw.totalVolume) || 0;
+                          const gwVol = Number(gw.successfulVolume) || 0;
                           const gwRate = gwVol > 0 ? (gwFees / gwVol) * 100 : 0;
                           const maxFees = Math.max(...gatewayStats.gateways.map((g: any) => Number(g.totalFees) || 0), 1);
                           return (
@@ -1247,8 +1247,8 @@ export default function AdminDashboard() {
                       <p className="text-lg font-bold text-gray-900 mt-0.5">{(gw?.totalTransactions ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-gray-50 rounded-xl">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Volume</p>
-                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.totalVolume ?? 0).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Settled Vol.</p>
+                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.successfulVolume ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-emerald-50 rounded-xl">
                       <p className="text-[10px] text-emerald-600 uppercase tracking-wide font-semibold">Successful</p>
@@ -1298,8 +1298,8 @@ export default function AdminDashboard() {
                       <p className="text-lg font-bold text-gray-900 mt-0.5">{(gw?.totalTransactions ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-gray-50 rounded-xl">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Volume</p>
-                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.totalVolume ?? 0).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Settled Vol.</p>
+                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.successfulVolume ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-emerald-50 rounded-xl">
                       <p className="text-[10px] text-emerald-600 uppercase tracking-wide font-semibold">Successful</p>
@@ -1349,8 +1349,8 @@ export default function AdminDashboard() {
                       <p className="text-lg font-bold text-gray-900 mt-0.5">{(gw?.totalTransactions ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-gray-50 rounded-xl">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Volume</p>
-                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.totalVolume ?? 0).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold">Settled Vol.</p>
+                      <p className="text-lg font-bold text-gray-900 mt-0.5">₦{Number(gw?.successfulVolume ?? 0).toLocaleString()}</p>
                     </div>
                     <div className="p-2.5 bg-emerald-50 rounded-xl">
                       <p className="text-[10px] text-emerald-600 uppercase tracking-wide font-semibold">Successful</p>
