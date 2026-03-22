@@ -377,7 +377,7 @@ export default function TransactionsPage() {
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <p className="font-bold text-gray-900 text-sm">
-                            ₦{parseFloat(tx.amount).toLocaleString()}
+                            ₦{parseFloat(tx.type === 'WALLET_FUNDING' && tx.netAmount ? tx.netAmount : tx.amount).toLocaleString()}
                           </p>
                           {tx.fee && parseFloat(tx.fee) > 0 && (
                             <p className="text-[11px] text-gray-400 mt-0.5 whitespace-nowrap">

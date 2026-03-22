@@ -185,7 +185,7 @@ export default function LegalDocumentsPage() {
     new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <><div className="p-6 space-y-6 max-w-5xl mx-auto">
         {/* Page header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Legal Documents</h1>
@@ -341,6 +341,6 @@ export default function LegalDocumentsPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
