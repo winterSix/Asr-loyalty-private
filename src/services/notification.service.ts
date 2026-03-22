@@ -88,25 +88,22 @@ class NotificationService {
       '/notifications/me',
       { params }
     );
-    const data = unwrapResponse<any>(response.data);
-    // Backend returns { notifications: [...], pagination: {...}, unreadCount: N }
-    if (data?.notifications !== undefined) {
+    // Backend response: { success, statusCode, data: { notifications, pagination, unreadCount }, pagination }
+    // unwrapResponse returns { data: { notifications, pagination, unreadCount }, total, page, limit }
+    // when top-level pagination is present, so we need to dig one level deeper.
+    const raw = response.data;
+    const inner = raw?.data ?? raw;  // { notifications: [...], pagination: {...}, unreadCount: N }
+    const notifs = inner?.notifications ?? (Array.isArray(inner) ? inner : null);
+    const pag = raw?.pagination ?? inner?.pagination;
+    if (notifs !== null && notifs !== undefined) {
       return {
-        data: data.notifications,
-        total: data.pagination?.total ?? data.notifications.length,
-        page: data.pagination?.page ?? params?.page ?? 1,
-        limit: data.pagination?.limit ?? params?.limit ?? 20,
+        data: notifs,
+        total: pag?.total ?? notifs.length,
+        page: pag?.page ?? params?.page ?? 1,
+        limit: pag?.limit ?? params?.limit ?? 20,
       };
     }
-    if (Array.isArray(data)) {
-      return {
-        data,
-        total: data.length,
-        page: params?.page || 1,
-        limit: params?.limit || 20,
-      };
-    }
-    return data;
+    return unwrapResponse<NotificationsResponse>(raw);
   }
 
   // GET /notifications/me/unread-count
