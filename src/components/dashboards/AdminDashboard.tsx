@@ -666,15 +666,15 @@ export default function AdminDashboard() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {/* Period Selector */}
-              <div className="flex rounded-xl bg-gray-100 p-1">
+              <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
                 {(['week', 'month', 'year'] as const).map((period) => (
                   <button
                     key={period}
                     onClick={() => setSelectedPeriod(period)}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       selectedPeriod === period
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-800'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                     }`}
                   >
                     {period.charAt(0).toUpperCase() + period.slice(1)}

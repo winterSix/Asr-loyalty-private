@@ -84,11 +84,20 @@ class NotificationService {
     type?: string;
     read?: boolean;
   }): Promise<NotificationsResponse> {
-    const response = await apiClient.get<NotificationsResponse>(
+    const response = await apiClient.get<any>(
       '/notifications/me',
       { params }
     );
-    const data = unwrapResponse<NotificationsResponse | Notification[]>(response.data);
+    const data = unwrapResponse<any>(response.data);
+    // Backend returns { notifications: [...], pagination: {...}, unreadCount: N }
+    if (data?.notifications !== undefined) {
+      return {
+        data: data.notifications,
+        total: data.pagination?.total ?? data.notifications.length,
+        page: data.pagination?.page ?? params?.page ?? 1,
+        limit: data.pagination?.limit ?? params?.limit ?? 20,
+      };
+    }
     if (Array.isArray(data)) {
       return {
         data,
