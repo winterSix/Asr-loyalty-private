@@ -227,9 +227,6 @@
   display: inline-block;
   border-radius: 12px;
   overflow: hidden;
-  /* Ensure the wrapper always shows even before GIS button loads */
-  min-width: 406px; /* 400px button + 3px margin each side */
-  min-height: 50px; /* ~44px Google button + 3px margin each side */
 }
 .google-animated-btn::before {
   content: '';
@@ -260,11 +257,6 @@
   margin: 3px;
   border-radius: 9px;
   background: white;
-  /* No overflow:hidden here — let the Google button render at its full height */
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .dark .google-inner-bg {
   background: #1E293B;
