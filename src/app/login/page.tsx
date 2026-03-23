@@ -446,7 +446,7 @@ export default function LoginPage() {
                   }}
                   onError={() => toast.error('Google sign-in failed. Please try again.')}
                   useOneTap={false}
-                  width="400"
+                  width="300"
                 />
               </GoogleLoginWrapper>
             </div>
