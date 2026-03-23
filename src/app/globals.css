@@ -225,7 +225,7 @@
 .google-animated-btn {
   position: relative;
   display: inline-block;
-  border-radius: 12px;
+  border-radius: 7px;
   overflow: hidden;
 }
 .google-animated-btn::before {
@@ -255,7 +255,7 @@
   position: relative;
   z-index: 1;
   margin: 3px;
-  border-radius: 9px;
+  border-radius: 4px;
   background: white;
 }
 .dark .google-inner-bg {
