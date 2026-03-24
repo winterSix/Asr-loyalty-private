@@ -168,6 +168,9 @@ export default function LoginPage() {
       setError(null);
       const response = await authService.googleLogin(idToken);
       if (!response.accessToken || !response.refreshToken) throw new Error('Invalid response from server');
+      // Verify admin access dynamically — backend guards determine who qualifies
+      const verify = await authService.verifyAdminAccess(response.accessToken);
+      if (!verify?.canAccess) throw new Error('Access denied. This portal is for administrators only.');
       login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
       Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
