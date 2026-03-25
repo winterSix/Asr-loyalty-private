@@ -127,7 +127,7 @@ export default function PrivacyPolicyPage() {
           <p>If you have any questions or concerns about this Privacy Policy, please contact us at:</p>
           <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p className="font-semibold text-gray-800">ASR Loyalty</p>
-            <p className="text-gray-700">Email: <a href="mailto:support@asrloyalty.com" className="text-blue-600 hover:underline">support@asrloyalty.com</a></p>
+            <p className="text-gray-700">Email: <a href="mailto:asrloyalty@gmail.com" className="text-blue-600 hover:underline">asrloyalty@gmail.com</a></p>
           </div>
         </Section>
 

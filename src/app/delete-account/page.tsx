@@ -29,7 +29,7 @@ export default function DeleteAccountPage() {
           <ol className="space-y-3 text-gray-700">
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-red-600 text-white text-sm flex items-center justify-center flex-shrink-0 font-semibold">1</span>
-              <span>Send an email to <a href="mailto:support@asrloyalty.com" className="text-red-600 font-medium hover:underline">support@asrloyalty.com</a></span>
+              <span>Send an email to <a href="mailto:asrloyalty@gmail.com" className="text-red-600 font-medium hover:underline">asrloyalty@gmail.com</a></span>
             </li>
             <li className="flex gap-3">
               <span className="w-6 h-6 rounded-full bg-red-600 text-white text-sm flex items-center justify-center flex-shrink-0 font-semibold">2</span>
@@ -61,7 +61,7 @@ export default function DeleteAccountPage() {
         </div>
 
         <a
-          href="mailto:support@asrloyalty.com?subject=Account%20Deletion%20Request"
+          href="mailto:asrloyalty@gmail.com?subject=Account%20Deletion%20Request"
           className="inline-block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
         >
           Send Deletion Request
