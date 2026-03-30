@@ -6,9 +6,6 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 // import CustomerDashboard from '@/components/dashboards/CustomerDashboard'; // Customers use the mobile app
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import CashierDashboard from '@/components/dashboards/CashierDashboard';
-import FinanceManagerDashboard from '@/components/dashboards/FinanceManagerDashboard';
-import LoyaltyManagerDashboard from '@/components/dashboards/LoyaltyManagerDashboard';
-import CustomerSupportDashboard from '@/components/dashboards/CustomerSupportDashboard';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuthGuard();
@@ -31,12 +28,8 @@ export default function DashboardPage() {
       return <AdminDashboard />;
     case 'CASHIER':
       return <CashierDashboard />;
-    case 'FINANCE_MANAGER':
-      return <FinanceManagerDashboard />;
-    case 'LOYALTY_MANAGER':
-      return <LoyaltyManagerDashboard />;
-    case 'CUSTOMER_SUPPORT':
-      return <CustomerSupportDashboard />;
+    case 'OTHERS':
+      return <AdminDashboard />;
     case 'CUSTOMER':
     default:
       return (

@@ -12,8 +12,8 @@ import {
   FiEdit,
   FiSave,
   FiTrash2,
-  FiUsers,
   FiKey,
+  FiCheck,
 } from '@/utils/icons';
 
 export default function RoleDetailPage() {
@@ -25,12 +25,21 @@ export default function RoleDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const { data: role, isLoading: roleLoading } = useQuery({
     queryKey: ['role', roleId],
     queryFn: () => roleService.getRole(roleId),
-    enabled: !!roleId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!roleId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+  });
+
+  const { data: allPermissions } = useQuery({
+    queryKey: ['permissions'],
+    queryFn: () => roleService.getPermissions(),
+    enabled: !!user && isSuperAdmin,
   });
 
   // Sync form state when role data loads
@@ -38,11 +47,12 @@ export default function RoleDetailPage() {
     if (role) {
       setName(role.name);
       setDescription(role.description || '');
+      setSelectedPermissionIds(new Set((role.permissions || []).map((p: any) => p.id)));
     }
   }, [role]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { name?: string; description?: string }) =>
+    mutationFn: (data: { name?: string; description?: string; permissionIds?: string[] }) =>
       roleService.updateRole(roleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['role', roleId] });
@@ -68,11 +78,43 @@ export default function RoleDetailPage() {
   });
 
   const handleUpdate = () => {
-    updateMutation.mutate({ name, description });
+    const payload: { name?: string; description?: string; permissionIds?: string[] } = {
+      description,
+    };
+    // Only include name if it's not a system role (backend blocks renaming anyway)
+    if (!role?.isSystem) {
+      payload.name = name;
+    }
+    // Only SUPER_ADMIN can update permissions
+    if (isSuperAdmin) {
+      payload.permissionIds = [...selectedPermissionIds];
+    }
+    updateMutation.mutate(payload);
   };
 
   const handleDelete = () => {
     setShowDeleteModal(true);
+  };
+
+  const togglePermission = (permId: string) => {
+    setSelectedPermissionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(permId)) {
+        next.delete(permId);
+      } else {
+        next.add(permId);
+      }
+      return next;
+    });
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    if (role) {
+      setName(role.name);
+      setDescription(role.description || '');
+      setSelectedPermissionIds(new Set((role.permissions || []).map((p: any) => p.id)));
+    }
   };
 
   if (isLoading || roleLoading) {
@@ -95,8 +137,22 @@ export default function RoleDetailPage() {
     );
   }
 
-  const roleUserRole = user?.role || 'CUSTOMER';
-  const canEdit = !role.isSystem && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN');
+  // Super Admin can edit all roles except SUPER_ADMIN itself
+  // Admin can only edit custom (non-system) roles
+  const canEdit = role.name !== 'SUPER_ADMIN' && (
+    isSuperAdmin || (!role.isSystem && user?.role === 'ADMIN')
+  );
+
+  // Group all permissions by resource for the checkbox UI
+  const permissionsByResource: Record<string, any[]> = {};
+  if (allPermissions) {
+    for (const perm of allPermissions) {
+      if (!permissionsByResource[perm.resource]) {
+        permissionsByResource[perm.resource] = [];
+      }
+      permissionsByResource[perm.resource].push(perm);
+    }
+  }
 
   return (
     <>
@@ -130,14 +186,16 @@ export default function RoleDetailPage() {
                       <FiEdit className="w-5 h-5" />
                       Edit Role
                     </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleteMutation.isPending}
-                      className="btn-secondary flex items-center gap-2 bg-red-600 text-white border-red-600 hover:bg-red-700"
-                    >
-                      <FiTrash2 className="w-5 h-5" />
-                      Delete
-                    </button>
+                    {!role.isSystem && (
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleteMutation.isPending}
+                        className="btn-secondary flex items-center gap-2 bg-red-600 text-white border-red-600 hover:bg-red-700"
+                      >
+                        <FiTrash2 className="w-5 h-5" />
+                        Delete
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -150,11 +208,7 @@ export default function RoleDetailPage() {
                       {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                     </button>
                     <button
-                      onClick={() => {
-                        setIsEditing(false);
-                        setName(role.name);
-                        setDescription(role.description || '');
-                      }}
+                      onClick={cancelEdit}
                       className="btn-secondary"
                     >
                       Cancel
@@ -173,7 +227,7 @@ export default function RoleDetailPage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-700">Role Name</label>
-                  {isEditing ? (
+                  {isEditing && !role.isSystem ? (
                     <input
                       type="text"
                       value={name}
@@ -181,7 +235,12 @@ export default function RoleDetailPage() {
                       className="input-field mt-1"
                     />
                   ) : (
-                    <p className="text-gray-900 font-semibold text-lg mt-1">{role.name}</p>
+                    <p className="text-gray-900 font-semibold text-lg mt-1">
+                      {role.name}
+                      {role.isSystem && (
+                        <span className="text-xs text-gray-400 font-normal ml-2">(system role — name cannot be changed)</span>
+                      )}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -214,34 +273,130 @@ export default function RoleDetailPage() {
             </div>
 
             {/* Permissions */}
-            {role.permissions && role.permissions.length > 0 && (
-              <div className="card mt-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Assigned Permissions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {role.permissions.map((perm: any) => (
-                    <div
-                      key={perm.id}
-                      className="p-3 rounded-lg border border-gray-200 hover:border-primary transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{perm.name}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {perm.resource}:{perm.action}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => router.push(`/dashboard/permissions/${perm.id}`)}
-                          className="text-primary hover:text-primary-light"
-                        >
-                          <FiKey className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="card mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {isEditing && isSuperAdmin ? 'Edit Permissions' : 'Assigned Permissions'}
+                </h2>
+                {isEditing && isSuperAdmin && (
+                  <span className="text-xs text-gray-500">
+                    {selectedPermissionIds.size} selected
+                  </span>
+                )}
               </div>
-            )}
+
+              {isEditing && isSuperAdmin ? (
+                /* Pill-based permission editor grouped by resource — same UI as Create Role modal */
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-500">{selectedPermissionIds.size} selected</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (allPermissions) {
+                          const allIds = allPermissions.map((p: any) => p.id);
+                          setSelectedPermissionIds(
+                            selectedPermissionIds.size === allIds.length
+                              ? new Set()
+                              : new Set(allIds)
+                          );
+                        }
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {allPermissions && selectedPermissionIds.size === allPermissions.length ? 'Deselect all' : 'Select all'}
+                    </button>
+                  </div>
+                  {Object.entries(permissionsByResource).sort().map(([resource, perms]) => {
+                    const allSelected = perms.every(p => selectedPermissionIds.has(p.id));
+                    const someSelected = perms.some(p => selectedPermissionIds.has(p.id));
+                    return (
+                      <div key={resource} className="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden">
+                        {/* Resource header — click to toggle all in resource */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPermissionIds(prev => {
+                              const next = new Set(prev);
+                              if (allSelected) {
+                                perms.forEach(p => next.delete(p.id));
+                              } else {
+                                perms.forEach(p => next.add(p.id));
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
+                            allSelected ? 'bg-violet-50 dark:bg-violet-900/20' : someSelected ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-50/50 dark:bg-gray-800/50'
+                          }`}
+                        >
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{resource}</span>
+                          <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            allSelected
+                              ? 'bg-violet-500 border-violet-500'
+                              : someSelected
+                              ? 'bg-violet-200 border-violet-300'
+                              : 'border-gray-300'
+                          }`}>
+                            {(allSelected || someSelected) && <FiCheck className="w-2.5 h-2.5 text-white" />}
+                          </span>
+                        </button>
+                        {/* Action pills */}
+                        <div className="px-4 py-2 flex flex-wrap gap-2">
+                          {perms.map((perm) => {
+                            const checked = selectedPermissionIds.has(perm.id);
+                            return (
+                              <button
+                                key={perm.id}
+                                type="button"
+                                onClick={() => togglePermission(perm.id)}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                                  checked
+                                    ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 ring-1 ring-violet-400/40'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                              >
+                                {checked && <FiCheck className="w-3 h-3" />}
+                                {perm.action}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Read-only view */
+                role.permissions && role.permissions.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {role.permissions.map((perm: any) => (
+                      <div
+                        key={perm.id}
+                        className="p-3 rounded-lg border border-gray-200 hover:border-primary transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{perm.name}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {perm.resource}:{perm.action}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => router.push(`/dashboard/permissions/${perm.id}`)}
+                            className="text-primary hover:text-primary-light"
+                          >
+                            <FiKey className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No permissions assigned</p>
+                )
+              )}
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -266,7 +421,7 @@ export default function RoleDetailPage() {
                   <div>
                     <p className="text-xs text-gray-500">Permissions Count</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {role.permissions.length}
+                      {isEditing && isSuperAdmin ? selectedPermissionIds.size : role.permissions.length}
                     </p>
                   </div>
                 )}
@@ -312,6 +467,3 @@ export default function RoleDetailPage() {
     </>
   );
 }
-
-
-

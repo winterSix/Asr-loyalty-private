@@ -77,13 +77,13 @@ export default function LoyaltyTiersPage() {
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({
     queryKey: ['loyalty-tier-configs'],
     queryFn: () => loyaltyService.getAllTierConfigs(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'LOYALTY_MANAGER'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: tierStats } = useQuery({
     queryKey: ['loyalty-tier-stats'],
     queryFn: () => loyaltyService.getTierStats(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'LOYALTY_MANAGER'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const handleRefresh = async () => {
@@ -156,7 +156,7 @@ export default function LoyaltyTiersPage() {
   }
 
   const role = user?.role || 'CUSTOMER';
-  const canEdit = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'LOYALTY_MANAGER';
+  const canEdit = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
 
   const benefitLabels: Record<string, string> = {
     cashback: 'Cashback',

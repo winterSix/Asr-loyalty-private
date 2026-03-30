@@ -31,7 +31,7 @@ export default function AuditLogsPage() {
   const { data: auditLogs, isLoading: auditLoading } = useQuery({
     queryKey: ['audit-logs', actionFilter, page],
     queryFn: () => auditService.getAuditLogs({ action: actionFilter || undefined, page, limit }),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   if (isLoading || auditLoading) {

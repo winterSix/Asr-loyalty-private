@@ -92,8 +92,8 @@ export default function RefundDetailPage() {
     processMutation.mutate(processNotes ? { notes: processNotes } : undefined);
   };
 
-  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'CUSTOMER_SUPPORT' || user?.role === 'FINANCE_MANAGER';
-  const canProcess = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'FINANCE_MANAGER';
+  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const canProcess = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   if (isLoading || refundLoading) {
     return (

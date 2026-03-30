@@ -30,7 +30,7 @@ export default function TransactionDetailPage() {
   const [showReverseModal, setShowReverseModal] = useState(false);
   const [reverseReason, setReverseReason] = useState('');
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   const reverseMutation = useMutation({
     mutationFn: () => paymentService.reversePayment(transactionId, reverseReason),

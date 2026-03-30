@@ -38,7 +38,7 @@ export default function TransactionsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const limit = 10;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   // Debounce search
   useEffect(() => {

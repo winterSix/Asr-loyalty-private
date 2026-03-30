@@ -163,7 +163,7 @@ export default function LegalDocumentsPage() {
   const [editing, setEditing] = useState<LegalDocument | null>(null);
   const [previewing, setPreviewing] = useState<LegalDocument | null>(null);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   const { data: documents, isLoading: docsLoading } = useQuery({
     queryKey: ['legal-documents'],

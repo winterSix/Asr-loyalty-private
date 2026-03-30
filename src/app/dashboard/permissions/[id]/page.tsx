@@ -21,7 +21,7 @@ export default function PermissionDetailPage() {
   const { data: permission, isLoading: permissionLoading } = useQuery({
     queryKey: ['permission', permissionId],
     queryFn: () => permissionService.getPermission(permissionId),
-    enabled: !!permissionId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!permissionId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   if (isLoading || permissionLoading) {

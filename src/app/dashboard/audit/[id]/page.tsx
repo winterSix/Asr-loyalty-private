@@ -31,7 +31,7 @@ export default function AuditDetailPage() {
   const { data: auditLog, isLoading: detailLoading, error } = useQuery({
     queryKey: ['audit-log', id],
     queryFn: () => auditService.getAuditLog(id),
-    enabled: !!user && !!id && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!user && !!id && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const role = user?.role || 'CUSTOMER';

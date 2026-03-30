@@ -46,7 +46,7 @@ export default function RefundsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'CUSTOMER_SUPPORT' || user?.role === 'FINANCE_MANAGER';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   const { data: refundsRaw, isLoading: refundsLoading } = useQuery({
     queryKey: ['refunds', statusFilter, page, limit, isAdmin],

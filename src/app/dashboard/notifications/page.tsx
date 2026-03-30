@@ -39,7 +39,7 @@ import toast from 'react-hot-toast';
 type Tab = 'mine' | 'all' | 'send' | 'broadcast' | 'history';
 
 const CHANNELS: NotificationType[] = ['IN_APP', 'PUSH', 'EMAIL', 'SMS'];
-const TARGET_ROLES = ['CUSTOMER', 'CASHIER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT'];
+const TARGET_ROLES = ['CUSTOMER', 'CASHIER', 'ADMIN', 'OTHERS'];
 const TARGET_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'];
 
 function NotificationsContent() {
@@ -48,7 +48,7 @@ function NotificationsContent() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const isAdmin = !!(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN');
+  const isAdmin = !!(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS');
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
@@ -360,12 +360,12 @@ function NotificationsContent() {
         <div className="overflow-x-auto min-w-0 mb-6">
           <div className="flex gap-1 bg-gray-100 dark:bg-[#1E293B] rounded-xl p-1 w-max">
             {([
-              { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser, superAdminOnly: false },
-              { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers, superAdminOnly: false },
-              { id: 'send' as Tab, label: 'Send', icon: FiSend, superAdminOnly: true },
-              { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe, superAdminOnly: true },
-              { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock, superAdminOnly: true },
-            ] as { id: Tab; label: string; icon: any; superAdminOnly: boolean }[]).filter(tab => !tab.superAdminOnly || isSuperAdmin).map((tab) => (
+              { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
+              { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
+              { id: 'send' as Tab, label: 'Send', icon: FiSend },
+              { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe },
+              { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock },
+            ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
