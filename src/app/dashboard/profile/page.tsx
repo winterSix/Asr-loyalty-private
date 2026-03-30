@@ -217,6 +217,16 @@ export default function ProfilePage() {
   };
 
   const tierConfig = getTierConfig(user?.currentTier || 'BRONZE');
+
+  const getAdminGradient = (r: string) => {
+    switch (r) {
+      case 'SUPER_ADMIN': return 'from-rose-600 via-red-600 to-orange-600';
+      case 'ADMIN':       return 'from-indigo-600 via-violet-600 to-purple-700';
+      case 'CASHIER':     return 'from-blue-500 via-cyan-500 to-teal-600';
+      default:            return 'from-slate-600 via-gray-600 to-zinc-700';
+    }
+  };
+  const adminGradient = getAdminGradient(role);
   const devicesArray = Array.isArray(devices) ? devices : (devices as any)?.data || [];
 
   const VerifiedBadge = ({ verified }: { verified?: boolean }) =>
@@ -236,7 +246,7 @@ export default function ProfilePage() {
         {/* ─── Profile Card with Banner ─── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
           {/* Banner */}
-          <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${isCustomerRole ? tierConfig.gradient : 'from-primary to-primary-lighter'}`}>
+          <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${isCustomerRole ? tierConfig.gradient : adminGradient}`}>
             <svg className="absolute inset-0 w-full h-full opacity-[0.08]" viewBox="0 0 800 200" preserveAspectRatio="none">
               <circle cx="700" cy="40" r="120" fill="white" />
               <circle cx="650" cy="80" r="60" fill="white" />
@@ -324,17 +334,26 @@ export default function ProfilePage() {
               <div className="hidden lg:flex items-center gap-6 pb-0.5">
                 <div className="text-right">
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Member Since</p>
-                  <p className="text-sm font-bold text-gray-800 mt-0.5">
+                  <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-0.5">
                     {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014'}
                   </p>
                 </div>
-                <div className="w-px h-8 bg-gray-200" />
-                <div className="text-right">
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Total Spent</p>
-                  <p className="text-sm font-bold text-gray-800 mt-0.5">
-                    &#x20A6;{user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}
-                  </p>
-                </div>
+                <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
+                {isCustomerRole ? (
+                  <div className="text-right">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Total Spent</p>
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-0.5">
+                      &#x20A6;{user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-right">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Access Level</p>
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-0.5">
+                      {user?.role?.replace(/_/g, ' ') || '\u2014'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -342,20 +361,25 @@ export default function ProfilePage() {
 
         {/* ─── Stats Grid ─── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {[
-            { label: 'Total Spent', value: `\u20A6${user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}`, icon: FiCreditCard, color: 'text-indigo-600', bg: 'bg-indigo-50', customerOnly: false },
-            { label: 'Transactions', value: user?.totalTransactions || 0, icon: FiActivity, color: 'text-violet-600', bg: 'bg-violet-50', customerOnly: false },
-            { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50', customerOnly: true },
-            { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50', customerOnly: false },
-          ].filter(s => !s.customerOnly || isCustomerRole).map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border border-gray-200/70 dark:border-white/10 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+          {(isCustomerRole ? [
+            { label: 'Total Spent', value: `\u20A6${user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}`, icon: FiCreditCard, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },
+            { label: 'Transactions', value: String(user?.totalTransactions || 0), icon: FiActivity, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-900/30' },
+            { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+            { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+          ] : [
+            { label: 'Access Level', value: user?.role?.replace(/_/g, ' ') || '\u2014', icon: FiShield, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/30' },
+            { label: 'Account Status', value: user?.status || 'ACTIVE', icon: FiActivity, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+            { label: 'Email', value: user?.emailVerified ? 'Verified' : 'Unverified', icon: FiMail, color: user?.emailVerified ? 'text-emerald-600' : 'text-amber-600', bg: user?.emailVerified ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-amber-50 dark:bg-amber-900/30' },
+            { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },
+          ]).map((s) => (
+            <div key={s.label} className="bg-white dark:bg-gray-800/60 rounded-xl border border-gray-200/70 dark:border-white/10 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center gap-2.5 mb-2.5">
                 <div className={`w-8 h-8 rounded-lg ${s.bg} ${s.color} flex items-center justify-center`}>
                   <s.icon className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider leading-none">{s.label}</span>
               </div>
-              <p className="text-lg sm:text-xl font-extrabold text-gray-900 leading-none">{s.value}</p>
+              <p className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-gray-100 leading-none">{s.value}</p>
             </div>
           ))}
         </div>
@@ -567,6 +591,46 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* Admin Access Card — non-customers only */}
+            {!isCustomerRole && (
+              <div className="bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
+                <div className={`h-1 bg-gradient-to-r ${adminGradient}`} />
+                <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <FiShield className="w-4 h-4 text-primary" /> Access Details
+                  </h3>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Role</span>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gradient-to-r ${adminGradient} text-white`}>
+                      <FiShield className="w-3 h-3" />
+                      {user?.role?.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="h-px bg-gray-100 dark:bg-white/5" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Account Type</span>
+                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Staff</span>
+                  </div>
+                  <div className="h-px bg-gray-100 dark:bg-white/5" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Access Since</span>
+                    <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                      {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '\u2014'}
+                    </span>
+                  </div>
+                  <div className="h-px bg-gray-100 dark:bg-white/5" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">2FA</span>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${user?.twoFactorEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {user?.twoFactorEnabled ? <><FiCheckCircle className="w-3 h-3" /> Enabled</> : 'Not Enabled'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Loyalty Tier Card — customers only */}
             {isCustomerRole && <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">

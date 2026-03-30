@@ -88,11 +88,13 @@ export default function UsersPage() {
     enabled: !!user && isAdmin,
   });
 
-  // All RBAC roles for the customRoleId selector (value = ID, not name)
+  // Only custom (non-system) RBAC roles for the role selector
   const rbacRoles = (() => {
     if (!rolesRaw) return [];
     const list = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw as any)?.data || [];
-    return list.map((r: any) => ({ value: r.id, label: r.name.replace(/_/g, ' ') }));
+    return list
+      .filter((r: any) => !r.isSystem)
+      .map((r: any) => ({ value: r.id, label: r.name.replace(/_/g, ' ') }));
   })();
 
   const {
