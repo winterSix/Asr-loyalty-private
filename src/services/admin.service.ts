@@ -441,6 +441,7 @@ export interface CreateCashierData {
   email: string;
   phoneNumber?: string;
   role?: string;
+  customRoleId?: string;
 }
 
 export interface CreateCashierResponse {
