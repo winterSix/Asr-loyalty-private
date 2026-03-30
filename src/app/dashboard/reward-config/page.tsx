@@ -451,11 +451,14 @@ export default function RewardConfigPage() {
                         <p className="text-[10px] font-medium text-gray-400 uppercase">Multipliers</p>
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {Object.entries(multipliers).length > 0 ? (
-                            Object.entries(multipliers).map(([tier, val]: [string, any]) => (
-                              <span key={tier} className="text-[10px] font-semibold text-gray-600 bg-gray-200/60 px-1.5 py-0.5 rounded">
-                                {tier.charAt(0).toUpperCase()}: {val}x
-                              </span>
-                            ))
+                            Object.entries(multipliers).map(([tier, val]: [string, any]) => {
+                              const tc = tierColors[tier.toLowerCase() as keyof typeof tierColors] || tierColors.bronze;
+                              return (
+                                <span key={tier} className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${tc.bg} ${tc.darkBg} ${tc.text}`}>
+                                  {tier.charAt(0).toUpperCase()}: {val}x
+                                </span>
+                              );
+                            })
                           ) : (
                             <span className="text-xs text-gray-400">—</span>
                           )}

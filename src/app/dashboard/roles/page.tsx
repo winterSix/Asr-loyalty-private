@@ -48,8 +48,8 @@ export default function RolesPage() {
 
   const roles = useMemo(() => {
     if (!rolesRaw) return [];
-    if (Array.isArray(rolesRaw)) return rolesRaw;
-    return (rolesRaw as any)?.data || [];
+    const list = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw as any)?.data || [];
+    return list.filter((r: any) => r.name !== 'OTHERS');
   }, [rolesRaw]);
 
   const filteredRoles = useMemo(() => {
@@ -379,9 +379,9 @@ export default function RolesPage() {
               <FiShield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Built-in System Roles</p>
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Base System Roles</p>
               <p className="text-xs text-blue-600 dark:text-blue-400 mb-3">
-                The following roles are defined at the system level and cannot be edited or deleted. They appear in user creation but are not manageable here.
+                These are core roles built into the platform. They are available when creating users and their permissions can only be managed by a Super Admin.
               </p>
               <div className="flex flex-wrap gap-2">
                 {['CASHIER', 'CUSTOMER', 'ADMIN', 'SUPER_ADMIN', 'OTHERS'].map((r) => (
