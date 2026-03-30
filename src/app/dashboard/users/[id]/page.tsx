@@ -66,7 +66,7 @@ export default function UserDetailPage() {
     queryFn: () => roleService.getRoles(),
     enabled: !!user && (user.role === 'SUPER_ADMIN'),
   });
-  const rbacRoles: { value: string; label: string }[] = (rbacRolesData?.data || rbacRolesData || [])
+  const rbacRoles: { value: string; label: string }[] = (rbacRolesData || [])
     .filter((r: any) => !r.isSystem)
     .map((r: any) => ({ value: r.id, label: r.name.replace(/_/g, ' ') }));
 
