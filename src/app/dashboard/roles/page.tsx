@@ -370,6 +370,28 @@ export default function RolesPage() {
             </p>
           </div>
         )}
+        {/* Built-in System Roles Notice */}
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-2xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+              <FiShield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-1">Built-in System Roles</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mb-3">
+                The following roles are defined at the system level and cannot be edited or deleted. They appear in user creation but are not manageable here.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {['CASHIER', 'CUSTOMER', 'ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT'].map((r) => (
+                  <span key={r} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/20">
+                    <FiShield className="w-3 h-3" />
+                    {r.replace(/_/g, ' ')}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Create Role Modal */}

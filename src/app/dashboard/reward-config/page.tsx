@@ -36,6 +36,8 @@ export default function RewardConfigPage() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
 
   const emptyCreateForm = () => ({
     rewardPercentage: '',
@@ -44,6 +46,7 @@ export default function RewardConfigPage() {
     tierMultipliers: { bronze: '', silver: '', gold: '', platinum: '' },
   });
   const [createForm, setCreateForm] = useState(emptyCreateForm);
+  const [editForm, setEditForm] = useState(emptyCreateForm());
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -109,6 +112,49 @@ export default function RewardConfigPage() {
       effectiveFrom: createForm.effectiveFrom || undefined,
       effectiveUntil: createForm.effectiveUntil || undefined,
       tierMultipliers: Object.keys(tierMultipliers).length > 0 ? tierMultipliers : undefined,
+    });
+  };
+
+  const openEditModal = (config: any) => {
+    const multipliers = config.tierMultipliers || {};
+    setEditForm({
+      rewardPercentage: String(config.rewardPercentage || ''),
+      effectiveFrom: config.effectiveFrom ? config.effectiveFrom.split('T')[0] : '',
+      effectiveUntil: config.effectiveUntil ? config.effectiveUntil.split('T')[0] : '',
+      tierMultipliers: {
+        bronze: multipliers.bronze != null ? String(multipliers.bronze) : '',
+        silver: multipliers.silver != null ? String(multipliers.silver) : '',
+        gold: multipliers.gold != null ? String(multipliers.gold) : '',
+        platinum: multipliers.platinum != null ? String(multipliers.platinum) : '',
+      },
+    });
+    setEditingConfigId(config.id);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingConfigId) return;
+    const rewardPct = parseFloat(editForm.rewardPercentage);
+    if (isNaN(rewardPct) || rewardPct <= 0 || rewardPct > 100) {
+      toast.error('Reward percentage must be between 0 and 100');
+      return;
+    }
+    const tierMultipliers: Record<string, number> = {};
+    for (const [tier, val] of Object.entries(editForm.tierMultipliers)) {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num > 0) tierMultipliers[tier] = num;
+    }
+    updateMutation.mutate({
+      id: editingConfigId,
+      data: {
+        rewardPercentage: rewardPct,
+        effectiveFrom: editForm.effectiveFrom || undefined,
+        effectiveUntil: editForm.effectiveUntil || undefined,
+        tierMultipliers: Object.keys(tierMultipliers).length > 0 ? tierMultipliers : undefined,
+      },
+    }, {
+      onSuccess: () => { setShowEditModal(false); setEditingConfigId(null); },
     });
   };
 
@@ -376,7 +422,7 @@ export default function RewardConfigPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => toast('Edit form coming soon')}
+                          onClick={() => openEditModal(config)}
                           className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/5 transition-all"
                           title="Edit"
                         >
@@ -561,6 +607,140 @@ export default function RewardConfigPage() {
                     <>
                       <FiCheck className="w-4 h-4" />
                       Create Config
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Configuration Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary-light text-white shadow-lg shadow-primary/25">
+                  <FiEdit className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Edit Configuration</h2>
+                  <p className="text-xs text-gray-400">Update reward rules for this configuration</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingConfigId(null); }}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
+              {/* Reward Percentage */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Reward Percentage <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max="100"
+                    placeholder="e.g. 2.5"
+                    value={editForm.rewardPercentage}
+                    onChange={(e) => setEditForm(f => ({ ...f, rewardPercentage: e.target.value }))}
+                    required
+                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
+                </div>
+              </div>
+
+              {/* Tier Multipliers */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Tier Multipliers
+                  <span className="text-xs text-gray-400 font-normal ml-2">(optional — leave blank to skip a tier)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['bronze', 'silver', 'gold', 'platinum'] as const).map((tier) => {
+                    const tc = tierColors[tier];
+                    return (
+                      <div key={tier}>
+                        <label className={`text-xs font-semibold uppercase tracking-wide mb-1 block ${tc.text}`}>{tier}</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            placeholder="e.g. 1.5"
+                            value={editForm.tierMultipliers[tier]}
+                            onChange={(e) => setEditForm(f => ({
+                              ...f,
+                              tierMultipliers: { ...f.tierMultipliers, [tier]: e.target.value },
+                            }))}
+                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary`}
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">×</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Effective Dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Effective From</label>
+                  <input
+                    type="date"
+                    value={editForm.effectiveFrom}
+                    onChange={(e) => setEditForm(f => ({ ...f, effectiveFrom: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Effective Until
+                    <span className="text-xs text-gray-400 font-normal ml-1">(optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.effectiveUntil}
+                    onChange={(e) => setEditForm(f => ({ ...f, effectiveUntil: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => { setShowEditModal(false); setEditingConfigId(null); }}
+                  className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all flex items-center gap-2 disabled:opacity-60"
+                >
+                  {updateMutation.isPending ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="w-4 h-4" />
+                      Save Changes
                     </>
                   )}
                 </button>
