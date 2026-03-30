@@ -343,11 +343,11 @@ export default function ProfilePage() {
         {/* ─── Stats Grid ─── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { label: 'Total Spent', value: `\u20A6${user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}`, icon: FiCreditCard, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { label: 'Transactions', value: user?.totalTransactions || 0, icon: FiActivity, color: 'text-violet-600', bg: 'bg-violet-50' },
-            { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          ].map((s) => (
+            { label: 'Total Spent', value: `\u20A6${user?.totalSpent ? parseFloat(user.totalSpent).toLocaleString() : '0'}`, icon: FiCreditCard, color: 'text-indigo-600', bg: 'bg-indigo-50', customerOnly: false },
+            { label: 'Transactions', value: user?.totalTransactions || 0, icon: FiActivity, color: 'text-violet-600', bg: 'bg-violet-50', customerOnly: false },
+            { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50', customerOnly: true },
+            { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50', customerOnly: false },
+          ].filter(s => !s.customerOnly || isCustomerRole).map((s) => (
             <div key={s.label} className="bg-white rounded-xl border border-gray-200/70 dark:border-white/10 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center gap-2.5 mb-2.5">
                 <div className={`w-8 h-8 rounded-lg ${s.bg} ${s.color} flex items-center justify-center`}>

@@ -728,7 +728,7 @@ export default function RewardsPage() {
   }
 
   const role = user?.role || 'CUSTOMER';
-  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'LOYALTY_MANAGER' || role === 'FINANCE_MANAGER';
+  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
 
   return isAdmin ? (
     <AdminRewardsView />

@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { user, logout } = useAuthStore();
     const { theme, setTheme } = useTheme();
     const role    = user?.role || 'CUSTOMER';
-    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
 
     const navRef      = useRef<HTMLElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -251,42 +251,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { label: 'QR Scanner',  icon: <FiQrCode />,     path: '/dashboard/qr-scanner' },
                 { label: 'Transactions',icon: <FiCreditCard />, path: '/dashboard/transactions' },
             ]}];
-            case 'FINANCE_MANAGER': return [
+            case 'OTHERS': return [
                 { title: 'Overview', items: [
-                    { label: 'Dashboard', icon: <FiHome />,     path: '/dashboard' },
-                    { label: 'Reports',   icon: <FiBarChart />, path: '/dashboard/reports' },
+                    { label: 'Dashboard',  icon: <FiHome />,     path: '/dashboard' },
+                    { label: 'Reports',    icon: <FiBarChart />, path: '/dashboard/reports' },
+                    { label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit' },
                 ]},
-                { title: 'Finance', items: [
-                    { label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions' },
-                    { label: 'Wallets',      icon: <FiWallet />,     path: '/dashboard/wallets' },
-                    { label: 'Rewards',      icon: <FiGift />,       path: '/dashboard/rewards' },
-                ]},
-                { title: 'Support', items: [
-                    { label: 'Disputes', icon: <FiShield />,    path: '/dashboard/disputes', badge: dCount > 0 ? dCount : undefined },
-                    { label: 'Refunds',  icon: <FiDollarSign />,path: '/dashboard/refunds',  badge: rCount > 0 ? rCount : undefined },
-                ]},
-            ];
-            case 'LOYALTY_MANAGER': return [
-                { title: 'Overview', items: [
-                    { label: 'Dashboard', icon: <FiHome />,     path: '/dashboard' },
-                    { label: 'Reports',   icon: <FiBarChart />, path: '/dashboard/reports' },
-                ]},
-                { title: 'Loyalty', items: [
-                    { label: 'Users',         icon: <FiUsers />,    path: '/dashboard/users' },
-                    { label: 'Loyalty Tiers', icon: <FiStar />,     path: '/dashboard/loyalty-tiers' },
-                    { label: 'Rewards',       icon: <FiGift />,     path: '/dashboard/rewards' },
-                    { label: 'Reward Config', icon: <FiSettings />, path: '/dashboard/reward-config' },
-                ]},
-            ];
-            case 'CUSTOMER_SUPPORT': return [
-                { title: 'Main', items: [
-                    { label: 'Dashboard',    icon: <FiHome />,       path: '/dashboard' },
+                { title: 'Management', items: [
                     { label: 'Users',        icon: <FiUsers />,      path: '/dashboard/users' },
                     { label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions' },
+                    { label: 'Wallets',      icon: <FiWallet />,     path: '/dashboard/wallets' },
+                ]},
+                { title: 'Loyalty & Rewards', items: [
+                    { label: 'Rewards',       icon: <FiGift />,     path: '/dashboard/rewards' },
+                    { label: 'Loyalty Tiers', icon: <FiStar />,     path: '/dashboard/loyalty-tiers' },
+                    { label: 'Reward Config', icon: <FiSettings />, path: '/dashboard/reward-config' },
                 ]},
                 { title: 'Support', items: [
-                    { label: 'Disputes', icon: <FiShield />,    path: '/dashboard/disputes', badge: dCount > 0 ? dCount : undefined },
-                    { label: 'Refunds',  icon: <FiDollarSign />,path: '/dashboard/refunds',  badge: rCount > 0 ? rCount : undefined },
+                    { label: 'Disputes',      icon: <FiShield />,     path: '/dashboard/disputes',     badge: dCount > 0 ? dCount : undefined },
+                    { label: 'Refunds',       icon: <FiDollarSign />, path: '/dashboard/refunds',      badge: rCount > 0 ? rCount : undefined },
+                    { label: 'Notifications', icon: <FiBell />,       path: '/dashboard/notifications' },
                 ]},
             ];
             default: return [{ title: 'Main', items: [{ label: 'Dashboard', icon: <FiHome />, path: '/dashboard' }] }];

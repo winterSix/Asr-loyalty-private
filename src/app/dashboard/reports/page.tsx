@@ -36,7 +36,7 @@ export default function ReportsPage() {
   const [breakdownPage, setBreakdownPage] = useState(1);
   const breakdownLimit = 10;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', startDate, endDate, groupBy],

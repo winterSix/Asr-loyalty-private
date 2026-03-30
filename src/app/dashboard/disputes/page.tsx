@@ -46,7 +46,7 @@ export default function DisputesPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'CUSTOMER_SUPPORT';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   const { data: disputesRaw, isLoading: disputesLoading } = useQuery({
     queryKey: ['disputes', statusFilter, page, limit, isAdmin],

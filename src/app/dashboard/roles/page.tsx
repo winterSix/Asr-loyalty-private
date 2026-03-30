@@ -43,7 +43,7 @@ export default function RolesPage() {
   const { data: rolesRaw, isLoading: rolesLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const roles = useMemo(() => {
@@ -64,7 +64,7 @@ export default function RolesPage() {
   const { data: permissionsRaw } = useQuery({
     queryKey: ['permissions-list'],
     queryFn: () => roleService.getPermissions(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const permissions = useMemo(() => {
@@ -309,22 +309,24 @@ export default function RolesPage() {
                         <FiEye className="w-4 h-4" />
                         View
                       </button>
+                      {/* Edit: only SUPER_ADMIN, and not on SUPER_ADMIN role itself */}
+                      {role === 'SUPER_ADMIN' && roleItem.name !== 'SUPER_ADMIN' && (
+                        <button
+                          onClick={() => router.push(`/dashboard/roles/${roleItem.id}`)}
+                          className="px-3 py-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-medium flex items-center gap-1.5"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                          Edit
+                        </button>
+                      )}
+                      {/* Delete: custom roles only */}
                       {!roleItem.isSystem && (
-                        <>
-                          <button
-                            onClick={() => router.push(`/dashboard/roles/${roleItem.id}/edit`)}
-                            className="px-3 py-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-medium flex items-center gap-1.5"
-                          >
-                            <FiEdit className="w-4 h-4" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(roleItem.id)}
-                            className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <FiTrash2 className="w-4 h-4" />
-                          </button>
-                        </>
+                        <button
+                          onClick={() => setDeleteConfirm(roleItem.id)}
+                          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -382,7 +384,7 @@ export default function RolesPage() {
                 The following roles are defined at the system level and cannot be edited or deleted. They appear in user creation but are not manageable here.
               </p>
               <div className="flex flex-wrap gap-2">
-                {['CASHIER', 'CUSTOMER', 'ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT'].map((r) => (
+                {['CASHIER', 'CUSTOMER', 'ADMIN', 'SUPER_ADMIN', 'OTHERS'].map((r) => (
                   <span key={r} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/20">
                     <FiShield className="w-3 h-3" />
                     {r.replace(/_/g, ' ')}

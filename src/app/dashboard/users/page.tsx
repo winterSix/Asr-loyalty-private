@@ -29,6 +29,7 @@ const createUserSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   phoneNumber: z.string().optional(),
   role: z.string().min(1, 'Role is required'),
+  customRoleId: z.string().optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
@@ -55,7 +56,7 @@ export default function UsersPage() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   // Debounce search input
   useEffect(() => {
@@ -87,10 +88,11 @@ export default function UsersPage() {
     enabled: !!user && isAdmin,
   });
 
-  const customRoles = (() => {
+  // All RBAC roles for the customRoleId selector (value = ID, not name)
+  const rbacRoles = (() => {
     if (!rolesRaw) return [];
     const list = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw as any)?.data || [];
-    return list.map((r: any) => ({ value: r.name, label: r.name }));
+    return list.map((r: any) => ({ value: r.id, label: r.name.replace(/_/g, ' ') }));
   })();
 
   const {
@@ -115,7 +117,7 @@ export default function UsersPage() {
         role: result.cashier.role,
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      reset({ role: 'CASHIER' });
+      reset({ role: 'CASHIER', customRoleId: '' });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to create user');
@@ -123,7 +125,10 @@ export default function UsersPage() {
   });
 
   const onCreateUser = (data: CreateUserFormData) => {
-    createUserMutation.mutate(data);
+    createUserMutation.mutate({
+      ...data,
+      customRoleId: data.customRoleId || undefined,
+    });
   };
 
   const handleCopyPassword = () => {
@@ -508,25 +513,31 @@ export default function UsersPage() {
                     Role <span className="text-red-500">*</span>
                   </label>
                   <CustomSelect
-                    value={watch('role')}
-                    onChange={(v) => setValue('role', v)}
+                    value={watch('customRoleId') ? `__rbac__${watch('customRoleId')}` : watch('role')}
+                    onChange={(v) => {
+                      if (v.startsWith('__rbac__')) {
+                        // Custom RBAC role — map base role to OTHERS automatically
+                        setValue('role', 'OTHERS');
+                        setValue('customRoleId', v.replace('__rbac__', ''));
+                      } else {
+                        // Standard base role
+                        setValue('role', v);
+                        setValue('customRoleId', '');
+                      }
+                    }}
                     options={[
                       { value: 'CASHIER', label: 'Cashier' },
                       { value: 'CUSTOMER', label: 'Customer' },
-                      { value: 'FINANCE_MANAGER', label: 'Finance Manager' },
-                      { value: 'LOYALTY_MANAGER', label: 'Loyalty Manager' },
-                      { value: 'CUSTOMER_SUPPORT', label: 'Customer Support' },
                       { value: 'ADMIN', label: 'Admin' },
-                      ...customRoles.filter((r: any) =>
-                        !['CASHIER', 'CUSTOMER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT', 'ADMIN', 'SUPER_ADMIN'].includes(r.value)
-                      ),
+                      ...(rbacRoles.length > 0 ? [{ value: '__divider__', label: '── Custom Roles ──' }] : []),
+                      ...rbacRoles.map((r: any) => ({ value: `__rbac__${r.value}`, label: r.label })),
                     ]}
                   />
                   {errors.role && (
                     <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
                   )}
                   <p className="text-xs text-gray-400 mt-1.5">
-                    This sets what the user can access in the system.
+                    Custom roles you created in Role Management appear below the divider.
                   </p>
                 </div>
 

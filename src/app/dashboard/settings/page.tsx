@@ -71,7 +71,7 @@ export default function SettingsPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const { data: groupedRaw, isLoading: settingsLoading } = useQuery({
@@ -702,8 +702,11 @@ export default function SettingsPage() {
                 const isExpanded = expandedCategories.has(category);
                 const catMeta = getCategoryIcon(category);
                 const CatIcon = catMeta.icon;
-                // Exclude keys already shown in dedicated Payment Gateways and Fee Config sections
-                const nonDedicatedSettings = (settings as any[]).filter((s: any) => !DEDICATED_KEYS.includes(s.key));
+                // Exclude keys already shown in dedicated Feature Flags, Payment Gateways, and Fee Config sections
+                const featureKeys = features.map((f: any) => f.key);
+                const nonDedicatedSettings = (settings as any[]).filter(
+                  (s: any) => !DEDICATED_KEYS.includes(s.key) && !featureKeys.includes(s.key)
+                );
                 if (nonDedicatedSettings.length === 0) return null;
                 return (
                   <div key={category} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

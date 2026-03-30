@@ -6,6 +6,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import { walletService } from '@/services/wallet.service';
+import { roleService } from '@/services/role.service';
 import CustomSelect from '@/components/ui/CustomSelect';
 import toast from 'react-hot-toast';
 import {
@@ -37,6 +38,7 @@ export default function UserDetailPage() {
   const [statusAction, setStatusAction] = useState<'ACTIVE' | 'SUSPENDED'>('SUSPENDED');
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
+  const [selectedCustomRoleId, setSelectedCustomRoleId] = useState('');
 
   // Wallet freeze modal state
   const [showFreezeModal, setShowFreezeModal] = useState(false);
@@ -48,21 +50,31 @@ export default function UserDetailPage() {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['admin', 'user', userId],
     queryFn: () => adminService.getUserById(userId),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Fetch user's wallets
   const { data: userWallets } = useQuery({
     queryKey: ['admin', 'user', userId, 'wallets'],
     queryFn: () => adminService.getUserWallets(userId),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
+
+  // Fetch RBAC custom roles for the role change dropdown
+  const { data: rbacRolesData } = useQuery({
+    queryKey: ['roles'],
+    queryFn: () => roleService.getRoles(),
+    enabled: !!user && (user.role === 'SUPER_ADMIN'),
+  });
+  const rbacRoles: { value: string; label: string }[] = (rbacRolesData?.data || rbacRolesData || [])
+    .filter((r: any) => !r.isSystem)
+    .map((r: any) => ({ value: r.id, label: r.name.replace(/_/g, ' ') }));
 
   // Fetch user's transactions
   const { data: userTransactions } = useQuery({
     queryKey: ['admin', 'user', userId, 'transactions'],
     queryFn: () => adminService.getUserTransactions(userId, { page: 1, limit: 5 }),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Update user status mutation
@@ -91,6 +103,7 @@ export default function UserDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setShowRoleModal(false);
       setSelectedRole('');
+      setSelectedCustomRoleId('');
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to update user role');
@@ -131,7 +144,10 @@ export default function UserDetailPage() {
 
   const handleRoleChange = () => {
     if (!selectedRole) return;
-    roleMutation.mutate({ role: selectedRole });
+    roleMutation.mutate({
+      role: selectedRole,
+      ...(selectedCustomRoleId ? { customRoleId: selectedCustomRoleId } : {}),
+    });
   };
 
   const openStatusModal = (action: 'ACTIVE' | 'SUSPENDED') => {
@@ -725,14 +741,24 @@ export default function UserDetailPage() {
                   New Role
                 </label>
                 <CustomSelect
-                  value={selectedRole}
-                  onChange={setSelectedRole}
+                  value={selectedCustomRoleId ? `__rbac__${selectedCustomRoleId}` : selectedRole}
+                  onChange={(v) => {
+                    if (v.startsWith('__rbac__')) {
+                      setSelectedRole('OTHERS');
+                      setSelectedCustomRoleId(v.replace('__rbac__', ''));
+                    } else {
+                      setSelectedRole(v);
+                      setSelectedCustomRoleId('');
+                    }
+                  }}
                   options={[
                     { value: '', label: 'Select role...' },
                     { value: 'CUSTOMER', label: 'Customer' },
                     { value: 'CASHIER', label: 'Cashier' },
                     { value: 'ADMIN', label: 'Admin' },
                     { value: 'SUPER_ADMIN', label: 'Super Admin' },
+                    ...(rbacRoles.length > 0 ? [{ value: '__divider__', label: '── Custom Roles ──' }] : []),
+                    ...rbacRoles.map((r) => ({ value: `__rbac__${r.value}`, label: r.label })),
                   ]}
                 />
               </div>
@@ -746,7 +772,7 @@ export default function UserDetailPage() {
                 </button>
                 <button
                   onClick={handleRoleChange}
-                  disabled={roleMutation.isPending || !selectedRole || selectedRole === userData?.role}
+                  disabled={roleMutation.isPending || !selectedRole || (selectedRole === userData?.role && !selectedCustomRoleId)}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50"
                 >
                   {roleMutation.isPending ? 'Updating...' : 'Update Role'}

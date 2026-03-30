@@ -393,7 +393,7 @@ class AdminService {
 
   // PATCH /admin/users/:id/role - Update user role (SUPER_ADMIN only)
   // Backend returns: { success, message, user: { ... } }
-  async updateUserRole(userId: string, data: { role: string }): Promise<AdminUser> {
+  async updateUserRole(userId: string, data: { role: string; customRoleId?: string }): Promise<AdminUser> {
     const response = await apiClient.patch<any>(`/admin/users/${userId}/role`, data);
     const result = unwrapResponse<any>(response.data);
     return extractInner<AdminUser>(result, 'user');
@@ -425,10 +425,10 @@ class AdminService {
     return extractInner<GatewayStats>(data, 'stats');
   }
 
-  // POST /admin/cashiers - Create a new cashier account
+  // POST /admin/users - Create a new user account
   // Backend returns: { success, message, cashier: { id, firstName, lastName, email, phoneNumber, role, status, temporaryPassword } }
   async createCashier(data: CreateCashierData): Promise<CreateCashierResponse> {
-    const response = await apiClient.post<any>('/admin/cashiers', data);
+    const response = await apiClient.post<any>('/admin/users', data);
     const result = unwrapResponse<any>(response.data);
     // The backend returns the full object at the top level (not nested under a key)
     return result as CreateCashierResponse;

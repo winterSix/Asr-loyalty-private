@@ -23,11 +23,11 @@ import {
 } from '@/utils/icons';
 import toast from 'react-hot-toast';
 
-const tierColors: Record<string, { bg: string; text: string; ring: string }> = {
-  bronze: { bg: 'bg-amber-50', text: 'text-amber-700', ring: 'ring-amber-600/20' },
-  silver: { bg: 'bg-gray-100', text: 'text-gray-700', ring: 'ring-gray-500/20' },
-  gold: { bg: 'bg-yellow-50', text: 'text-yellow-700', ring: 'ring-yellow-600/20' },
-  platinum: { bg: 'bg-violet-50', text: 'text-violet-700', ring: 'ring-violet-600/20' },
+const tierColors: Record<string, { bg: string; darkBg: string; text: string; ring: string }> = {
+  bronze: { bg: 'bg-amber-50', darkBg: 'dark:bg-amber-900/20', text: 'text-amber-700 dark:text-amber-400', ring: 'ring-amber-600/20' },
+  silver: { bg: 'bg-gray-100', darkBg: 'dark:bg-gray-700/50', text: 'text-gray-700 dark:text-gray-300', ring: 'ring-gray-500/20' },
+  gold: { bg: 'bg-yellow-50', darkBg: 'dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400', ring: 'ring-yellow-600/20' },
+  platinum: { bg: 'bg-violet-50', darkBg: 'dark:bg-violet-900/20', text: 'text-violet-700 dark:text-violet-400', ring: 'ring-violet-600/20' },
 };
 
 export default function RewardConfigPage() {
@@ -57,13 +57,13 @@ export default function RewardConfigPage() {
   const { data: configsRaw, isLoading: configsLoading } = useQuery({
     queryKey: ['reward-configs'],
     queryFn: () => rewardConfigurationService.getAll({ includeInactive: true }),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'LOYALTY_MANAGER'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: activeConfig } = useQuery({
     queryKey: ['reward-config-active'],
     queryFn: () => rewardConfigurationService.getActive(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'LOYALTY_MANAGER'),
+    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const updateMutation = useMutation({
@@ -72,6 +72,7 @@ export default function RewardConfigPage() {
       queryClient.invalidateQueries({ queryKey: ['reward-configs'] });
       queryClient.invalidateQueries({ queryKey: ['reward-config-active'] });
       toast.success('Configuration updated successfully');
+      router.push('/dashboard/rewards');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to update configuration');
@@ -247,7 +248,7 @@ export default function RewardConfigPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push('/dashboard/rewards')}
-              className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
             >
               <FiArrowLeft className="w-4 h-4" />
               Back to Rewards
@@ -255,7 +256,7 @@ export default function RewardConfigPage() {
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+              className="p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-all disabled:opacity-50"
               title="Refresh"
             >
               <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -266,13 +267,13 @@ export default function RewardConfigPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {summaryCards.map((card) => (
-            <div key={card.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+            <div key={card.label} className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 flex items-center gap-4">
               <div className={`p-2.5 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-lg ${card.shadow}`}>
                 <card.icon className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500">{card.label}</p>
-                <p className="text-xl font-bold text-gray-900 mt-0.5">{card.value}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{card.label}</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{card.value}</p>
               </div>
             </div>
           ))}
@@ -280,16 +281,16 @@ export default function RewardConfigPage() {
 
         {/* Active Configuration */}
         {activeConfigData && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+          <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
                     <FiZap className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="font-semibold text-gray-900">Active Configuration</h2>
-                    <p className="text-xs text-gray-500">Version {activeConfigData.version}</p>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Active Configuration</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Version {activeConfigData.version}</p>
                   </div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
@@ -301,32 +302,32 @@ export default function RewardConfigPage() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Reward Rate */}
-                <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
                   <div className="flex items-center gap-1.5 mb-2">
                     <FiStar className="w-3.5 h-3.5 text-gray-400" />
-                    <p className="text-xs font-medium text-gray-500">Reward Percentage</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Reward Percentage</p>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">{activeConfigData.rewardPercentage}%</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{activeConfigData.rewardPercentage}%</p>
                   <p className="text-xs text-gray-400 mt-1">Base reward rate on transactions</p>
                 </div>
 
                 {/* Effective Period */}
-                <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
                   <div className="flex items-center gap-1.5 mb-2">
                     <FiCalendar className="w-3.5 h-3.5 text-gray-400" />
-                    <p className="text-xs font-medium text-gray-500">Effective Period</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Effective Period</p>
                   </div>
-                  <p className="text-sm font-bold text-gray-900">{formatDate(activeConfigData.effectiveFrom)}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatDate(activeConfigData.effectiveFrom)}</p>
                   <p className="text-xs text-gray-400 mt-1">
                     Until: {activeConfigData.effectiveUntil ? formatDate(activeConfigData.effectiveUntil) : 'No expiry'}
                   </p>
                 </div>
 
                 {/* Tier Multipliers */}
-                <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
                   <div className="flex items-center gap-1.5 mb-2">
                     <FiTrendingUp className="w-3.5 h-3.5 text-gray-400" />
-                    <p className="text-xs font-medium text-gray-500">Tier Multipliers</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Tier Multipliers</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {Object.entries(tierMultipliers).map(([tier, multiplier]: [string, any]) => {
@@ -343,10 +344,10 @@ export default function RewardConfigPage() {
 
               {/* Tier Expiry Days */}
               {activeConfigData.tierExpiryDays && typeof activeConfigData.tierExpiryDays === 'object' && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
                   <div className="flex items-center gap-1.5 mb-2">
                     <FiCalendar className="w-3.5 h-3.5 text-gray-400" />
-                    <p className="text-xs font-medium text-gray-500">Tier Expiry Days (points validity)</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Tier Expiry Days (points validity)</p>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {Object.entries(activeConfigData.tierExpiryDays).map(([tier, days]: [string, any]) => {
@@ -365,10 +366,10 @@ export default function RewardConfigPage() {
         )}
 
         {/* All Configurations */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-700/20 flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">All Configurations</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">All Configurations</h2>
               <p className="text-xs text-gray-400 mt-0.5">{totalConfigs} configuration{totalConfigs !== 1 ? 's' : ''} total</p>
             </div>
             <button
@@ -387,7 +388,7 @@ export default function RewardConfigPage() {
                 const multipliers = config.tierMultipliers || {};
 
                 return (
-                  <div key={config.id} className={`p-5 hover:bg-gray-50/60 transition-colors ${isActive ? 'bg-emerald-50/30' : ''}`}>
+                  <div key={config.id} className={`p-5 transition-colors ${isActive ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : 'hover:bg-gray-50/60 dark:hover:bg-gray-700/20'}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
@@ -399,7 +400,7 @@ export default function RewardConfigPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900">Version {config.version}</p>
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">Version {config.version}</p>
                             {isActive && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                                 <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
@@ -432,21 +433,21 @@ export default function RewardConfigPage() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
                         <p className="text-[10px] font-medium text-gray-400 uppercase">Reward %</p>
-                        <p className="text-sm font-bold text-gray-900 mt-0.5">{config.rewardPercentage}%</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">{config.rewardPercentage}%</p>
                       </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
                         <p className="text-[10px] font-medium text-gray-400 uppercase">From</p>
-                        <p className="text-sm font-bold text-gray-900 mt-0.5">{formatDate(config.effectiveFrom)}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">{formatDate(config.effectiveFrom)}</p>
                       </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
                         <p className="text-[10px] font-medium text-gray-400 uppercase">Until</p>
-                        <p className="text-sm font-bold text-gray-900 mt-0.5">
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-0.5">
                           {config.effectiveUntil ? formatDate(config.effectiveUntil) : 'No expiry'}
                         </p>
                       </div>
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
                         <p className="text-[10px] font-medium text-gray-400 uppercase">Multipliers</p>
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {Object.entries(multipliers).length > 0 ? (
@@ -467,10 +468,10 @@ export default function RewardConfigPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <FiGift className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-900 font-semibold mb-1">No configurations found</p>
+              <p className="text-gray-900 dark:text-gray-100 font-semibold mb-1">No configurations found</p>
               <p className="text-sm text-gray-400">Create your first reward configuration to get started</p>
             </div>
           )}
@@ -480,21 +481,21 @@ export default function RewardConfigPage() {
       {/* Create Configuration Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/25">
                   <FiGift className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">New Configuration</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">New Configuration</h2>
                   <p className="text-xs text-gray-400">Set reward rules for this configuration</p>
                 </div>
               </div>
               <button
                 onClick={() => { setShowCreateModal(false); setCreateForm(emptyCreateForm()); }}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
               >
                 <FiX className="w-5 h-5" />
               </button>
@@ -504,7 +505,7 @@ export default function RewardConfigPage() {
             <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
               {/* Reward Percentage */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Reward Percentage <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -517,7 +518,7 @@ export default function RewardConfigPage() {
                     value={createForm.rewardPercentage}
                     onChange={(e) => setCreateForm(f => ({ ...f, rewardPercentage: e.target.value }))}
                     required
-                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
                 </div>
@@ -526,7 +527,7 @@ export default function RewardConfigPage() {
 
               {/* Tier Multipliers */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Tier Multipliers
                   <span className="text-xs text-gray-400 font-normal ml-2">(optional — leave blank to skip a tier)</span>
                 </label>
@@ -549,7 +550,7 @@ export default function RewardConfigPage() {
                               ...f,
                               tierMultipliers: { ...f.tierMultipliers, [tier]: e.target.value },
                             }))}
-                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary`}
+                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.darkBg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary text-gray-900 dark:text-gray-100 placeholder:text-gray-400`}
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">×</span>
                         </div>
@@ -562,12 +563,12 @@ export default function RewardConfigPage() {
               {/* Effective Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Effective From</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Effective From</label>
                   <input
                     type="date"
                     value={createForm.effectiveFrom}
                     onChange={(e) => setCreateForm(f => ({ ...f, effectiveFrom: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -579,17 +580,17 @@ export default function RewardConfigPage() {
                     type="date"
                     value={createForm.effectiveUntil}
                     onChange={(e) => setCreateForm(f => ({ ...f, effectiveUntil: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
 
               {/* Footer Actions */}
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={() => { setShowCreateModal(false); setCreateForm(emptyCreateForm()); }}
-                  className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -619,20 +620,20 @@ export default function RewardConfigPage() {
       {/* Edit Configuration Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary-light text-white shadow-lg shadow-primary/25">
                   <FiEdit className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Edit Configuration</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Edit Configuration</h2>
                   <p className="text-xs text-gray-400">Update reward rules for this configuration</p>
                 </div>
               </div>
               <button
                 onClick={() => { setShowEditModal(false); setEditingConfigId(null); }}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
               >
                 <FiX className="w-5 h-5" />
               </button>
@@ -641,7 +642,7 @@ export default function RewardConfigPage() {
             <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
               {/* Reward Percentage */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Reward Percentage <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -654,7 +655,7 @@ export default function RewardConfigPage() {
                     value={editForm.rewardPercentage}
                     onChange={(e) => setEditForm(f => ({ ...f, rewardPercentage: e.target.value }))}
                     required
-                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
                 </div>
@@ -662,7 +663,7 @@ export default function RewardConfigPage() {
 
               {/* Tier Multipliers */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   Tier Multipliers
                   <span className="text-xs text-gray-400 font-normal ml-2">(optional — leave blank to skip a tier)</span>
                 </label>
@@ -683,7 +684,7 @@ export default function RewardConfigPage() {
                               ...f,
                               tierMultipliers: { ...f.tierMultipliers, [tier]: e.target.value },
                             }))}
-                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary`}
+                            className={`w-full pl-3 pr-8 py-2 rounded-xl text-sm border outline-none transition-all ${tc.bg} ${tc.darkBg} ${tc.ring} ring-1 ring-inset focus:ring-2 focus:border-primary text-gray-900 dark:text-gray-100 placeholder:text-gray-400`}
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">×</span>
                         </div>
@@ -696,12 +697,12 @@ export default function RewardConfigPage() {
               {/* Effective Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Effective From</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Effective From</label>
                   <input
                     type="date"
                     value={editForm.effectiveFrom}
                     onChange={(e) => setEditForm(f => ({ ...f, effectiveFrom: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -713,7 +714,7 @@ export default function RewardConfigPage() {
                     type="date"
                     value={editForm.effectiveUntil}
                     onChange={(e) => setEditForm(f => ({ ...f, effectiveUntil: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>

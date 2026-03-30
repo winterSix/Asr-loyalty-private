@@ -92,7 +92,7 @@ export default function DisputeDetailPage() {
     rejectMutation.mutate(rejectReason);
   };
 
-  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'CUSTOMER_SUPPORT';
+  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
 
   if (isLoading || disputeLoading) {
     return (
