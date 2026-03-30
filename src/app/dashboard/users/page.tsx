@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, UserFilters, CreateCashierData } from '@/services/admin.service';
+import { roleService } from '@/services/role.service';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -79,6 +80,18 @@ export default function UsersPage() {
     queryFn: () => adminService.getUsers(filters),
     enabled: !!user && isAdmin,
   });
+
+  const { data: rolesRaw } = useQuery({
+    queryKey: ['roles'],
+    queryFn: () => roleService.getRoles(),
+    enabled: !!user && isAdmin,
+  });
+
+  const customRoles = (() => {
+    if (!rolesRaw) return [];
+    const list = Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw as any)?.data || [];
+    return list.map((r: any) => ({ value: r.name, label: r.name }));
+  })();
 
   const {
     register,
@@ -504,6 +517,9 @@ export default function UsersPage() {
                       { value: 'LOYALTY_MANAGER', label: 'Loyalty Manager' },
                       { value: 'CUSTOMER_SUPPORT', label: 'Customer Support' },
                       { value: 'ADMIN', label: 'Admin' },
+                      ...customRoles.filter((r: any) =>
+                        !['CASHIER', 'CUSTOMER', 'FINANCE_MANAGER', 'LOYALTY_MANAGER', 'CUSTOMER_SUPPORT', 'ADMIN', 'SUPER_ADMIN'].includes(r.value)
+                      ),
                     ]}
                   />
                   {errors.role && (

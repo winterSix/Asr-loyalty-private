@@ -702,6 +702,9 @@ export default function SettingsPage() {
                 const isExpanded = expandedCategories.has(category);
                 const catMeta = getCategoryIcon(category);
                 const CatIcon = catMeta.icon;
+                // Exclude keys already shown in dedicated Payment Gateways and Fee Config sections
+                const nonDedicatedSettings = (settings as any[]).filter((s: any) => !DEDICATED_KEYS.includes(s.key));
+                if (nonDedicatedSettings.length === 0) return null;
                 return (
                   <div key={category} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <button
@@ -717,7 +720,7 @@ export default function SettingsPage() {
                             {category.replace(/_/g, ' ')}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            {(settings as any[]).length} setting{(settings as any[]).length !== 1 ? 's' : ''}
+                            {nonDedicatedSettings.length} setting{nonDedicatedSettings.length !== 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
@@ -729,7 +732,7 @@ export default function SettingsPage() {
                     </button>
                     {isExpanded && (
                       <div className="border-t border-gray-100 dark:border-slate-700/50 divide-y divide-gray-100 dark:divide-slate-700/50">
-                        {(settings as any[]).map((setting: any) => {
+                        {nonDedicatedSettings.map((setting: any) => {
                           const isBoolean = isBooleanValue(setting.value);
                           const boolVal = setting.value === 'true';
                           const isEditing = editingSetting === setting.key;

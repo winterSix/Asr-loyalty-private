@@ -137,10 +137,10 @@ export default function EditTierPage() {
   if (!tierConfig && !tierLoading) {
     return (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 dark:bg-gray-700">
             <FiAward className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="text-gray-900 font-semibold text-lg mb-1">Tier not found</p>
+          <p className="text-gray-900 font-semibold text-lg mb-1 dark:text-gray-100">Tier not found</p>
           <p className="text-sm text-gray-400 mb-5">The tier &quot;{tierName}&quot; does not exist</p>
           <button
             onClick={() => router.push('/dashboard/loyalty-tiers')}
@@ -160,7 +160,7 @@ export default function EditTierPage() {
           <div className="flex items-center gap-3.5">
             <button
               onClick={() => router.push('/dashboard/loyalty-tiers')}
-              className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
+              className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50"
             >
               <FiArrowLeft className="w-5 h-5" />
             </button>
@@ -172,7 +172,7 @@ export default function EditTierPage() {
                 <span className="text-2xl">{style.icon}</span>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Edit {tierName} Tier</h1>
               </div>
-              <p className="text-gray-500 text-sm">{style.label} — Configure requirements and benefits</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{style.label} — Configure requirements and benefits</p>
             </div>
           </div>
         </div>
@@ -182,9 +182,9 @@ export default function EditTierPage() {
             {/* Main Settings */}
             <div className="lg:col-span-2 space-y-6">
               {/* Requirements Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                  <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-gray-800/50 dark:border-gray-700/50">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:border-gray-700/50 dark:bg-gray-700/30">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <FiTarget className="w-4 h-4 text-gray-500" />
                     Tier Requirements
                   </h2>
@@ -193,7 +193,7 @@ export default function EditTierPage() {
                 <div className="p-6 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         <span className="flex items-center gap-1.5">
                           <FiDollarSign className="w-3.5 h-3.5 text-gray-400" />
                           Minimum Spend (NGN)
@@ -205,13 +205,13 @@ export default function EditTierPage() {
                         onChange={(e) => setMinSpend(e.target.value)}
                         min="0"
                         step="1000"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700 dark:placeholder:text-gray-500"
                         placeholder="e.g. 50000"
                       />
                       <p className="text-xs text-gray-400 mt-1">Total spending required to reach this tier</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         <span className="flex items-center gap-1.5">
                           <FiTarget className="w-3.5 h-3.5 text-gray-400" />
                           Minimum Transactions
@@ -222,14 +222,14 @@ export default function EditTierPage() {
                         value={minTransactions}
                         onChange={(e) => setMinTransactions(e.target.value)}
                         min="0"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700 dark:placeholder:text-gray-500"
                         placeholder="e.g. 10"
                       />
                       <p className="text-xs text-gray-400 mt-1">Number of transactions to qualify</p>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       <span className="flex items-center gap-1.5">
                         <FiStar className="w-3.5 h-3.5 text-gray-400" />
                         Reward Multiplier
@@ -241,7 +241,7 @@ export default function EditTierPage() {
                       onChange={(e) => setRewardMultiplier(e.target.value)}
                       min="1"
                       step="0.05"
-                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700 dark:placeholder:text-gray-500"
                       placeholder="e.g. 1.5"
                     />
                     <p className="text-xs text-gray-400 mt-1">Points earned = base points x multiplier (min 1.0)</p>
@@ -250,9 +250,9 @@ export default function EditTierPage() {
               </div>
 
               {/* Benefits Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                  <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-gray-800/50 dark:border-gray-700/50">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:border-gray-700/50 dark:bg-gray-700/30">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <FiZap className="w-4 h-4 text-gray-500" />
                     Tier Benefits
                   </h2>
@@ -261,12 +261,12 @@ export default function EditTierPage() {
                 <div className="p-6 space-y-5">
                   {/* Cashback */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Cashback Rate</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Cashback Rate</label>
                     <input
                       type="text"
                       value={cashback}
                       onChange={(e) => setCashback(e.target.value)}
-                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700 dark:placeholder:text-gray-500"
                       placeholder="e.g. 2%"
                     />
                     <p className="text-xs text-gray-400 mt-1">Percentage cashback on transactions (e.g. &quot;1.5%&quot;)</p>
@@ -274,13 +274,13 @@ export default function EditTierPage() {
 
                   {/* Free Transfers */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Free Transfers per Month</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Free Transfers per Month</label>
                     <input
                       type="number"
                       value={freeTransfers}
                       onChange={(e) => setFreeTransfers(e.target.value)}
                       min="0"
-                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      className="w-full sm:w-1/2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700 dark:placeholder:text-gray-500"
                       placeholder="e.g. 5"
                     />
                     <p className="text-xs text-gray-400 mt-1">Number of free transfers included monthly</p>
@@ -288,9 +288,9 @@ export default function EditTierPage() {
 
                   {/* Toggle Benefits */}
                   <div className="space-y-4 pt-2">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl dark:bg-gray-700/50">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Priority Support</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Priority Support</p>
                         <p className="text-xs text-gray-400">Fast-tracked customer support for this tier</p>
                       </div>
                       <button
@@ -306,9 +306,9 @@ export default function EditTierPage() {
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl dark:bg-gray-700/50">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Exclusive Offers</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Exclusive Offers</p>
                         <p className="text-xs text-gray-400">Access to tier-exclusive deals and promotions</p>
                       </div>
                       <button
@@ -324,9 +324,9 @@ export default function EditTierPage() {
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl dark:bg-gray-700/50">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Personal Manager</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Personal Manager</p>
                         <p className="text-xs text-gray-400">Dedicated account manager for VIP users</p>
                       </div>
                       <button
@@ -349,7 +349,7 @@ export default function EditTierPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Tier Preview */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-gray-800/50 dark:border-gray-700/50">
                 <div className={`bg-gradient-to-br ${style.gradient} p-6 relative overflow-hidden`}>
                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                   <div className="relative z-10">
@@ -373,30 +373,30 @@ export default function EditTierPage() {
                   </div>
                 </div>
                 <div className="p-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Preview</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Preview</p>
                   <div className="space-y-1.5 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Cashback</span>
-                      <span className="font-medium text-gray-900">{cashback || '—'}</span>
+                      <span className="text-gray-500 dark:text-gray-400">Cashback</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{cashback || '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Free Transfers</span>
-                      <span className="font-medium text-gray-900">{freeTransfers || '0'}/mo</span>
+                      <span className="text-gray-500 dark:text-gray-400">Free Transfers</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{freeTransfers || '0'}/mo</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Priority Support</span>
+                      <span className="text-gray-500 dark:text-gray-400">Priority Support</span>
                       <span className={`font-medium ${prioritySupport ? 'text-emerald-600' : 'text-gray-400'}`}>
                         {prioritySupport ? 'Yes' : 'No'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Exclusive Offers</span>
+                      <span className="text-gray-500 dark:text-gray-400">Exclusive Offers</span>
                       <span className={`font-medium ${exclusiveOffers ? 'text-emerald-600' : 'text-gray-400'}`}>
                         {exclusiveOffers ? 'Yes' : 'No'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Personal Manager</span>
+                      <span className="text-gray-500 dark:text-gray-400">Personal Manager</span>
                       <span className={`font-medium ${personalManager ? 'text-emerald-600' : 'text-gray-400'}`}>
                         {personalManager ? 'Yes' : 'No'}
                       </span>
@@ -406,16 +406,16 @@ export default function EditTierPage() {
               </div>
 
               {/* Status & Color */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800/50 dark:border-gray-700/50">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                   <FiCheckCircle className="w-4 h-4 text-gray-500" />
                   Status & Appearance
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl dark:bg-gray-700/50">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Active</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Active</p>
                       <p className="text-xs text-gray-400">Enable or disable this tier</p>
                     </div>
                     <button
@@ -432,19 +432,19 @@ export default function EditTierPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Tier Color</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tier Color</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="color"
                         value={color || '#CD7F32'}
                         onChange={(e) => setColor(e.target.value)}
-                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+                        className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer dark:border-gray-600"
                       />
                       <input
                         type="text"
                         value={color}
                         onChange={(e) => setColor(e.target.value)}
-                        className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-100 dark:focus:bg-gray-700"
                         placeholder="#CD7F32"
                       />
                     </div>

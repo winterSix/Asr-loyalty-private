@@ -33,33 +33,33 @@ const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; t
   BRONZE: {
     gradient: 'from-amber-600 to-amber-800',
     shadow: 'shadow-amber-600/25',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    ring: 'ring-amber-600/20',
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    text: 'text-amber-700 dark:text-amber-400',
+    ring: 'ring-amber-600/20 dark:ring-amber-400/20',
     icon: '🥉',
   },
   SILVER: {
     gradient: 'from-gray-400 to-gray-600',
     shadow: 'shadow-gray-400/25',
-    bg: 'bg-gray-100',
-    text: 'text-gray-700',
-    ring: 'ring-gray-500/20',
+    bg: 'bg-gray-100 dark:bg-gray-700/50',
+    text: 'text-gray-700 dark:text-gray-300',
+    ring: 'ring-gray-500/20 dark:ring-gray-400/20',
     icon: '🥈',
   },
   GOLD: {
     gradient: 'from-yellow-400 to-amber-500',
     shadow: 'shadow-yellow-500/25',
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-700',
-    ring: 'ring-yellow-600/20',
+    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+    text: 'text-yellow-700 dark:text-yellow-400',
+    ring: 'ring-yellow-600/20 dark:ring-yellow-400/20',
     icon: '🥇',
   },
   PLATINUM: {
     gradient: 'from-violet-500 to-indigo-700',
     shadow: 'shadow-violet-500/25',
-    bg: 'bg-violet-50',
-    text: 'text-violet-700',
-    ring: 'ring-violet-600/20',
+    bg: 'bg-violet-50 dark:bg-violet-900/20',
+    text: 'text-violet-700 dark:text-violet-400',
+    ring: 'ring-violet-600/20 dark:ring-violet-400/20',
     icon: '💎',
   },
 };
@@ -181,7 +181,7 @@ function AdminRewardsView() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push('/dashboard/reward-config')}
-            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700/50"
           >
             <FiSettings className="w-4 h-4" />
             Reward Config
@@ -189,7 +189,7 @@ function AdminRewardsView() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
+            className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50"
             title="Refresh"
           >
             <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -199,51 +199,51 @@ function AdminRewardsView() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
             <FiZap className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500">Reward Rate</p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Reward Rate</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">
               {activeConfig ? `${parseFloat(activeConfig.rewardPercentage)}%` : '—'}
             </p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
             <FiUsers className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500">Users in Tiers</p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">{totalUsersInTiers.toLocaleString()}</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Users in Tiers</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{totalUsersInTiers.toLocaleString()}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">
             <FiAward className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500">Tier Levels</p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">{orderedTiers.length}</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Tier Levels</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{orderedTiers.length}</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25">
             <FiCheckCircle className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500">Config Status</p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">{activeConfig ? 'Active' : 'Inactive'}</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Config Status</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{activeConfig ? 'Active' : 'Inactive'}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Active Configuration */}
-        <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <FiSettings className="w-5 h-5 text-primary" />
               Active Configuration
             </h2>
@@ -261,8 +261,8 @@ function AdminRewardsView() {
                 <p className="text-3xl font-bold text-primary">{parseFloat(activeConfig.rewardPercentage)}%</p>
                 <p className="text-xs text-gray-500 mt-1">of each transaction value</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs font-medium text-gray-500 mb-2">Tier Multipliers</p>
+              <div className="p-4 bg-gray-50 rounded-xl dark:bg-gray-700/50">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Tier Multipliers</p>
                 {activeConfig.tierMultipliers && typeof activeConfig.tierMultipliers === 'object' ? (
                   <div className="space-y-2">
                     {Object.entries(activeConfig.tierMultipliers).map(([tier, multiplier]) => {
@@ -272,7 +272,7 @@ function AdminRewardsView() {
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text} ring-1 ring-inset ${style.ring}`}>
                             {style.icon} {tier}
                           </span>
-                          <span className="text-sm font-bold text-gray-900">{parseFloat(String(multiplier))}x</span>
+                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{parseFloat(String(multiplier))}x</span>
                         </div>
                       );
                     })}
@@ -282,15 +282,15 @@ function AdminRewardsView() {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500">Effective From</p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                <div className="p-3 bg-gray-50 rounded-xl dark:bg-gray-700/50">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Effective From</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
                     {new Date(activeConfig.effectiveFrom).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500">Version</p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">v{activeConfig.version}</p>
+                <div className="p-3 bg-gray-50 rounded-xl dark:bg-gray-700/50">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Version</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">v{activeConfig.version}</p>
                 </div>
               </div>
               <button
@@ -302,10 +302,10 @@ function AdminRewardsView() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 dark:bg-gray-700">
                 <FiSettings className="w-6 h-6 text-gray-400" />
               </div>
-              <p className="text-gray-900 font-semibold text-sm mb-1">No active configuration</p>
+              <p className="text-gray-900 font-semibold text-sm mb-1 dark:text-gray-100">No active configuration</p>
               <p className="text-xs text-gray-400 mb-3">Set up reward rules to get started</p>
               <button
                 onClick={() => router.push('/dashboard/reward-config')}
@@ -318,9 +318,9 @@ function AdminRewardsView() {
         </div>
 
         {/* Tier Distribution */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800/50 dark:border-gray-700/50">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <FiAward className="w-5 h-5 text-primary" />
               Loyalty Tiers
             </h2>
@@ -348,8 +348,8 @@ function AdminRewardsView() {
                           {style.icon}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{config.tier}</p>
-                          <p className="text-xs text-gray-500">{parseFloat(config.rewardMultiplier)}x multiplier</p>
+                          <p className="font-bold text-gray-900 dark:text-gray-100">{config.tier}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{parseFloat(config.rewardMultiplier)}x multiplier</p>
                         </div>
                       </div>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${style.bg} ${style.text} ring-1 ring-inset ${style.ring}`}>
@@ -359,16 +359,16 @@ function AdminRewardsView() {
 
                     {/* Progress bar */}
                     <div className="mb-3">
-                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${style.gradient} transition-all duration-500`}
                           style={{ width: `${Math.max(percentage, 2)}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{percentage}% of users</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{percentage}% of users</p>
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <FiDollarSign className="w-3 h-3" />
                         <span>Min ₦{parseFloat(config.minSpend).toLocaleString()}</span>
@@ -384,10 +384,10 @@ function AdminRewardsView() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 dark:bg-gray-700">
                 <FiAward className="w-7 h-7 text-gray-400" />
               </div>
-              <p className="text-gray-900 font-semibold mb-1">No tier configurations</p>
+              <p className="text-gray-900 font-semibold mb-1 dark:text-gray-100">No tier configurations</p>
               <p className="text-sm text-gray-400">Set up loyalty tiers to categorize users</p>
             </div>
           )}

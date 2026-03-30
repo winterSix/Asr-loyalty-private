@@ -201,6 +201,7 @@ export default function ProfilePage() {
   }
 
   const role = user?.role || 'CUSTOMER';
+  const isCustomerRole = role === 'CUSTOMER';
 
   const getTierConfig = (tier: string) => {
     switch (tier?.toUpperCase()) {
@@ -235,7 +236,7 @@ export default function ProfilePage() {
         {/* ─── Profile Card with Banner ─── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
           {/* Banner */}
-          <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${tierConfig.gradient}`}>
+          <div className={`relative h-32 sm:h-40 bg-gradient-to-r ${isCustomerRole ? tierConfig.gradient : 'from-primary to-primary-lighter'}`}>
             <svg className="absolute inset-0 w-full h-full opacity-[0.08]" viewBox="0 0 800 200" preserveAspectRatio="none">
               <circle cx="700" cy="40" r="120" fill="white" />
               <circle cx="650" cy="80" r="60" fill="white" />
@@ -290,9 +291,11 @@ export default function ProfilePage() {
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-lighter flex items-center justify-center text-white text-2xl sm:text-3xl font-bold ring-[3px] ring-white shadow-lg">
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </div>
-                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-md ${tierConfig.accent} ring-2 ring-white flex items-center justify-center`}>
-                  <FiStar className="w-3 h-3 text-white" />
-                </div>
+                {isCustomerRole && (
+                  <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-md ${tierConfig.accent} ring-2 ring-white flex items-center justify-center`}>
+                    <FiStar className="w-3 h-3 text-white" />
+                  </div>
+                )}
               </div>
 
               {/* Name & Meta */}
@@ -301,9 +304,11 @@ export default function ProfilePage() {
                   {user?.firstName} {user?.lastName}
                 </h1>
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${tierConfig.badge}`}>
-                    <FiAward className="w-3 h-3" /> {user?.currentTier || 'BRONZE'}
-                  </span>
+                  {isCustomerRole && (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${tierConfig.badge}`}>
+                      <FiAward className="w-3 h-3" /> {user?.currentTier || 'BRONZE'}
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary/5 text-primary">
                     <FiShield className="w-3 h-3" /> {user?.role?.replace(/_/g, ' ') || 'CUSTOMER'}
                   </span>
@@ -563,8 +568,8 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Loyalty Tier Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
+            {/* Loyalty Tier Card — customers only */}
+            {isCustomerRole && <div className="bg-white rounded-2xl shadow-sm border border-gray-200/70 dark:border-white/10 overflow-hidden">
               <div className={`h-1 bg-gradient-to-r ${tierConfig.gradient}`} />
               <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5">
                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -610,7 +615,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* Active Devices */}
             {devicesArray.length > 0 && (
