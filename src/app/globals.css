@@ -224,7 +224,7 @@
 
 .google-animated-btn {
   position: relative;
-  display: inline-block;
+  display: block;
   border-radius: 19px;
   overflow: hidden;
 }

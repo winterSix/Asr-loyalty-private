@@ -12,8 +12,8 @@
  */
 export function GoogleLoginWrapper({ children }: { children: React.ReactNode }) {
     return (
-        <div className="google-animated-btn">
-            <div className="google-inner-bg">
+        <div className="google-animated-btn w-full">
+            <div className="google-inner-bg flex justify-center">
                 {children}
             </div>
         </div>

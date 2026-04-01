@@ -436,7 +436,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex justify-center">
+            <div className="w-full">
               <GoogleLoginWrapper>
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
@@ -446,7 +446,10 @@ export default function LoginPage() {
                   }}
                   onError={() => toast.error('Google sign-in failed. Please try again.')}
                   useOneTap={false}
-                  width="300"
+                  width="400"
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
                 />
               </GoogleLoginWrapper>
             </div>
