@@ -183,7 +183,7 @@ function NotificationsContent() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: () => notificationService.createNotification({ ...sendForm }),
+    mutationFn: () => notificationService.sendNotification({ userId: sendForm.userId, type: sendForm.type, title: sendForm.title, body: sendForm.body, data: sendForm.priority ? { priority: sendForm.priority } : undefined }),
     onSuccess: () => {
       toast.success('Notification sent successfully');
       setSendForm({ userId: '', type: 'IN_APP', title: '', body: '', priority: 'normal' });
