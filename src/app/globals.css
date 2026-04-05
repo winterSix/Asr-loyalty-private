@@ -225,7 +225,7 @@
 .google-animated-btn {
   position: relative;
   display: block;
-  border-radius: 19px;
+  border-radius: 28px;
   overflow: hidden;
 }
 .google-animated-btn::before {
@@ -255,11 +255,8 @@
   position: relative;
   z-index: 1;
   margin: 3px;
-  border-radius: 16px;
+  border-radius: 25px;
   background: white;
-}
-.dark .google-inner-bg {
-  background: #1E293B;
 }
 
 @keyframes googleBorderSpin {

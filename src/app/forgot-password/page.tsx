@@ -60,20 +60,20 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl p-8 border border-gray-200 shadow-xl">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-[#0F172A] dark:bg-none flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white dark:bg-[#1E293B] rounded-3xl p-8 border border-gray-200 dark:border-white/10 shadow-xl">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiCheckCircle className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiCheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#F1F5F9] mb-2">
               Check Your Email
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-[#64748B] mb-6">
               We&apos;ve sent a password reset code to your email address. Please check your inbox and follow the instructions.
             </p>
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-[#64748B]">
                 Redirecting to reset password page...
               </p>
               <Link
@@ -91,29 +91,29 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl p-8 border border-gray-200 shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-[#0F172A] dark:bg-none flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-[#1E293B] rounded-3xl p-8 border border-gray-200 dark:border-white/10 shadow-xl">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <FiShield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#F1F5F9] mb-2">
             Forgot Password?
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-[#64748B]">
             Enter your email address and we&apos;ll send you a code to reset your password.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm shadow-sm">
+          <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border-l-4 border-red-500 text-red-700 dark:text-red-400 text-sm shadow-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2.5">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">
               Email Address
             </label>
             <div className="relative">
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
             {errors.email && (
               <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
             )}
-            <p className="mt-1.5 text-xs text-gray-500">
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-[#64748B]">
               We&apos;ll send a 6-digit code to this email
             </p>
           </div>

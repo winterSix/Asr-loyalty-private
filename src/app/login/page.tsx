@@ -12,7 +12,6 @@ import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
-import { GoogleLoginWrapper } from '@/components/ui/GoogleLoginWrapper';
 import {
   FiMail,
   FiLock,
@@ -296,6 +295,9 @@ export default function LoginPage() {
             ) : (
             <>
             <div className="mb-10">
+              <div className="flex justify-center mb-6 lg:hidden">
+                <Image src="/logo.svg" alt="ASR Loyalty" width={64} height={64} className="w-16 h-16 object-contain" />
+              </div>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-[#F1F5F9] mb-2">
                 Sign in to continue
               </h2>
@@ -436,8 +438,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="w-full">
-              <GoogleLoginWrapper>
+            <div className="w-full relative">
+              {/* Visual layer — custom button matching mobile design */}
+              <div className="google-animated-btn w-full pointer-events-none" aria-hidden="true">
+                <div className="google-inner-bg flex items-center justify-center gap-3 py-[14px] px-6">
+                  <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+                    <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+                    <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34A21.991 21.991 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/>
+                    <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+                  </svg>
+                  <span className="text-sm font-semibold" style={{ color: '#111827' }}>Continue with Google</span>
+                </div>
+              </div>
+              {/* Functional layer — invisible GoogleLogin button on top, handles actual auth */}
+              <div className="absolute inset-0 overflow-hidden flex items-center justify-center" style={{ opacity: 0.001 }}>
                 <GoogleLogin
                   onSuccess={(credentialResponse) => {
                     if (credentialResponse.credential) {
@@ -446,12 +461,10 @@ export default function LoginPage() {
                   }}
                   onError={() => toast.error('Google sign-in failed. Please try again.')}
                   useOneTap={false}
-                  width="400"
-                  text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
+                  width="800"
+                  size="large"
                 />
-              </GoogleLoginWrapper>
+              </div>
             </div>
             </>
             )}
