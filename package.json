@@ -31,6 +31,7 @@
     "axios": "^1.6.2",
     "dayjs": "^1.11.10",
     "framer-motion": "^12.29.2",
+    "isomorphic-dompurify": "^3.7.1",
     "js-cookie": "^3.0.5",
     "next": "^14.0.4",
     "next-themes": "^0.4.6",

@@ -105,13 +105,13 @@ export default function LoginPage() {
 
       login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      const _isSecure = window.location.protocol === 'https:';
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
     } catch (err: any) {
-      console.error('[Login] Login error:', err);
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
 
       if (errorMessage === 'Please verify your email first') {
@@ -147,8 +147,9 @@ export default function LoginPage() {
       if (!response.accessToken || !response.refreshToken) throw new Error('Invalid 2FA response');
       login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      const _isSecure = window.location.protocol === 'https:';
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
@@ -169,8 +170,9 @@ export default function LoginPage() {
       if (!response.accessToken || !response.refreshToken) throw new Error('Invalid response from server');
       login(response.accessToken, response.refreshToken, response.user);
       await new Promise(resolve => setTimeout(resolve, 100));
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      const _isSecure = window.location.protocol === 'https:';
+      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
+      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -252,7 +253,7 @@ export default function LegalDocumentsPage() {
                     {isEmpty ? (
                       <p className="text-amber-600 dark:text-amber-400 italic">⚠ Placeholder content — click Edit to write the real document.</p>
                     ) : (
-                      <div className="text-gray-600 dark:text-gray-300 line-clamp-3 prose-xs" dangerouslySetInnerHTML={{ __html: doc.content }} />
+                      <div className="text-gray-600 dark:text-gray-300 line-clamp-3 prose-xs" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(doc.content) }} />
                     )}
                   </div>
 

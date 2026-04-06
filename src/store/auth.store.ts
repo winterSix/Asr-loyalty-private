@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, authService } from '@/services/auth.service';
-import Cookies from 'js-cookie';
+import Cookies from 'js-cookie'; // used only in onRehydrateStorage to check token presence
 
 interface AuthState {
   user: User | null;
@@ -31,44 +31,25 @@ export const useAuthStore = create<AuthState>()(
 
       setTokens: (accessToken, refreshToken) => {
         authService.setTokens(accessToken, refreshToken);
-        // Also set in cookies for server-side access (middleware)
-        // Set path to '/' to ensure cookies are accessible to all routes
-        Cookies.set('accessToken', accessToken, { 
-          expires: 7,
-          path: '/',
-          sameSite: 'lax'
-        });
-        Cookies.set('refreshToken', refreshToken, { 
-          expires: 30,
-          path: '/',
-          sameSite: 'lax'
-        });
       },
 
       login: (accessToken, refreshToken, user) => {
         if (!accessToken || !refreshToken) {
-          console.error('[AuthStore] Login called with invalid tokens');
           return;
         }
 
         authService.setTokens(accessToken, refreshToken);
         authService.setUser(user);
-
-        Cookies.set('accessToken', accessToken, { expires: 7, path: '/', sameSite: 'lax' });
-        Cookies.set('refreshToken', refreshToken, { expires: 30, path: '/', sameSite: 'lax' });
-
         set({ user, isAuthenticated: true, isLoading: false });
       },
 
       logout: async () => {
         try {
           await authService.logout();
-        } catch (error) {
-          console.error('Logout error:', error);
+        } catch {
+          // swallow — we still clear local state
         } finally {
           authService.clearTokens();
-          Cookies.remove('accessToken');
-          Cookies.remove('refreshToken');
           set({
             user: null,
             isAuthenticated: false,
@@ -80,12 +61,10 @@ export const useAuthStore = create<AuthState>()(
       logoutAll: async () => {
         try {
           await authService.logoutAll();
-        } catch (error) {
-          console.error('Logout all error:', error);
+        } catch {
+          // swallow — we still clear local state
         } finally {
           authService.clearTokens();
-          Cookies.remove('accessToken');
-          Cookies.remove('refreshToken');
           set({
             user: null,
             isAuthenticated: false,
@@ -169,19 +148,16 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Verify tokens actually exist - prevent stale auth state
-          const hasToken = typeof window !== 'undefined' &&
-            (!!localStorage.getItem('accessToken') || !!Cookies.get('accessToken'));
+          // Verify token cookie exists — prevent stale auth state after cookie expiry
+          const hasToken = typeof window !== 'undefined' && !!Cookies.get('accessToken');
 
           if (state.isAuthenticated && !hasToken) {
-            // Tokens are gone but Zustand still says authenticated - reset
             state.isAuthenticated = false;
             state.user = null;
             state.isLoading = false;
             return;
           }
 
-          // After rehydration, if we have a user, set loading to false
           if (state.user && state.isAuthenticated) {
             state.isLoading = false;
           }
