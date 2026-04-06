@@ -76,14 +76,7 @@ class AuthService {
   }
 
   async login(data: LoginData) {
-    console.log('[AuthService] Calling login API...');
     const response = await apiClient.post<any>('/auth/login', data);
-    console.log('[AuthService] Login API response:', {
-      status: response.status,
-      dataKeys: Object.keys(response.data || {}),
-      fullData: response.data
-    });
-    
     const responseData = unwrapResponse<AuthResponse>(response.data);
 
     if (!responseData) {
@@ -95,9 +88,7 @@ class AuthService {
       return responseData;
     }
 
-    // Check if tokens are in the response
     if (!responseData.accessToken || !responseData.refreshToken) {
-      console.error('[AuthService] Missing tokens in response:', responseData);
       throw new Error('Invalid response: missing tokens');
     }
 
@@ -161,50 +152,37 @@ class AuthService {
   // Helper methods
   setTokens(accessToken: string, refreshToken: string) {
     if (typeof window !== 'undefined') {
-      console.log('[AuthService] setTokens() called:', {
-        accessTokenLength: accessToken?.length || 0,
-        refreshTokenLength: refreshToken?.length || 0
-      });
-      
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      console.log('[AuthService] Tokens stored in localStorage');
-      
-      // Set cookies with proper options for middleware access
-      Cookies.set('accessToken', accessToken, { 
+      // Store tokens ONLY in cookies — never localStorage (XSS risk)
+      Cookies.set('accessToken', accessToken, {
         expires: 7,
         path: '/',
-        sameSite: 'lax'
+        sameSite: 'strict',
+        secure: window.location.protocol === 'https:',
       });
-      Cookies.set('refreshToken', refreshToken, { 
+      Cookies.set('refreshToken', refreshToken, {
         expires: 30,
         path: '/',
-        sameSite: 'lax'
-      });
-      console.log('[AuthService] Cookies set:', {
-        accessTokenCookie: Cookies.get('accessToken')?.substring(0, 20) + '...' || 'NOT SET',
-        refreshTokenCookie: !!Cookies.get('refreshToken')
+        sameSite: 'strict',
+        secure: window.location.protocol === 'https:',
       });
     }
   }
 
   getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken') || Cookies.get('accessToken') || null;
+    return Cookies.get('accessToken') || null;
   }
 
   getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('refreshToken') || Cookies.get('refreshToken') || null;
+    return Cookies.get('refreshToken') || null;
   }
 
   clearTokens() {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      Cookies.remove('accessToken', { path: '/' });
+      Cookies.remove('refreshToken', { path: '/' });
       localStorage.removeItem('user');
-      Cookies.remove('accessToken');
-      Cookies.remove('refreshToken');
     }
   }
 
@@ -222,9 +200,7 @@ class AuthService {
     }
     try {
       return JSON.parse(userStr);
-    } catch (error) {
-      console.error('Error parsing user from localStorage:', error);
-      // Clear invalid data
+    } catch {
       localStorage.removeItem('user');
       return null;
     }

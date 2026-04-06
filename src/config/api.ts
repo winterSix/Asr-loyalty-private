@@ -17,11 +17,11 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Try to get token from cookies (server-side) or localStorage (client-side)
+    // Tokens are stored only in cookies — never localStorage
     let token: string | null = null;
-    
+
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('accessToken') || Cookies.get('accessToken') || null;
+      token = Cookies.get('accessToken') || null;
     }
 
     if (token && config.headers) {
@@ -64,31 +64,23 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        let refreshToken: string | null = null;
-        
-        if (typeof window !== 'undefined') {
-          refreshToken = localStorage.getItem('refreshToken') || Cookies.get('refreshToken') || null;
-        }
+        const refreshToken = typeof window !== 'undefined' ? Cookies.get('refreshToken') || null : null;
 
         // Only try to refresh if we have a refresh token
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refreshToken,
           }, {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
           });
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;
-          
+          const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+
           if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
-            Cookies.set('accessToken', accessToken, { expires: 7 });
-            
+            Cookies.set('accessToken', accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: isSecure });
             if (newRefreshToken) {
-              localStorage.setItem('refreshToken', newRefreshToken);
-              Cookies.set('refreshToken', newRefreshToken, { expires: 30 });
+              Cookies.set('refreshToken', newRefreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: isSecure });
             }
           }
 
@@ -98,28 +90,21 @@ apiClient.interceptors.response.use(
 
           return apiClient(originalRequest);
         } else {
-          // No refresh token, clear everything and redirect to login
+          // No refresh token, clear and redirect
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            Cookies.remove('accessToken', { path: '/' });
+            Cookies.remove('refreshToken', { path: '/' });
             localStorage.removeItem('user');
-            Cookies.remove('accessToken');
-            Cookies.remove('refreshToken');
-            // Only redirect if not already on login/register page
             if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
               window.location.href = '/login';
             }
           }
         }
       } catch (refreshError) {
-        // Refresh failed, logout user
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          Cookies.remove('accessToken', { path: '/' });
+          Cookies.remove('refreshToken', { path: '/' });
           localStorage.removeItem('user');
-          Cookies.remove('accessToken');
-          Cookies.remove('refreshToken');
-          // Only redirect if not already on login/register page
           if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
             window.location.href = '/login';
           }
@@ -150,9 +135,9 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Generate device ID if not exists (client-side only)
+// Generate device ID if not exists (client-side only) — uses crypto.randomUUID for unpredictability
 if (typeof window !== 'undefined' && !localStorage.getItem('deviceId')) {
-  const deviceId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const deviceId = `web-${crypto.randomUUID()}`;
   localStorage.setItem('deviceId', deviceId);
   localStorage.setItem('deviceName', 'Web Browser');
 }

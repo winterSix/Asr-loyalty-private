@@ -22,6 +22,8 @@ export enum SystemSettingKey {
   PHONE_VERIFICATION_REQUIRED = 'phone_verification_required',
   // General
   MAINTENANCE_MODE = 'maintenance_mode',
+  // Kill switch
+  EMERGENCY_MODE = 'emergency_mode',
 }
 
 export interface SystemSetting {
@@ -168,6 +170,18 @@ class SystemSettingsService {
   async deleteSetting(key: string): Promise<{ success: boolean; message: string }> {
     const response = await apiClient.delete<any>(`/system-settings/${key}`);
     return unwrapResponse<{ success: boolean; message: string }>(response.data);
+  }
+
+  // POST /system-settings/request-toggle-otp (SUPER_ADMIN) — sends OTP to admin email
+  async requestToggleOtp(): Promise<{ message: string }> {
+    const response = await apiClient.post<any>('/system-settings/request-toggle-otp');
+    return unwrapResponse<{ message: string }>(response.data);
+  }
+
+  // POST /system-settings/toggle-secure (SUPER_ADMIN) — OTP-verified toggle
+  async toggleFeatureSecure(key: string, enabled: boolean, otpCode: string, reason?: string): Promise<SystemSetting> {
+    const response = await apiClient.post<any>('/system-settings/toggle-secure', { key, enabled, otpCode, reason });
+    return unwrapResponse<SystemSetting>(response.data);
   }
 }
 

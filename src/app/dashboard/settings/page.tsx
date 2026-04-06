@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemSettingsService, SystemSettingKey } from '@/services/system-settings.service';
+import { OtpVerificationModal } from '@/components/ui/OtpVerificationModal';
 import {
   FiSettings,
   FiShield,
@@ -57,6 +58,8 @@ export default function SettingsPage() {
   const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null);
   const [editingFeeConfig, setEditingFeeConfig] = useState<string | null>(null);
   const [feeConfigForm, setFeeConfigForm] = useState({ percentage: 0, flatFee: 0, cap: 0, flatFeeWaivedBelow: 0 });
+  const [otpModal, setOtpModal] = useState(false);
+  const pendingToggleRef = useRef<{ key: string; enabled: boolean } | null>(null);
   const [createForm, setCreateForm] = useState({
     key: '',
     value: '',
@@ -159,27 +162,62 @@ export default function SettingsPage() {
     return result;
   }, [grouped, searchTerm]);
 
+  const invalidateSettings = () => {
+    queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
+    queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
+    queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
+    queryClient.invalidateQueries({ queryKey: ['system-status'] });
+  };
+
   const toggleMutation = useMutation({
-    mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
-      systemSettingsService.toggleFeature(key, enabled),
-    onSuccess: (_, { key, enabled }) => {
+    mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) => {
+      if (isSuperAdmin) {
+        // Super admin: intercept and show OTP modal
+        pendingToggleRef.current = { key, enabled };
+        setOtpModal(true);
+        return Promise.resolve(null as any);
+      }
+      return systemSettingsService.toggleFeature(key, enabled);
+    },
+    onSuccess: (data, { key, enabled }) => {
+      if (isSuperAdmin) return; // OTP modal will handle the rest
       if (key === MAINTENANCE_KEY) {
-        toast.success(
-          enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled',
-          { id: 'maintenance-toggle', duration: 4000 }
-        );
+        toast.success(enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled', { id: 'maintenance-toggle', duration: 4000 });
       } else {
         toast.success('Setting toggled', { id: 'toggle-setting', duration: 3000 });
       }
-      queryClient.invalidateQueries({ queryKey: ['system-settings-grouped'] });
-      queryClient.invalidateQueries({ queryKey: ['system-settings-features'] });
-      queryClient.invalidateQueries({ queryKey: ['payment-gateway-statuses'] });
-      queryClient.invalidateQueries({ queryKey: ['system-status'] });
+      invalidateSettings();
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Failed to toggle setting', { id: 'toggle-error', duration: 4000 });
     },
   });
+
+  const secureToggleMutation = useMutation({
+    mutationFn: ({ key, enabled, otpCode }: { key: string; enabled: boolean; otpCode: string }) =>
+      systemSettingsService.toggleFeatureSecure(key, enabled, otpCode),
+    onSuccess: (_, { key, enabled }) => {
+      setOtpModal(false);
+      pendingToggleRef.current = null;
+      if (key === MAINTENANCE_KEY) {
+        toast.success(enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled', { id: 'maintenance-toggle', duration: 4000 });
+      } else if (key === SystemSettingKey.EMERGENCY_MODE) {
+        toast.success(enabled ? '🚨 Emergency mode ACTIVATED' : '✅ Emergency mode deactivated', { id: 'emergency-toggle', duration: 5000 });
+      } else {
+        toast.success('Setting toggled', { id: 'toggle-setting', duration: 3000 });
+      }
+      invalidateSettings();
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Invalid OTP or failed to toggle', { id: 'toggle-error', duration: 4000 });
+    },
+  });
+
+  const handleOtpVerified = (otpCode: string) => {
+    if (!pendingToggleRef.current) return;
+    const { key, enabled } = pendingToggleRef.current;
+    secureToggleMutation.mutate({ key, enabled, otpCode });
+  };
 
   const updateMutation = useMutation({
     mutationFn: ({ key, value }: { key: string; value: string }) =>
@@ -486,6 +524,60 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* ── Emergency Mode (Kill Switch) ─────────────────────────── */}
+        {isSuperAdmin && (() => {
+          const allSettings: any[] = Object.values(grouped).flat();
+          const emergencySetting = allSettings.find((s: any) => s.key === SystemSettingKey.EMERGENCY_MODE);
+          const isEmergencyActive = emergencySetting?.value === 'true';
+          return (
+            <div className={`rounded-2xl border shadow-sm overflow-hidden mb-6 ${
+              isEmergencyActive
+                ? 'border-red-500 bg-red-950/10 dark:bg-red-950/30'
+                : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E293B]'
+            }`}>
+              <div className={`px-6 py-4 flex items-center justify-between border-b ${
+                isEmergencyActive ? 'border-red-500/30 bg-red-900/20' : 'border-gray-100 dark:border-white/5'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg text-white shadow-sm ${
+                    isEmergencyActive ? 'bg-red-600' : 'bg-gradient-to-br from-gray-600 to-gray-700'
+                  }`}>
+                    <FiAlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className={`font-semibold flex items-center gap-2 ${isEmergencyActive ? 'text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                      Emergency Kill Switch
+                      {isEmergencyActive && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white animate-pulse">
+                          ACTIVE
+                        </span>
+                      )}
+                    </h2>
+                    <p className={`text-xs mt-0.5 ${isEmergencyActive ? 'text-red-400' : 'text-gray-500'}`}>
+                      {isEmergencyActive
+                        ? 'All financial operations are SUSPENDED. Payments, wallet, QR, and rewards return 503.'
+                        : 'Immediately halts all financial operations (payments, wallet, QR codes, rewards).'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleMutation.mutate({ key: SystemSettingKey.EMERGENCY_MODE, enabled: !isEmergencyActive })}
+                  disabled={toggleMutation.isPending || secureToggleMutation.isPending}
+                  title={isEmergencyActive ? 'Deactivate emergency mode' : 'Activate emergency mode'}
+                  className={`flex-shrink-0 p-1 rounded-full transition-all disabled:opacity-50 ${
+                    isEmergencyActive ? 'text-red-500 hover:text-red-400' : 'text-gray-300 hover:text-red-500'
+                  }`}
+                >
+                  {isEmergencyActive ? <FiToggleRight className="w-10 h-10" /> : <FiToggleLeft className="w-10 h-10" />}
+                </button>
+              </div>
+              <div className={`px-6 py-3 text-xs ${isEmergencyActive ? 'text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                <strong>Requires OTP.</strong> When active, all payment and financial endpoints return HTTP 503 with EMERGENCY_MODE error code. Super Admin only.
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Payment Gateways ─────────────────────────────────────── */}
         {isAdmin && (
@@ -883,6 +975,18 @@ export default function SettingsPage() {
             </p>
           </div>
         )}
+
+        {/* OTP Verification Modal (Super Admin toggle gate) */}
+        <OtpVerificationModal
+          isOpen={otpModal}
+          onClose={() => {
+            setOtpModal(false);
+            pendingToggleRef.current = null;
+          }}
+          onVerified={handleOtpVerified}
+          title="Confirm Setting Change"
+          description="As Super Admin, all setting changes require OTP verification. An OTP will be sent to your registered email."
+        />
 
         {/* Create Setting Modal */}
         {showCreateModal && (
