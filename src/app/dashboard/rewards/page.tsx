@@ -545,7 +545,7 @@ function CustomerRewardsView({ userId }: { userId: string }) {
   const { data: rewardDetails, isLoading: rewardsLoading } = useQuery({
     queryKey: ['reward-details', userId],
     queryFn: () => rewardService.getUserRewardDetails(userId),
-    enabled: !isLoading && !!userId,
+    enabled: !!userId,
   });
 
   if (rewardsLoading) {
