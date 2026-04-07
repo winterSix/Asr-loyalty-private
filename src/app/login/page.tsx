@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
@@ -175,7 +175,6 @@ export default function LoginPage() {
   ];
 
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:bg-[#0F172A] dark:from-[#0F172A] dark:via-[#0F172A] dark:to-[#0F172A] flex items-stretch transition-colors duration-300">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
         {/* Left Side - Branding */}
@@ -332,7 +331,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">
                   Email Address
@@ -458,6 +457,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-    </GoogleOAuthProvider>
   );
 }

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
 import toast from 'react-hot-toast';
@@ -98,7 +98,6 @@ export default function RegisterPage() {
   ];
 
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-[#0F172A] flex items-stretch">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
         {/* Left Side - Branding */}
@@ -166,7 +165,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-[#94A3B8] mb-2.5">
@@ -362,6 +361,5 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
-    </GoogleOAuthProvider>
   );
 }
