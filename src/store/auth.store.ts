@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, authService } from '@/services/auth.service';
-import { setMemoryToken } from '@/config/api';
+import { setMemoryToken, refreshAccessToken } from '@/config/api';
 
 interface AuthState {
   user: User | null;
@@ -65,20 +65,19 @@ export const useAuthStore = create<AuthState>()(
       checkAuth: async () => {
         // On every page load the memory token is gone — always attempt a silent refresh
         // via the httpOnly refresh cookie before deciding auth state.
+        // Uses the shared singleton so concurrent calls (layout + page) only hit
+        // the backend once.
         try {
-          const res = await fetch('/api/auth/refresh', { method: 'POST' });
+          const accessToken = await refreshAccessToken();
 
-          if (!res.ok) {
+          if (!accessToken) {
             // Refresh cookie is absent or expired — signed out
             authService.clearTokens();
             set({ user: null, isAuthenticated: false, isLoading: false });
             return;
           }
 
-          const data = await res.json();
-          if (data?.accessToken) {
-            setMemoryToken(data.accessToken);
-          }
+          // Token is already stored in memory by refreshAccessToken()
 
           // If user is already in zustand persist, reuse it
           const { user: currentUser } = get();

@@ -1,4 +1,4 @@
-import { apiClient, unwrapResponse, setMemoryToken, getMemoryToken, clearMemoryToken } from '@/config/api';
+import { apiClient, unwrapResponse, setMemoryToken, getMemoryToken, clearMemoryToken, refreshAccessToken } from '@/config/api';
 import Cookies from 'js-cookie';
 
 export interface RegisterData {
@@ -111,14 +111,10 @@ class AuthService {
   }
 
   async refreshToken(_refreshToken?: string) {
-    // Refresh is handled via httpOnly cookie by the Next.js proxy route
-    const res = await fetch('/api/auth/refresh', { method: 'POST' });
-    if (!res.ok) throw new Error('Session expired');
-    const data = await res.json();
-    if (data?.accessToken) {
-      setMemoryToken(data.accessToken);
-    }
-    return data as RefreshTokenResponse;
+    // Route through the shared singleton to avoid token-rotation races
+    const token = await refreshAccessToken();
+    if (!token) throw new Error('Session expired');
+    return { accessToken: token } as RefreshTokenResponse;
   }
 
   async logout() {
