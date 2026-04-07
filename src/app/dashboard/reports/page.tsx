@@ -41,19 +41,19 @@ export default function ReportsPage() {
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', startDate, endDate, groupBy],
     queryFn: () => adminService.getRevenueReport({ startDate, endDate, groupBy }),
-    enabled: !!user && isAdmin && activeTab === 'revenue',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'revenue',
   });
 
   const { data: txStats, isLoading: txStatsLoading } = useQuery({
     queryKey: ['admin', 'transaction-stats'],
     queryFn: () => adminService.getTransactionStats(),
-    enabled: !!user && isAdmin && activeTab === 'transactions',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'transactions',
   });
 
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['admin', 'user-stats'],
     queryFn: () => adminService.getUserStats(),
-    enabled: !!user && isAdmin && activeTab === 'users',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'users',
   });
 
   const [gwStartDate, setGwStartDate] = useState('');
@@ -61,13 +61,13 @@ export default function ReportsPage() {
   const { data: gatewayStats, isLoading: gatewayLoading } = useQuery({
     queryKey: ['admin', 'gateway-stats', gwStartDate, gwEndDate],
     queryFn: () => adminService.getGatewayStats(gwStartDate || undefined, gwEndDate || undefined),
-    enabled: !!user && isAdmin && activeTab === 'gateway',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'gateway',
   });
 
   const { data: healthData, isLoading: healthLoading } = useQuery({
     queryKey: ['admin', 'health-detailed'],
     queryFn: () => healthService.getDetailedHealth(),
-    enabled: !!user && isAdmin && activeTab === 'health',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'health',
   });
 
   if (isLoading) {

@@ -169,7 +169,7 @@ export default function LegalDocumentsPage() {
   const { data: documents, isLoading: docsLoading } = useQuery({
     queryKey: ['legal-documents'],
     queryFn: () => legalService.getAllDocuments(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   if (!isLoading && !isAuthenticated) {

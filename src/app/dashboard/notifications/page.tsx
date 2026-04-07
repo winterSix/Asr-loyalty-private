@@ -135,25 +135,25 @@ function NotificationsContent() {
   const { data: myRaw, isLoading: myLoading } = useQuery({
     queryKey: ['notifications', 'mine', typeFilter, readFilter, page, limit],
     queryFn: () => notificationService.getNotifications({ type: typeFilter || undefined, read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined, page, limit }),
-    enabled: !!user && (activeTab === 'mine' || !isAdmin),
+    enabled: !isLoading && !!user && (activeTab === 'mine' || !isAdmin),
   });
 
   const { data: allRaw, isLoading: allLoading } = useQuery({
     queryKey: ['notifications', 'all', typeFilter, readFilter, page, limit],
     queryFn: () => notificationService.getAllNotifications({ type: typeFilter || undefined, read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined, page, limit }),
-    enabled: !!user && isAdmin && activeTab === 'all',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'all',
   });
 
   const { data: unreadCount } = useQuery({
     queryKey: ['notifications', 'unread-count'],
     queryFn: () => notificationService.getUnreadCount(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: broadcastHistory, isLoading: historyLoading } = useQuery({
     queryKey: ['notifications', 'broadcast-history', historyPage],
     queryFn: () => notificationService.getBroadcastHistory(historyPage, 15),
-    enabled: !!user && isAdmin && activeTab === 'history',
+    enabled: !isLoading && !!user && isAdmin && activeTab === 'history',
   });
 
   // Mutations

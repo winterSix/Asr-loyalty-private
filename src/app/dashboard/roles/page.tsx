@@ -43,7 +43,7 @@ export default function RolesPage() {
   const { data: rolesRaw, isLoading: rolesLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const roles = useMemo(() => {
@@ -64,7 +64,7 @@ export default function RolesPage() {
   const { data: permissionsRaw } = useQuery({
     queryKey: ['permissions-list'],
     queryFn: () => roleService.getPermissions(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const permissions = useMemo(() => {

@@ -79,13 +79,13 @@ export default function UsersPage() {
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   const { data: rolesRaw } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   // Only custom (non-system) RBAC roles for the role selector

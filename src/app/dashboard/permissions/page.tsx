@@ -39,25 +39,25 @@ export default function PermissionsPage() {
   const { data: permissions, isLoading: permissionsLoading } = useQuery({
     queryKey: ['permissions'],
     queryFn: () => permissionService.getAllPermissions(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: groupedPermissions } = useQuery({
     queryKey: ['permissions-grouped'],
     queryFn: () => permissionService.getGroupedPermissions(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: resources } = useQuery({
     queryKey: ['permissions-resources'],
     queryFn: () => permissionService.getResources(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: statistics } = useQuery({
     queryKey: ['permissions-stats'],
     queryFn: () => permissionService.getStatistics(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Initialize all groups as expanded

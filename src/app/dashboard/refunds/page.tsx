@@ -56,13 +56,13 @@ export default function RefundsPage() {
       }
       return refundService.getMyRefunds({ page, limit });
     },
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: statsRaw } = useQuery({
     queryKey: ['refund-stats'],
     queryFn: () => refundService.getStats(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   // Safely extract refunds array

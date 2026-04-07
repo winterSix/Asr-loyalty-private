@@ -39,7 +39,7 @@ export default function RoleDetailPage() {
   const { data: allPermissions } = useQuery({
     queryKey: ['permissions'],
     queryFn: () => roleService.getPermissions(),
-    enabled: !!user && isSuperAdmin,
+    enabled: !isLoading && !!user && isSuperAdmin,
   });
 
   // Sync form state when role data loads

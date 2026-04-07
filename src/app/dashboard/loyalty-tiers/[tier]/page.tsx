@@ -58,7 +58,7 @@ export default function EditTierPage() {
   const { data: tierRaw, isLoading: tierLoading } = useQuery({
     queryKey: ['loyalty-tier-config', tierName],
     queryFn: () => loyaltyService.getTierConfig(tierName),
-    enabled: !!user && !!tierName && ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'].includes(tierName),
+    enabled: !isLoading && !!user && !!tierName && ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'].includes(tierName),
   });
 
   // Extract tier config from response

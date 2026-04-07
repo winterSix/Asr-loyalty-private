@@ -57,13 +57,13 @@ export default function RewardConfigPage() {
   const { data: configsRaw, isLoading: configsLoading } = useQuery({
     queryKey: ['reward-configs'],
     queryFn: () => rewardConfigurationService.getAll({ includeInactive: true }),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: activeConfig } = useQuery({
     queryKey: ['reward-config-active'],
     queryFn: () => rewardConfigurationService.getActive(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const updateMutation = useMutation({

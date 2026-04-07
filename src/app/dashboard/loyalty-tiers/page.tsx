@@ -77,13 +77,13 @@ export default function LoyaltyTiersPage() {
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({
     queryKey: ['loyalty-tier-configs'],
     queryFn: () => loyaltyService.getAllTierConfigs(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const { data: tierStats } = useQuery({
     queryKey: ['loyalty-tier-stats'],
     queryFn: () => loyaltyService.getTierStats(),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const handleRefresh = async () => {
