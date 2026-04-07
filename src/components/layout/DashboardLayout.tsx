@@ -45,14 +45,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const router   = useRouter();
     const pathname = usePathname();
-    const { user, logout, isLoading: authLoading } = useAuthStore();
+    const { user, logout, isLoading: authLoading, checkAuth, isAuthenticated } = useAuthStore();
     const { theme, setTheme } = useTheme();
     const role    = user?.role || 'CUSTOMER';
     const isAdmin = !authLoading && (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS');
 
-    const navRef      = useRef<HTMLElement>(null);
-    const userMenuRef = useRef<HTMLDivElement>(null);
-    const themeRef    = useRef<HTMLDivElement>(null);
+    const navRef        = useRef<HTMLElement>(null);
+    const userMenuRef   = useRef<HTMLDivElement>(null);
+    const themeRef      = useRef<HTMLDivElement>(null);
+    const authInitedRef = useRef(false);
+
+    // Resolve auth on every dashboard page load. This is the single place that
+    // calls checkAuth() for pages that use useAuthStore directly (not useAuthGuard).
+    // Without this, isLoading stays true after rehydration and queries never fire.
+    useEffect(() => {
+        if (authInitedRef.current) return;
+        authInitedRef.current = true;
+        if (authLoading) {
+            checkAuth();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => { setMounted(true); }, []);
     // ── Global Search ──────────────────────────────────────────────

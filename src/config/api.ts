@@ -24,10 +24,12 @@ export function clearMemoryToken() {
   _memoryAccessToken = null;
 }
 
-// Singleton refresh promise to prevent concurrent 401s all firing refresh
+// Singleton refresh promise shared by both the 401 interceptor and checkAuth(),
+// so concurrent calls (e.g. DashboardLayout + useAuthGuard) only hit the
+// backend once and avoid token-rotation conflicts.
 let _refreshPromise: Promise<string | null> | null = null;
 
-async function refreshAccessToken(): Promise<string | null> {
+export async function refreshAccessToken(): Promise<string | null> {
   if (!_refreshPromise) {
     _refreshPromise = fetch('/api/auth/refresh', { method: 'POST' })
       .then(async (res) => {
