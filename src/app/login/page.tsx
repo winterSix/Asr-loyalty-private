@@ -11,7 +11,6 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
-import Cookies from 'js-cookie';
 import {
   FiMail,
   FiLock,
@@ -50,12 +49,11 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000/api/v1';
-    fetch(`${apiUrl}/system-settings/status`)
+    // Use relative /api proxy to avoid exposing backend URL to client and to keep CORS simple
+    fetch('/api/system-status')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        const status = data?.data ?? data;
-        if (status?.maintenanceMode === true) setIsMaintenanceMode(true);
+        if (data?.maintenanceMode === true) setIsMaintenanceMode(true);
       })
       .catch(() => {});
   }, []);
@@ -99,15 +97,8 @@ export default function LoginPage() {
         return;
       }
 
-      if (!response.accessToken || !response.refreshToken) {
-        throw new Error('Invalid response from server - missing tokens');
-      }
-
-      login(response.accessToken, response.refreshToken, response.user);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const _isSecure = window.location.protocol === 'https:';
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
+      // Tokens are set as httpOnly cookies by the Next.js proxy route
+      login('', '', response.user);
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
@@ -144,12 +135,8 @@ export default function LoginPage() {
       setTwoFactorLoading(true);
       setError(null);
       const response = await authService.verify2FA(twoFactorEmail, twoFactorCode.trim());
-      if (!response.accessToken || !response.refreshToken) throw new Error('Invalid 2FA response');
-      login(response.accessToken, response.refreshToken, response.user);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const _isSecure = window.location.protocol === 'https:';
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
+      // Tokens are set as httpOnly cookies by the Next.js proxy route
+      login('', '', response.user);
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);
@@ -167,12 +154,8 @@ export default function LoginPage() {
       setIsLoading(true);
       setError(null);
       const response = await authService.googleLogin(idToken);
-      if (!response.accessToken || !response.refreshToken) throw new Error('Invalid response from server');
-      login(response.accessToken, response.refreshToken, response.user);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const _isSecure = window.location.protocol === 'https:';
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: _isSecure });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: _isSecure });
+      // Tokens are set as httpOnly cookies by the Next.js proxy route
+      login('', '', response.user);
       toast.success('Login successful!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);

@@ -1,115 +1,103 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios';
-import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 
 // Keep frontend and API rewrites aligned; default includes /api/v1 prefix.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:9000/api/v1';
+
+/**
+ * In-memory access token store.
+ * Tokens are NEVER written to localStorage or readable-by-JS cookies.
+ * The refresh token lives in an httpOnly cookie managed exclusively by Next.js API routes.
+ * On page load, checkAuth() calls /api/auth/refresh to hydrate this variable.
+ */
+let _memoryAccessToken: string | null = null;
+
+export function setMemoryToken(token: string | null) {
+  _memoryAccessToken = token;
+}
+
+export function getMemoryToken(): string | null {
+  return _memoryAccessToken;
+}
+
+export function clearMemoryToken() {
+  _memoryAccessToken = null;
+}
+
+// Singleton refresh promise to prevent concurrent 401s all firing refresh
+let _refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!_refreshPromise) {
+    _refreshPromise = fetch('/api/auth/refresh', { method: 'POST' })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        const token = data?.accessToken ?? null;
+        _memoryAccessToken = token;
+        return token;
+      })
+      .catch(() => null)
+      .finally(() => { _refreshPromise = null; });
+  }
+  return _refreshPromise;
+}
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
   timeout: 15000,
 });
 
-// Request interceptor to add auth token
+// Request interceptor — attach in-memory access token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Tokens are stored only in cookies — never localStorage
-    let token: string | null = null;
-
-    if (typeof window !== 'undefined') {
-      token = Cookies.get('accessToken') || null;
+    if (_memoryAccessToken && config.headers) {
+      config.headers.Authorization = `Bearer ${_memoryAccessToken}`;
     }
 
-    if (token && config.headers) {
-      // Remove any existing Bearer prefix if present (to avoid double prefixing)
-      const cleanToken = token.startsWith('Bearer ') ? token.substring(7) : token;
-      config.headers.Authorization = `Bearer ${cleanToken}`;
-    }
-
-    // Add device info for mobile compatibility
+    // Add device info
     if (typeof window !== 'undefined') {
       const deviceId = localStorage.getItem('deviceId');
-      if (deviceId && config.headers) {
-        config.headers['x-device-id'] = deviceId;
-      }
-
+      if (deviceId && config.headers) config.headers['x-device-id'] = deviceId;
       const deviceName = localStorage.getItem('deviceName');
-      if (deviceName && config.headers) {
-        config.headers['x-device-name'] = deviceName;
-      }
+      if (deviceName && config.headers) config.headers['x-device-name'] = deviceName;
     }
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// Response interceptor — handle 401 with httpOnly-cookie refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<any>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // Skip refresh for auth endpoints to prevent infinite loops
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/');
-    
-    // Handle 401 Unauthorized - try to refresh token
+
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = typeof window !== 'undefined' ? Cookies.get('refreshToken') || null : null;
+      const newToken = await refreshAccessToken();
 
-        // Only try to refresh if we have a refresh token
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          }, {
-            headers: { 'Content-Type': 'application/json' },
-          });
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
-          const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-          if (typeof window !== 'undefined') {
-            Cookies.set('accessToken', accessToken, { expires: 7, path: '/', sameSite: 'strict', secure: isSecure });
-            if (newRefreshToken) {
-              Cookies.set('refreshToken', newRefreshToken, { expires: 30, path: '/', sameSite: 'strict', secure: isSecure });
-            }
-          }
-
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          }
-
-          return apiClient(originalRequest);
-        } else {
-          // No refresh token, clear and redirect
-          if (typeof window !== 'undefined') {
-            Cookies.remove('accessToken', { path: '/' });
-            Cookies.remove('refreshToken', { path: '/' });
-            localStorage.removeItem('user');
-            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-              window.location.href = '/login';
-            }
-          }
+      if (newToken) {
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
-      } catch (refreshError) {
+        return apiClient(originalRequest);
+      } else {
+        // Refresh failed — clear memory token and redirect
+        _memoryAccessToken = null;
         if (typeof window !== 'undefined') {
-          Cookies.remove('accessToken', { path: '/' });
-          Cookies.remove('refreshToken', { path: '/' });
           localStorage.removeItem('user');
           if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
             window.location.href = '/login';
           }
         }
-        return Promise.reject(refreshError);
+        return Promise.reject(error);
       }
     }
 
@@ -123,10 +111,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle other errors
     const message = error.response?.data?.message || error.message || 'An error occurred';
-
-    // Don't show toast for 401 errors (handled above) or if it's an auth endpoint
     if (error.response?.status !== 401 && !isAuthEndpoint && typeof window !== 'undefined') {
       toast.error(message);
     }
@@ -135,7 +120,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Generate device ID if not exists (client-side only) — uses crypto.randomUUID for unpredictability
+// Generate device ID if not exists
 if (typeof window !== 'undefined' && !localStorage.getItem('deviceId')) {
   const deviceId = `web-${crypto.randomUUID()}`;
   localStorage.setItem('deviceId', deviceId);

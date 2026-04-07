@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, authService } from '@/services/auth.service';
-import Cookies from 'js-cookie'; // used only in onRehydrateStorage to check token presence
+import { setMemoryToken } from '@/config/api';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken?: string) => void;
   login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
@@ -29,16 +29,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      setTokens: (accessToken, refreshToken) => {
-        authService.setTokens(accessToken, refreshToken);
+      setTokens: (accessToken, _refreshToken) => {
+        authService.setTokens(accessToken);
       },
 
-      login: (accessToken, refreshToken, user) => {
-        if (!accessToken || !refreshToken) {
-          return;
-        }
-
-        authService.setTokens(accessToken, refreshToken);
+      login: (_accessToken, _refreshToken, user) => {
+        // Tokens are set by the Next.js proxy route as httpOnly cookies — nothing to store here.
+        // Only persist user profile in memory/zustand.
         authService.setUser(user);
         set({ user, isAuthenticated: true, isLoading: false });
       },
@@ -50,11 +47,7 @@ export const useAuthStore = create<AuthState>()(
           // swallow — we still clear local state
         } finally {
           authService.clearTokens();
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
+          set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
 
@@ -62,81 +55,52 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authService.logoutAll();
         } catch {
-          // swallow — we still clear local state
+          // swallow
         } finally {
           authService.clearTokens();
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
+          set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
 
       checkAuth: async () => {
-        // Don't check auth if we don't have a token
-        if (!authService.isAuthenticated()) {
-          set({ user: null, isAuthenticated: false, isLoading: false });
-          return;
-        }
-
-        // If user is already loaded and authenticated, skip the API call
-        const { user: currentUser, isAuthenticated: currentAuth } = get();
-        if (currentUser && currentAuth) {
-          set({ isLoading: false });
-          return;
-        }
-
+        // On every page load the memory token is gone — always attempt a silent refresh
+        // via the httpOnly refresh cookie before deciding auth state.
         try {
-          const user = await authService.getCurrentUser();
-          const storedUser = authService.getUser();
-          const resolvedUser = user || storedUser;
+          const res = await fetch('/api/auth/refresh', { method: 'POST' });
 
-          // If the user still has mustChangePassword set, redirect them
+          if (!res.ok) {
+            // Refresh cookie is absent or expired — signed out
+            authService.clearTokens();
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return;
+          }
+
+          const data = await res.json();
+          if (data?.accessToken) {
+            setMemoryToken(data.accessToken);
+          }
+
+          // If user is already in zustand persist, reuse it
+          const { user: currentUser } = get();
+          if (currentUser) {
+            set({ isAuthenticated: true, isLoading: false });
+            return;
+          }
+
+          // Otherwise fetch from backend
+          const user = await authService.getCurrentUser();
+          const resolvedUser = user || authService.getUser();
+
           if (resolvedUser?.mustChangePassword && typeof window !== 'undefined') {
-            const path = window.location.pathname;
-            if (path !== '/force-change-password') {
+            if (window.location.pathname !== '/force-change-password') {
               window.location.href = '/force-change-password';
             }
           }
 
-          set({
-            user: resolvedUser,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch (error: any) {
-          // If error is 401, user is not authenticated
-          if (error?.response?.status === 401) {
-            // Only clear tokens if we don't have a stored user
-            // This prevents clearing tokens immediately after login
-            const storedUser = authService.getUser();
-            if (!storedUser) {
-              authService.clearTokens();
-              Cookies.remove('accessToken');
-              Cookies.remove('refreshToken');
-              set({
-                user: null,
-                isAuthenticated: false,
-                isLoading: false,
-              });
-            } else {
-              // We have a stored user, keep it even if API call failed
-              set({
-                user: storedUser,
-                isAuthenticated: true,
-                isLoading: false,
-              });
-            }
-          } else {
-            // Other errors, use stored user if available
-            const storedUser = authService.getUser();
-            set({
-              user: storedUser,
-              isAuthenticated: !!storedUser,
-              isLoading: false,
-            });
-          }
+          set({ user: resolvedUser, isAuthenticated: true, isLoading: false });
+        } catch {
+          authService.clearTokens();
+          set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
     }),
@@ -148,19 +112,8 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Verify token cookie exists — prevent stale auth state after cookie expiry
-          const hasToken = typeof window !== 'undefined' && !!Cookies.get('accessToken');
-
-          if (state.isAuthenticated && !hasToken) {
-            state.isAuthenticated = false;
-            state.user = null;
-            state.isLoading = false;
-            return;
-          }
-
-          if (state.user && state.isAuthenticated) {
-            state.isLoading = false;
-          }
+          // isLoading stays true until checkAuth resolves — it will verify via refresh cookie
+          state.isLoading = true;
         }
       },
     }

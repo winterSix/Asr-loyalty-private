@@ -11,7 +11,6 @@ import { GoogleLogin } from '@react-oauth/google';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
 import toast from 'react-hot-toast';
-import Cookies from 'js-cookie';
 import {
   FiUser,
   FiPhone,
@@ -78,11 +77,8 @@ export default function RegisterPage() {
       setIsLoading(true);
       setError(null);
       const response = await authService.googleLogin(idToken);
-      if (!response.accessToken || !response.refreshToken) throw new Error('Invalid response from server');
-      login(response.accessToken, response.refreshToken, response.user);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Cookies.set('accessToken', response.accessToken, { expires: 7, path: '/', sameSite: 'lax', secure: false });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 30, path: '/', sameSite: 'lax', secure: false });
+      // Tokens are set as httpOnly cookies by the Next.js proxy route
+      login('', '', response.user);
       toast.success('Signed in with Google!');
       const mustChange = response.mustChangePassword ?? response.user?.mustChangePassword;
       setTimeout(() => { window.location.href = mustChange ? '/force-change-password' : '/dashboard'; }, 500);

@@ -685,8 +685,12 @@ export default function UserDetailPage() {
                     value={freezeReason}
                     onChange={(e) => setFreezeReason(e.target.value)}
                     placeholder="Enter reason for freezing..."
+                    maxLength={500}
                     className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
                   />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {freezeReason.trim().length}/500 — minimum 10 characters
+                  </p>
                 </div>
               )}
               <div className="flex items-center gap-3 justify-end">
@@ -698,7 +702,7 @@ export default function UserDetailPage() {
                 </button>
                 <button
                   onClick={() => freezeMutation.mutate()}
-                  disabled={freezeMutation.isPending || (freezeAction === 'freeze' && !freezeReason.trim())}
+                  disabled={freezeMutation.isPending || (freezeAction === 'freeze' && freezeReason.trim().length < 10)}
                   className={`px-4 py-2 rounded-xl font-medium text-sm text-white transition-colors disabled:opacity-50 ${
                     freezeAction === 'freeze' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
                   }`}
