@@ -390,7 +390,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading || isMaintenanceMode}
+                disabled={!mounted || isLoading || isMaintenanceMode}
                 className="btn-primary w-full mt-6 h-14 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {isLoading ? (

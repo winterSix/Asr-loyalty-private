@@ -33,25 +33,19 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=()',
   },
   {
-    // strict-dynamic + nonce replaces unsafe-inline.
-    // Next.js injects a per-request nonce via middleware; the nonce is set in
-    // the <script> tags by the custom Document / metadata. For static export
-    // builds that don't support per-request nonces, this falls back gracefully.
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // strict-dynamic trusts scripts loaded by a nonced script; unsafe-inline
-      // is ignored by browsers that support strict-dynamic (kept for fallback).
-      "script-src 'self' 'strict-dynamic' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
-      "font-src 'self' data:",
-      `connect-src 'self' ${API_URL} https://asr-loyalty-api-1.onrender.com wss:`,
+      "font-src 'self' data: https:",
+      `connect-src 'self' ${API_URL} https://asr-loyalty-api-1.onrender.com wss: https://accounts.google.com`,
+      "frame-src 'self' https://accounts.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
-      "upgrade-insecure-requests",
     ].join('; '),
   },
 ];
