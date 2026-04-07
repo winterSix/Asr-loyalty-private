@@ -1,5 +1,3 @@
-import { apiClient } from '@/config/api';
-
 export interface LandingStats {
   totalUsers: number;
   totalTransactions: number;
@@ -10,9 +8,10 @@ export interface LandingStats {
 
 class PublicService {
   async getLandingStats(): Promise<LandingStats> {
-    const response = await apiClient.get<any>('/public/stats');
-    const data = response.data;
-    // Handle both wrapped and unwrapped responses
+    // Use the Next.js proxy (/api/*) — avoids a direct browser→backend CORS request
+    const res = await fetch('/api/public/stats');
+    if (!res.ok) throw new Error('Failed to fetch public stats');
+    const data = await res.json();
     const stats = data?.stats ?? data?.data?.stats ?? data;
     return {
       totalUsers: stats?.totalUsers ?? 0,
