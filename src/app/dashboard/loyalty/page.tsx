@@ -24,19 +24,19 @@ export default function LoyaltyPage() {
   const { data: tiers } = useQuery({
     queryKey: ['loyalty-tiers'],
     queryFn: () => loyaltyService.getAllTierConfigs(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: progress } = useQuery({
     queryKey: ['loyalty-progress'],
     queryFn: () => loyaltyService.getMyProgress(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: history } = useQuery({
     queryKey: ['loyalty-history'],
     queryFn: () => loyaltyService.getMyHistory({ page: 1, limit: 10 }),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   if (isLoading) {

@@ -89,12 +89,15 @@ apiClient.interceptors.response.use(
         }
         return apiClient(originalRequest);
       } else {
-        // Refresh failed — clear memory token and redirect
-        _memoryAccessToken = null;
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-            window.location.href = '/login';
+        // Refresh failed — only redirect if we still have no token in memory.
+        // If a concurrent checkAuth() already set a token, skip the redirect to
+        // avoid a race-condition logout.
+        if (!_memoryAccessToken) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('user');
+            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+              window.location.href = '/login';
+            }
           }
         }
         return Promise.reject(error);

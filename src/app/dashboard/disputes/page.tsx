@@ -56,13 +56,13 @@ export default function DisputesPage() {
       }
       return disputeService.getMyDisputes({ page, limit });
     },
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: statsRaw } = useQuery({
     queryKey: ['dispute-stats'],
     queryFn: () => disputeService.getStats(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   // Safely extract disputes array

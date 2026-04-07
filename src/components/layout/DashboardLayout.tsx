@@ -45,10 +45,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const router   = useRouter();
     const pathname = usePathname();
-    const { user, logout } = useAuthStore();
+    const { user, logout, isLoading: authLoading } = useAuthStore();
     const { theme, setTheme } = useTheme();
     const role    = user?.role || 'CUSTOMER';
-    const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
+    const isAdmin = !authLoading && (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS');
 
     const navRef      = useRef<HTMLElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -149,7 +149,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { data: unreadData } = useQuery({
         queryKey: ['notifications', 'unread-count'],
         queryFn:  () => notificationService.getUnreadCount(),
-        staleTime: 30000, retry: 1, enabled: !!user,
+        staleTime: 30000, retry: 1, enabled: !authLoading && !!user,
         refetchInterval: 60000,
     });
     const unreadCount = unreadData?.unreadCount ?? 0;

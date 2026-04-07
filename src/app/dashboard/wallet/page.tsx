@@ -26,13 +26,13 @@ export default function WalletPage() {
   const { data: walletBalance, isLoading: walletsLoading } = useQuery({
     queryKey: ['wallet-balance'],
     queryFn: () => walletService.getBalance(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: ledger } = useQuery({
     queryKey: ['wallet-ledger', 'MAIN'],
     queryFn: () => walletService.getLedger('MAIN', { page: 1, limit: 20 }),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   if (isLoading || walletsLoading) {

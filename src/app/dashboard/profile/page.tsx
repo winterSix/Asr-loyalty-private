@@ -138,13 +138,13 @@ export default function ProfilePage() {
   const { data: preferences } = useQuery({
     queryKey: ['user-preferences'],
     queryFn: () => userService.getPreferences(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const { data: devices } = useQuery({
     queryKey: ['user-devices'],
     queryFn: () => userService.getDevices(),
-    enabled: !!user,
+    enabled: !isLoading && !!user,
   });
 
   const updateProfileMutation = useMutation({

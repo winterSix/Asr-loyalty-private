@@ -80,19 +80,19 @@ export default function SettingsPage() {
   const { data: groupedRaw, isLoading: settingsLoading } = useQuery({
     queryKey: ['system-settings-grouped'],
     queryFn: () => systemSettingsService.getGroupedSettings(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   const { data: featuresRaw } = useQuery({
     queryKey: ['system-settings-features'],
     queryFn: () => systemSettingsService.getFeatures(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   const { data: paymentGatewaysRaw } = useQuery({
     queryKey: ['payment-gateway-statuses'],
     queryFn: () => systemSettingsService.getPaymentGatewayStatuses(),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   // Public endpoint — works even during maintenance mode

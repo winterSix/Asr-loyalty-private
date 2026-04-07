@@ -63,7 +63,7 @@ export default function TransactionsPage() {
   const { data: adminTxData, isLoading: adminTxLoading, isFetching: adminTxFetching, refetch } = useQuery({
     queryKey: ['admin', 'transactions', adminFilters],
     queryFn: () => adminService.getTransactions(adminFilters),
-    enabled: !!user && isAdmin,
+    enabled: !isLoading && !!user && isAdmin,
   });
 
   // Customer query (fallback for non-admin users)
@@ -75,7 +75,7 @@ export default function TransactionsPage() {
       page,
       limit,
     }),
-    enabled: !!user && !isAdmin,
+    enabled: !isLoading && !!user && !isAdmin,
   });
 
   if (isLoading) {

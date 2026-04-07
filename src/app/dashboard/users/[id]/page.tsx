@@ -50,21 +50,21 @@ export default function UserDetailPage() {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['admin', 'user', userId],
     queryFn: () => adminService.getUserById(userId),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Fetch user's wallets
   const { data: userWallets } = useQuery({
     queryKey: ['admin', 'user', userId, 'wallets'],
     queryFn: () => adminService.getUserWallets(userId),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Fetch RBAC custom roles for the role change dropdown
   const { data: rbacRolesData } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !!user && (user.role === 'SUPER_ADMIN'),
+    enabled: !isLoading && !!user && (user.role === 'SUPER_ADMIN'),
   });
   const rbacRoles: { value: string; label: string }[] = (rbacRolesData || [])
     .filter((r: any) => !r.isSystem)
@@ -74,7 +74,7 @@ export default function UserDetailPage() {
   const { data: userTransactions } = useQuery({
     queryKey: ['admin', 'user', userId, 'transactions'],
     queryFn: () => adminService.getUserTransactions(userId, { page: 1, limit: 5 }),
-    enabled: !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Update user status mutation

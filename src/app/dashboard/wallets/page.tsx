@@ -46,14 +46,14 @@ export default function WalletsPage() {
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', 'wallets', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   // Fetch all users (first page, no search) for summary stats
   const { data: allUsersData } = useQuery({
     queryKey: ['admin', 'users', 'wallets-summary'],
     queryFn: () => adminService.getUsers({ page: 1, limit: 100 }),
-    enabled: !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
   });
 
   const handleRefresh = async () => {
