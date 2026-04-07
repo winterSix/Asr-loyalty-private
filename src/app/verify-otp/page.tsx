@@ -57,11 +57,8 @@ function VerifyOtpContent() {
 
       const response = await authService.verifyOtp(data);
       
-      login(
-        response.accessToken,
-        response.refreshToken,
-        response.user
-      );
+      // Tokens are set as httpOnly cookies by the Next.js proxy route
+      login('', '', response.user);
 
       toast.success('Email verified successfully!');
       router.push('/dashboard');

@@ -85,7 +85,12 @@ export function RichTextEditor({ value, onChange, placeholder = 'Start writing..
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
     } else {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+      // Reject javascript: URIs and non-http(s) schemes to prevent XSS via link injection
+      const trimmed = url.trim();
+      if (/^javascript:/i.test(trimmed)) return;
+      const allowed = trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('/') || trimmed.startsWith('#');
+      if (!allowed) return;
+      editor.chain().focus().extendMarkRange('link').setLink({ href: trimmed }).run();
     }
   }, [editor]);
 

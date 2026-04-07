@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { systemSettingsService } from '@/services/system-settings.service';
 
 const POLL_INTERVAL_MS = 60_000; // 60 seconds
 
@@ -11,8 +10,12 @@ export default function MaintenanceBanner() {
 
   const checkStatus = useCallback(async () => {
     try {
-      const status = await systemSettingsService.getSystemStatus();
-      setIsMaintenanceMode(!!status?.maintenanceMode);
+      // Use the Next.js proxy route to avoid exposing the backend URL
+      const res = await fetch('/api/system-status');
+      if (res.ok) {
+        const data = await res.json();
+        setIsMaintenanceMode(!!data?.maintenanceMode);
+      }
     } catch {
       // Silently fail — network errors shouldn't show the banner
     }

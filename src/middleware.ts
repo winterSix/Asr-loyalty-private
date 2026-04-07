@@ -3,8 +3,9 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken');
+  const userRole = request.cookies.get('userRole')?.value;
   const { pathname } = request.nextUrl;
-  
+
   // Protected routes
   const protectedRoutes = [
     '/dashboard',
@@ -13,9 +14,12 @@ export function middleware(request: NextRequest) {
     '/profile',
     '/admin',
   ];
+  const adminRoutes = ['/admin'];
+  const adminRoles = ['ADMIN', 'SUPER_ADMIN'];
   const authRoutes = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'];
 
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isRoot = pathname === '/';
 
@@ -27,6 +31,11 @@ export function middleware(request: NextRequest) {
   // Redirect to login if accessing protected route without token
   if (isProtectedRoute && !accessToken) {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Block non-admin users from admin routes — redirect to dashboard
+  if (isAdminRoute && accessToken && userRole && !adminRoles.includes(userRole)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Redirect to dashboard if accessing auth route with token

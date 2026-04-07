@@ -1,4 +1,4 @@
-import { apiClient, unwrapResponse } from '@/config/api';
+import { apiClient, unwrapResponse, setMemoryToken, getMemoryToken, clearMemoryToken } from '@/config/api';
 import Cookies from 'js-cookie';
 
 export interface RegisterData {
@@ -27,8 +27,8 @@ export interface ResendOtpData {
 export interface AuthResponse {
   message: string;
   mustChangePassword?: boolean;
-  accessToken: string;
-  refreshToken: string;
+  accessToken?: string;  // not returned to client — set as httpOnly cookie by proxy
+  refreshToken?: string; // not returned to client — set as httpOnly cookie by proxy
   user: User;
   requiresTwoFactor?: boolean;
   email?: string;
@@ -66,8 +66,19 @@ class AuthService {
   }
 
   async verifyOtp(data: VerifyOtpData) {
-    const response = await apiClient.post<any>('/auth/verify-otp', data);
-    return unwrapResponse<AuthResponse>(response.data);
+    // Route through Next.js proxy — sets httpOnly cookies server-side
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const responseData = await res.json();
+    if (!res.ok) {
+      const err: any = new Error(responseData?.message || 'OTP verification failed');
+      err.response = { status: res.status, data: responseData };
+      throw err;
+    }
+    return responseData as AuthResponse;
   }
 
   async resendOtp(email: string) {
@@ -76,40 +87,50 @@ class AuthService {
   }
 
   async login(data: LoginData) {
-    const response = await apiClient.post<any>('/auth/login', data);
-    const responseData = unwrapResponse<AuthResponse>(response.data);
+    // Route through Next.js proxy — sets httpOnly cookies server-side
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
 
-    if (!responseData) {
-      throw new Error('No data in response');
+    const responseData = await res.json();
+
+    if (!res.ok) {
+      const err: any = new Error(responseData?.message || 'Login failed');
+      err.response = { status: res.status, data: responseData };
+      throw err;
     }
 
-    // 2FA required — return partial response without tokens so the page can show the 2FA step
-    if ((responseData as any).requiresTwoFactor) {
-      return responseData;
+    // 2FA pending — no tokens issued yet
+    if (responseData?.requiresTwoFactor) {
+      return responseData as AuthResponse;
     }
 
-    if (!responseData.accessToken || !responseData.refreshToken) {
-      throw new Error('Invalid response: missing tokens');
-    }
-
-    return responseData;
+    return responseData as AuthResponse;
   }
 
-  async refreshToken(refreshToken: string) {
-    const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh', {
-      refreshToken,
-    });
-    return response.data;
+  async refreshToken(_refreshToken?: string) {
+    // Refresh is handled via httpOnly cookie by the Next.js proxy route
+    const res = await fetch('/api/auth/refresh', { method: 'POST' });
+    if (!res.ok) throw new Error('Session expired');
+    const data = await res.json();
+    if (data?.accessToken) {
+      setMemoryToken(data.accessToken);
+    }
+    return data as RefreshTokenResponse;
   }
 
   async logout() {
-    const response = await apiClient.post('/auth/logout');
-    return response.data;
+    clearMemoryToken();
+    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    return res.json().catch(() => ({}));
   }
 
   async logoutAll() {
-    const response = await apiClient.post('/auth/logout-all');
-    return response.data;
+    clearMemoryToken();
+    const res = await fetch('/api/auth/logout-all', { method: 'POST' });
+    return res.json().catch(() => ({}));
   }
 
   async getCurrentUser() {
@@ -140,48 +161,61 @@ class AuthService {
   }
 
   async googleLogin(idToken: string) {
-    const response = await apiClient.post<any>('/auth/google', { idToken });
-    return unwrapResponse<AuthResponse>(response.data);
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const err: any = new Error(data?.message || 'Google login failed');
+      err.response = { status: res.status, data };
+      throw err;
+    }
+    return data as AuthResponse;
   }
 
   async verify2FA(email: string, code: string) {
-    const response = await apiClient.post<any>('/auth/verify-2fa', { email, code });
-    return unwrapResponse<AuthResponse>(response.data);
+    // Route through Next.js proxy — sets httpOnly cookies server-side
+    const res = await fetch('/api/auth/verify-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    const responseData = await res.json();
+    if (!res.ok) {
+      const err: any = new Error(responseData?.message || '2FA verification failed');
+      err.response = { status: res.status, data: responseData };
+      throw err;
+    }
+    return responseData as AuthResponse;
   }
 
   // Helper methods
-  setTokens(accessToken: string, refreshToken: string) {
-    if (typeof window !== 'undefined') {
-      // Store tokens ONLY in cookies — never localStorage (XSS risk)
-      Cookies.set('accessToken', accessToken, {
-        expires: 7,
-        path: '/',
-        sameSite: 'strict',
-        secure: window.location.protocol === 'https:',
-      });
-      Cookies.set('refreshToken', refreshToken, {
-        expires: 30,
-        path: '/',
-        sameSite: 'strict',
-        secure: window.location.protocol === 'https:',
-      });
-    }
+
+  /**
+   * Store the access token in memory only.
+   * Tokens are set as httpOnly cookies by the Next.js proxy routes — this method
+   * only updates the in-memory variable used by the axios interceptor.
+   */
+  setTokens(accessToken: string, _refreshToken?: string) {
+    setMemoryToken(accessToken);
   }
 
   getAccessToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return Cookies.get('accessToken') || null;
+    return getMemoryToken();
   }
 
   getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return Cookies.get('refreshToken') || null;
+    // Refresh token is in an httpOnly cookie — not readable by JS; return null
+    return null;
   }
 
   clearTokens() {
+    clearMemoryToken();
     if (typeof window !== 'undefined') {
-      Cookies.remove('accessToken', { path: '/' });
-      Cookies.remove('refreshToken', { path: '/' });
+      // Clear the non-httpOnly userRole cookie
+      Cookies.remove('userRole', { path: '/' });
       localStorage.removeItem('user');
     }
   }
@@ -189,6 +223,13 @@ class AuthService {
   setUser(user: User) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(user));
+      // Set role cookie for middleware role-based route checks (non-sensitive data)
+      Cookies.set('userRole', user.role, {
+        expires: 7,
+        path: '/',
+        sameSite: 'strict',
+        secure: window.location.protocol === 'https:',
+      });
     }
   }
 
@@ -207,7 +248,8 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getAccessToken();
+    // Check in-memory token; if missing (e.g. page refresh), checkAuth will call /api/auth/refresh
+    return !!getMemoryToken();
   }
 }
 
