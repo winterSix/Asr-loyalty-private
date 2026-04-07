@@ -100,7 +100,7 @@ export default function ForceChangePasswordPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Current (temp) Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
