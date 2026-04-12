@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { getDisplayRole } from '@/services/admin.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/user.service';
 import {
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                     </span>
                   )}
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary/5 text-primary">
-                    <FiShield className="w-3 h-3" /> {user?.role?.replace(/_/g, ' ') || 'CUSTOMER'}
+                    <FiShield className="w-3 h-3" /> {user ? getDisplayRole(user) : 'CUSTOMER'}
                   </span>
                   {user?.status === 'ACTIVE' && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600">
@@ -350,7 +351,7 @@ export default function ProfilePage() {
                   <div className="text-right">
                     <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Access Level</p>
                     <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-0.5">
-                      {user?.role?.replace(/_/g, ' ') || '\u2014'}
+                      {user ? getDisplayRole(user) : '\u2014'}
                     </p>
                   </div>
                 )}
@@ -367,7 +368,7 @@ export default function ProfilePage() {
             { label: 'Current Tier', value: user?.currentTier || 'BRONZE', icon: FiAward, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/30' },
             { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
           ] : [
-            { label: 'Access Level', value: user?.role?.replace(/_/g, ' ') || '\u2014', icon: FiShield, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/30' },
+            { label: 'Access Level', value: user ? getDisplayRole(user) : '\u2014', icon: FiShield, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/30' },
             { label: 'Account Status', value: user?.status || 'ACTIVE', icon: FiActivity, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
             { label: 'Email', value: user?.emailVerified ? 'Verified' : 'Unverified', icon: FiMail, color: user?.emailVerified ? 'text-emerald-600' : 'text-amber-600', bg: user?.emailVerified ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-amber-50 dark:bg-amber-900/30' },
             { label: 'Member Since', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '\u2014', icon: FiCalendar, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },

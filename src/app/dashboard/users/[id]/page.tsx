@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService } from '@/services/admin.service';
+import { adminService, getDisplayRole } from '@/services/admin.service';
 import { walletService } from '@/services/wallet.service';
 import { roleService } from '@/services/role.service';
 import CustomSelect from '@/components/ui/CustomSelect';
@@ -280,7 +280,7 @@ export default function UserDetailPage() {
                         userData.role === 'CASHIER' ? 'bg-blue-100 text-blue-700' :
                         'bg-gray-100 text-gray-700'
                       }`}>
-                        {userData.role?.replace('_', ' ')}
+                        {getDisplayRole(userData)}
                       </span>
                     </p>
                   </div>
@@ -735,7 +735,7 @@ export default function UserDetailPage() {
                   <FiShield className="w-5 h-5 mt-0.5 text-indigo-500" />
                   <p className="text-sm text-indigo-700">
                     Changing the role for <strong>{userData?.firstName} {userData?.lastName}</strong>.
-                    Current role: <strong>{userData?.role?.replace('_', ' ')}</strong>
+                    Current role: <strong>{userData ? getDisplayRole(userData) : ''}</strong>
                   </p>
                 </div>
               </div>
