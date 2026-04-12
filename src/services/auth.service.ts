@@ -52,6 +52,10 @@ export interface User {
   referralCode?: string;
   createdAt: string;
   updatedAt: string;
+  userRoles?: Array<{
+    id: string;
+    role: { id: string; name: string };
+  }>;
 }
 
 export interface RefreshTokenResponse {

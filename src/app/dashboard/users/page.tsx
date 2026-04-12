@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminService, UserFilters, CreateCashierData } from '@/services/admin.service';
+import { adminService, getDisplayRole, UserFilters, CreateCashierData } from '@/services/admin.service';
 import { roleService } from '@/services/role.service';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -111,12 +111,16 @@ export default function UsersPage() {
 
   const createUserMutation = useMutation({
     mutationFn: (data: CreateCashierData) => adminService.createCashier(data),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
+      // For OTHERS users, resolve the custom role name from the rbacRoles list
+      const customRoleId = variables.customRoleId;
+      const customRole = customRoleId ? rbacRoles.find((r: any) => r.value === customRoleId) : null;
+      const displayRole = customRole ? customRole.label : result.cashier.role.replace(/_/g, ' ');
       setCreatedCredentials({
         email: result.cashier.email,
         temporaryPassword: result.cashier.temporaryPassword,
         name: `${result.cashier.firstName} ${result.cashier.lastName}`,
-        role: result.cashier.role,
+        role: displayRole,
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       reset({ role: 'CASHIER', customRoleId: '' });
@@ -310,7 +314,7 @@ export default function UsersPage() {
                         <td className="py-4 px-4 whitespace-nowrap">
                           <div className="flex flex-col gap-1">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${getRoleColor(u.role)}`}>
-                              {u.role.replace('_', ' ')}
+                              {getDisplayRole(u)}
                             </span>
                             {u.mustChangePassword && (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold w-fit bg-amber-100 text-amber-700">

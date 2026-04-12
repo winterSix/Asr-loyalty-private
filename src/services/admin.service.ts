@@ -122,12 +122,27 @@ export interface AdminUser {
     type?: string;
     isActive?: boolean;
   }>;
+  userRoles?: Array<{
+    id: string;
+    role: { id: string; name: string };
+  }>;
   _count?: {
     transactions: number;
     disputes: number;
     refunds: number;
     notifications: number;
   };
+}
+
+/**
+ * Returns the display-friendly role label.
+ * For OTHERS users, resolves the name of their assigned custom RBAC role.
+ */
+export function getDisplayRole(user: { role: string; userRoles?: Array<{ role: { name: string } }> }): string {
+  if (user.role === 'OTHERS' && user.userRoles && user.userRoles.length > 0) {
+    return user.userRoles[0].role.name.replace(/_/g, ' ');
+  }
+  return user.role.replace(/_/g, ' ');
 }
 
 // Filter Types

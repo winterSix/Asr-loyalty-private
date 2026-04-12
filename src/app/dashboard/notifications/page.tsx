@@ -10,7 +10,7 @@ import {
   NotificationType,
   BroadcastResult,
 } from '@/services/notification.service';
-import { adminService } from '@/services/admin.service';
+import { adminService, getDisplayRole } from '@/services/admin.service';
 import CustomSelect from '@/components/ui/CustomSelect';
 import {
   FiBell,
@@ -577,7 +577,7 @@ function NotificationsContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-800 dark:text-[#F1F5F9] truncate">{u.firstName} {u.lastName}</p>
-                            <p className="text-xs text-gray-500 dark:text-[#64748B] truncate">{u.email} · {u.role}</p>
+                            <p className="text-xs text-gray-500 dark:text-[#64748B] truncate">{u.email} · {getDisplayRole(u)}</p>
                           </div>
                         </button>
                       )) : !userSearchLoading && (

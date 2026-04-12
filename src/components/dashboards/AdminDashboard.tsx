@@ -10,7 +10,7 @@ import {
   PieChart, Pie, Cell,
   BarChart, Bar,
 } from 'recharts';
-import { adminService } from '@/services/admin.service';
+import { adminService, getDisplayRole } from '@/services/admin.service';
 import { disputeService } from '@/services/dispute.service';
 import { refundService } from '@/services/refund.service';
 import {
@@ -1494,7 +1494,7 @@ export default function AdminDashboard() {
                           <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap">{user.email}</td>
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                              {user.role?.replace('_', ' ')}
+                              {getDisplayRole(user)}
                             </span>
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">

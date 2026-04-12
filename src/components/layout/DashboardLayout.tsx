@@ -15,7 +15,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { adminService } from '@/services/admin.service';
+import { adminService, getDisplayRole } from '@/services/admin.service';
+import { roleService } from '@/services/role.service';
 
 interface NavItem  { label: string; icon: React.ReactNode; path: string; badge?: number; }
 interface NavSection { title: string; items: NavItem[]; }
@@ -178,6 +179,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         enabled: notifOpen && notifTab === 'all' && isAdmin, staleTime: 10000,
     });
 
+    // Fetch permissions for OTHERS role users — drives the permission-based sidebar
+    const { data: userPermissions } = useQuery({
+        queryKey: ['user-permissions', user?.id],
+        queryFn:  () => roleService.getUserPermissions(user!.id),
+        enabled: !authLoading && !!user?.id && role === 'OTHERS',
+        staleTime: 300000,
+    });
+    const permSet = new Set((userPermissions ?? []).map(p => `${p.resource}:${p.action}`));
+
     // Close menus on outside click
     useEffect(() => {
         const h = (e: MouseEvent) => {
@@ -264,28 +274,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { label: 'QR Scanner',  icon: <FiQrCode />,     path: '/dashboard/qr-scanner' },
                 { label: 'Transactions',icon: <FiCreditCard />, path: '/dashboard/transactions' },
             ]}];
-            case 'OTHERS': return [
-                { title: 'Overview', items: [
-                    { label: 'Dashboard',  icon: <FiHome />,     path: '/dashboard' },
-                    { label: 'Reports',    icon: <FiBarChart />, path: '/dashboard/reports' },
-                    { label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit' },
-                ]},
-                { title: 'Management', items: [
-                    { label: 'Users',        icon: <FiUsers />,      path: '/dashboard/users' },
-                    { label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions' },
-                    { label: 'Wallets',      icon: <FiWallet />,     path: '/dashboard/wallets' },
-                ]},
-                { title: 'Loyalty & Rewards', items: [
-                    { label: 'Rewards',       icon: <FiGift />,     path: '/dashboard/rewards' },
-                    { label: 'Loyalty Tiers', icon: <FiStar />,     path: '/dashboard/loyalty-tiers' },
-                    { label: 'Reward Config', icon: <FiSettings />, path: '/dashboard/reward-config' },
-                ]},
-                { title: 'Support', items: [
-                    { label: 'Disputes',      icon: <FiShield />,     path: '/dashboard/disputes',     badge: dCount > 0 ? dCount : undefined },
-                    { label: 'Refunds',       icon: <FiDollarSign />, path: '/dashboard/refunds',      badge: rCount > 0 ? rCount : undefined },
-                    { label: 'Notifications', icon: <FiBell />,       path: '/dashboard/notifications' },
-                ]},
-            ];
+            case 'OTHERS': {
+                const has = (...perms: string[]) => perms.some(p => permSet.has(p));
+                const overviewItems: NavItem[] = [
+                    { label: 'Dashboard', icon: <FiHome />, path: '/dashboard' },
+                    ...(has('report:read', 'report:generate') ? [{ label: 'Reports', icon: <FiBarChart />, path: '/dashboard/reports' }] : []),
+                    ...(has('audit:read') ? [{ label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit' }] : []),
+                ];
+                const mgmtItems: NavItem[] = [
+                    ...(has('user:read', 'user:update', 'user:delete') ? [{ label: 'Users', icon: <FiUsers />, path: '/dashboard/users' }] : []),
+                    ...(has('transaction:read') ? [{ label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions' }] : []),
+                    ...(has('wallet:read', 'wallet:update') ? [{ label: 'Wallets', icon: <FiWallet />, path: '/dashboard/wallets' }] : []),
+                    ...(has('role:read', 'role:create', 'role:update') ? [{ label: 'Roles', icon: <FiLayers />, path: '/dashboard/roles' }] : []),
+                    ...(has('permission:read') ? [{ label: 'Permissions', icon: <FiKey />, path: '/dashboard/permissions' }] : []),
+                ];
+                const loyaltyItems: NavItem[] = [
+                    ...(has('reward:read', 'reward:create', 'reward:update') ? [{ label: 'Rewards', icon: <FiGift />, path: '/dashboard/rewards' }] : []),
+                    ...(has('loyalty:read') ? [{ label: 'Loyalty Tiers', icon: <FiStar />, path: '/dashboard/loyalty-tiers' }] : []),
+                    ...(has('reward:update') ? [{ label: 'Reward Config', icon: <FiSettings />, path: '/dashboard/reward-config' }] : []),
+                ];
+                const supportItems: NavItem[] = [
+                    ...(has('dispute:read', 'dispute:update') ? [{ label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: dCount > 0 ? dCount : undefined }] : []),
+                    ...(has('refund:read', 'refund:update') ? [{ label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: rCount > 0 ? rCount : undefined }] : []),
+                    ...(has('notification:send', 'notification:broadcast') ? [{ label: 'Notifications', icon: <FiBell />, path: '/dashboard/notifications' }] : []),
+                ];
+                return [
+                    { title: 'Overview', items: overviewItems },
+                    ...(mgmtItems.length    ? [{ title: 'Management',       items: mgmtItems }]    : []),
+                    ...(loyaltyItems.length ? [{ title: 'Loyalty & Rewards', items: loyaltyItems }] : []),
+                    ...(supportItems.length ? [{ title: 'Support',           items: supportItems }] : []),
+                ];
+            }
             default: return [{ title: 'Main', items: [{ label: 'Dashboard', icon: <FiHome />, path: '/dashboard' }] }];
         }
     };
@@ -338,7 +357,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     {user && (
                                         <div className="flex items-center gap-1.5 mt-0.5">
                                             <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                                            <p className="text-[11px] text-gray-400 dark:text-[#64748B] whitespace-nowrap font-medium">{role.replace(/_/g, ' ')}</p>
+                                            <p className="text-[11px] text-gray-400 dark:text-[#64748B] whitespace-nowrap font-medium">{user ? getDisplayRole(user) : role.replace(/_/g, ' ')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -681,7 +700,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={"text-sm font-medium " + (isSelected ? "text-primary dark:text-indigo-400" : "text-gray-700 dark:text-[#CBD5E1]")}>{u.firstName} {u.lastName}</p>
-                                                    <p className="text-xs text-gray-400 dark:text-[#64748B] truncate">{u.email} · {u.role}</p>
+                                                    <p className="text-xs text-gray-400 dark:text-[#64748B] truncate">{u.email} · {getDisplayRole(u)}</p>
                                                 </div>
                                                 <span className={"text-xs px-2 py-0.5 rounded-full flex-shrink-0 " + (u.status === "ACTIVE" ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-gray-100 dark:bg-[#334155] text-gray-500 dark:text-[#94A3B8]")}>{u.status}</span>
                                             </button>
