@@ -470,7 +470,7 @@ function NotificationsContent() {
 
                             <div className="flex items-center gap-1 flex-shrink-0">
                               {activeTab === 'mine' && isUnread && (
-                                <button onClick={() => markAsReadMutation.mutate(notification.id)} disabled={markAsReadMutation.isPending} className="p-1.5 rounded-lg text-gray-400 dark:text-[#64748B] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all" title="Mark as read">
+                                <button onClick={() => markAsReadMutation.mutate(notification.id)} disabled={markAsReadMutation.isPending} className="p-1.5 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-200 hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-500/20 dark:hover:text-blue-400 transition-all disabled:opacity-50" title="Mark as read">
                                   <FiCheck className="w-4 h-4" />
                                 </button>
                               )}
