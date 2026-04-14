@@ -207,7 +207,7 @@ export default function RefundDetailPage() {
           )}
 
           {/* Admin Actions */}
-          {canManage && (
+          {canManage && r.status !== 'PROCESSED' && r.status !== 'REJECTED' && (
             <div className={cardCls}>
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-5">Actions</h2>
               <div className="space-y-4">
