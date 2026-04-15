@@ -79,14 +79,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Token is already stored in memory by refreshAccessToken()
 
-          // If user is already in zustand persist, reuse it
-          const { user: currentUser } = get();
-          if (currentUser) {
-            set({ isAuthenticated: true, isLoading: false });
-            return;
-          }
-
-          // Otherwise fetch from backend
+          // Always fetch fresh user data so userRoles/permissions are current
           const user = await authService.getCurrentUser();
           const resolvedUser = user || authService.getUser();
 
