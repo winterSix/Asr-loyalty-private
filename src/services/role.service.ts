@@ -90,6 +90,12 @@ class RoleService {
     return unwrapResponse<Role[]>(response.data);
   }
 
+  // GET /roles/me/permissions — returns caller's own permissions, no special permission required
+  async getMyPermissions() {
+    const response = await apiClient.get<any>('/roles/user/me/permissions');
+    return unwrapResponse<Permission[]>(response.data);
+  }
+
   // GET /roles/user/:userId/permissions
   async getUserPermissions(userId: string) {
     const response = await apiClient.get<any>(`/roles/user/${userId}/permissions`);

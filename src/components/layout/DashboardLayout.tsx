@@ -179,10 +179,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         enabled: notifOpen && notifTab === 'all' && isAdmin, staleTime: 10000,
     });
 
-    // Fetch permissions for OTHERS role users — drives the permission-based sidebar
+    // Fetch permissions for OTHERS role users — drives the permission-based sidebar.
+    // Uses /roles/me/permissions (no user:read required) so the user can always read
+    // their own permissions regardless of what permissions they've been assigned.
     const { data: userPermissions } = useQuery({
         queryKey: ['user-permissions', user?.id],
-        queryFn:  () => roleService.getUserPermissions(user!.id),
+        queryFn:  () => roleService.getMyPermissions(),
         enabled: !authLoading && !!user?.id && role === 'OTHERS',
         staleTime: 300000,
     });
@@ -612,7 +614,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     <div className="hidden lg:flex items-center gap-1.5">
                                         <div>
                                             <p className="text-sm font-semibold text-gray-900 dark:text-[#F1F5F9] leading-tight">{user?.firstName} {user?.lastName}</p>
-                                            <p className="text-[11px] text-gray-400 dark:text-[#64748B] font-medium">{user ? role.replace(/_/g, ' ') : ''}</p>
+                                            <p className="text-[11px] text-gray-400 dark:text-[#64748B] font-medium">{user ? getDisplayRole(user) : ''}</p>
                                         </div>
                                         <FiChevronDown className={`w-4 h-4 text-gray-400 dark:text-[#64748B] transition-transform duration-200 ${userMenu ? 'rotate-180' : ''}`} />
                                     </div>
