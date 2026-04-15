@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/auth.store';
 import {
   FiUsers, FiShield, FiDollarSign, FiCreditCard,
   FiArrowRight, FiBarChart, FiGift, FiKey, FiLayers,
-  FiBookOpen, FiBell, FiWallet, FiFileText,
+  FiBell, FiWallet, FiFileText,
 } from '@/utils/icons';
 
 // Quick-link card config keyed by permission
@@ -76,8 +76,8 @@ export default function OthersDashboard() {
   const statCards = [
     has('user:read') && {
       label: 'Total Users',
-      value: userStats?.totalUsers ?? '—',
-      sub: userStats ? `+${userStats.newUsersThisMonth ?? 0} this month` : '',
+      value: userStats?.total ?? '—',
+      sub: userStats ? `+${userStats.recentSignups ?? 0} recent signups` : '',
       icon: FiUsers,
       color: 'text-teal-500',
       bg: 'bg-teal-50 dark:bg-teal-900/20',
@@ -117,7 +117,7 @@ export default function OthersDashboard() {
       <div className="bg-gradient-to-r from-primary/90 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
         <p className="text-sm font-medium opacity-80 mb-1">{roleName}</p>
         <h1 className="text-2xl font-bold">Welcome back, {displayName || 'Staff'}</h1>
-        <p className="text-sm opacity-70 mt-1">Here's a summary of what's within your access.</p>
+        <p className="text-sm opacity-70 mt-1">Here is a summary of what is within your access.</p>
       </div>
 
       {/* Stat cards — only visible when user has permission */}
