@@ -186,7 +186,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         queryKey: ['user-permissions', user?.id],
         queryFn:  () => roleService.getMyPermissions(),
         enabled: !authLoading && !!user?.id && role === 'OTHERS',
-        staleTime: 300000,
+        staleTime: 0,   // always treat as stale so permissions refresh on every login
+        gcTime: 0,      // don't cache between sessions
     });
     const permSet = new Set((userPermissions ?? []).map(p => `${p.resource}:${p.action}`));
 

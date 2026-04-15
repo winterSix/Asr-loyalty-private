@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,19 +37,30 @@ type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 export default function ForceChangePasswordPage() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, checkAuth, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const authInitedRef = useRef(false);
 
-  // Redirect to login if not authenticated
+  // Verify auth via the httpOnly refresh cookie (not in-memory token which is
+  // always empty after a hard navigation). checkAuth() will NOT redirect to
+  // force-change-password when we're already here, so no loop.
   useEffect(() => {
-    if (!authService.getAccessToken()) {
+    if (authInitedRef.current) return;
+    authInitedRef.current = true;
+    checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Only redirect to /login once the check resolves and the user is genuinely unauthenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const {
     register,
