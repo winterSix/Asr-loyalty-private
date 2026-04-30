@@ -385,26 +385,45 @@ export default function RewardConfigPage() {
             <div className="divide-y divide-gray-100">
               {configs.map((config: any) => {
                 const isActive = config.isActive;
+                const now = new Date();
+                const from = new Date(config.effectiveFrom);
+                const until = config.effectiveUntil ? new Date(config.effectiveUntil) : null;
+                const isCurrent = isActive && from <= now && (until === null || until >= now);
+                const isScheduled = isActive && from > now;
+                const isExpired = isActive && until !== null && until < now;
                 const multipliers = config.tierMultipliers || {};
 
                 return (
-                  <div key={config.id} className={`p-5 transition-colors ${isActive ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : 'hover:bg-gray-50/60 dark:hover:bg-gray-700/20'}`}>
+                  <div key={config.id} className={`p-5 transition-colors ${isCurrent ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : isScheduled ? 'bg-blue-50/20 dark:bg-blue-900/10' : 'hover:bg-gray-50/60 dark:hover:bg-gray-700/20'}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
-                          isActive
+                          isCurrent
                             ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
-                            : 'bg-gray-100 text-gray-500'
+                            : isScheduled
+                            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-500'
                         }`}>
                           v{config.version}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-semibold text-gray-900 dark:text-gray-100">Version {config.version}</p>
-                            {isActive && (
+                            {isCurrent && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                                <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
+                                <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Active
+                              </span>
+                            )}
+                            {isScheduled && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                                <span className="w-1 h-1 rounded-full bg-blue-500"></span>
+                                Scheduled
+                              </span>
+                            )}
+                            {isExpired && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 ring-1 ring-inset ring-gray-400/20">
+                                Expired
                               </span>
                             )}
                           </div>

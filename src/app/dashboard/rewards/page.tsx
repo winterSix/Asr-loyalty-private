@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -443,11 +444,11 @@ function AdminRewardsView() {
                         <td className="py-4 px-5">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
-                              {u.firstName?.[0]}{u.lastName?.[0]}
+                              {toTitleCase(u.firstName)?.[0]}{toTitleCase(u.lastName)?.[0]}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900 dark:text-[#F1F5F9] whitespace-nowrap">
-                                {u.firstName} {u.lastName}
+                                {toTitleCase(u.firstName)} {toTitleCase(u.lastName)}
                               </p>
                               <p className="text-xs text-gray-500 whitespace-nowrap">{u.email || u.phoneNumber}</p>
                             </div>

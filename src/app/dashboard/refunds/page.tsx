@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -214,11 +215,11 @@ export default function RefundsPage() {
                             {refund.user ? (
                               <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary-light rounded-full flex items-center justify-center text-white font-semibold text-xs shadow-sm">
-                                  {refund.user.firstName?.[0]}{refund.user.lastName?.[0]}
+                                  {toTitleCase(refund.user.firstName)?.[0]}{toTitleCase(refund.user.lastName)?.[0]}
                                 </div>
                                 <div>
                                   <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm group-hover:text-primary transition-colors">
-                                    {refund.user.firstName} {refund.user.lastName}
+                                    {toTitleCase(refund.user.firstName)} {toTitleCase(refund.user.lastName)}
                                   </p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">{refund.user.email}</p>
                                 </div>

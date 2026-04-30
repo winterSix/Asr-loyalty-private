@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -303,11 +304,11 @@ export default function TransactionDetailPage() {
                   </div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                      {transaction.user.firstName?.[0]}{transaction.user.lastName?.[0]}
+                      {toTitleCase(transaction.user.firstName)?.[0]}{toTitleCase(transaction.user.lastName)?.[0]}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {transaction.user.firstName} {transaction.user.lastName}
+                        {toTitleCase(transaction.user.firstName)} {toTitleCase(transaction.user.lastName)}
                       </p>
                       <p className="text-xs text-gray-500">{transaction.user.email}</p>
                     </div>

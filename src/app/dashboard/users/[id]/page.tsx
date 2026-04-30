@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -248,7 +249,7 @@ export default function UserDetailPage() {
                   <div>
                     <label className="text-sm font-semibold text-gray-500">Full Name</label>
                     <p className="text-gray-900 mt-1 font-medium">
-                      {userData.firstName} {userData.lastName}
+                      {toTitleCase(userData.firstName)} {toTitleCase(userData.lastName)}
                     </p>
                   </div>
                   <div>
@@ -604,8 +605,8 @@ export default function UserDetailPage() {
                     statusAction === 'SUSPENDED' ? 'text-red-700' : 'text-green-700'
                   }`}>
                     {statusAction === 'SUSPENDED'
-                      ? `Are you sure you want to suspend ${userData?.firstName} ${userData?.lastName}? They will lose access to their account.`
-                      : `Are you sure you want to reactivate ${userData?.firstName} ${userData?.lastName}'s account?`
+                      ? `Are you sure you want to suspend ${toTitleCase(userData?.firstName)} ${toTitleCase(userData?.lastName)}? They will lose access to their account.`
+                      : `Are you sure you want to reactivate ${toTitleCase(userData?.firstName)} ${toTitleCase(userData?.lastName)}'s account?`
                     }
                   </p>
                 </div>
@@ -671,8 +672,8 @@ export default function UserDetailPage() {
                   <FiAlertTriangle className={`w-5 h-5 mt-0.5 ${freezeAction === 'freeze' ? 'text-blue-500' : 'text-green-500'}`} />
                   <p className={`text-sm ${freezeAction === 'freeze' ? 'text-blue-700' : 'text-green-700'}`}>
                     {freezeAction === 'freeze'
-                      ? `This will freeze ${userData?.firstName}'s ${freezeWalletType} wallet. They will not be able to use it until unfrozen.`
-                      : `This will restore ${userData?.firstName}'s ${freezeWalletType} wallet to active status.`}
+                      ? `This will freeze ${toTitleCase(userData?.firstName)}'s ${freezeWalletType} wallet. They will not be able to use it until unfrozen.`
+                      : `This will restore ${toTitleCase(userData?.firstName)}'s ${freezeWalletType} wallet to active status.`}
                   </p>
                 </div>
               </div>
@@ -734,7 +735,7 @@ export default function UserDetailPage() {
                 <div className="flex items-start gap-3">
                   <FiShield className="w-5 h-5 mt-0.5 text-indigo-500" />
                   <p className="text-sm text-indigo-700">
-                    Changing the role for <strong>{userData?.firstName} {userData?.lastName}</strong>.
+                    Changing the role for <strong>{toTitleCase(userData?.firstName)} {toTitleCase(userData?.lastName)}</strong>.
                     Current role: <strong>{userData ? getDisplayRole(userData) : ''}</strong>
                   </p>
                 </div>
