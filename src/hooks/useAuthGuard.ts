@@ -50,23 +50,25 @@ export function useAuthGuard() {
     }
   }, [user, isAuthenticated, checkAuth]);
 
-  // Handle redirects after auth check completes
-  // Only redirect if we're absolutely sure the user is not authenticated
+  // Handle redirects after auth check completes.
+  // Wait for both the store's loading flag AND client hydration before redirecting
+  // so we never send an authenticated user to /login due to a rehydration race.
   useEffect(() => {
-    // Don't redirect if we're still loading or already redirecting
-    if (isLoading || redirectingRef.current) return;
-    
-    // Check if we have a token or stored user
+    if (isLoading || !hydrated || redirectingRef.current) return;
+
     const hasToken = authService.isAuthenticated();
     const storedUser = authService.getUser();
-    
-    // Only redirect if we have NO token, NO stored user, and state says not authenticated
+
     if (!isAuthenticated && !hasToken && !storedUser && !user) {
       redirectingRef.current = true;
       router.push('/login');
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router, hydrated]);
 
-  return { user, isAuthenticated, isLoading: isLoading || !hydrated };
+  // Do NOT include !hydrated in isLoading here. Zustand rehydrates synchronously
+  // from localStorage, so user/isAuthenticated are already correct by first render.
+  // Including !hydrated causes every page navigation to show a full-page spinner
+  // for one render cycle before queries can even start — that's the slug feeling.
+  return { user, isAuthenticated, isLoading };
 }
 
