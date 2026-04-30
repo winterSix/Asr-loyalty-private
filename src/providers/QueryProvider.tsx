@@ -11,7 +11,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           queries: {
             refetchOnWindowFocus: false,
             retry: 1,
-            staleTime: 30000, // 30 seconds — prevents refetch on every navigation
+            // 60s: data is fresh for a full minute, so navigating back to a page
+            // never triggers a duplicate network request. Time-sensitive queries
+            // (e.g. wallet balance) can override this per-call with staleTime: 0.
+            staleTime: 60_000,
           },
         },
       })

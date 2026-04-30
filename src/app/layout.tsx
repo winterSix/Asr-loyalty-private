@@ -21,6 +21,12 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'ASR Loyalty',
   description: 'Digital Wallet & Loyalty Platform',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ASR Loyalty',
+  },
 };
 
 export default function RootLayout({
