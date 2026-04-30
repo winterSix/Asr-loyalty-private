@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import './globals.css';
 
 const Toaster = dynamic(
@@ -40,6 +41,7 @@ export default function RootLayout({
         <ThemeProvider>
           <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
             <QueryProvider>
+              <ServiceWorkerRegistration />
               <MaintenanceBanner />
               {children}
               <Toaster position="top-right" />
