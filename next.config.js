@@ -1,4 +1,48 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  // Cache navigation so sidebar switches are instant on repeat visits
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  // Reload automatically when network comes back online
+  reloadOnOnline: true,
+  // Service worker disabled in dev — avoids caching stale code during development
+  disable: process.env.NODE_ENV === 'development',
+  // Never cache API calls — React Query owns that layer
+  buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      // Skip service-worker caching for all backend API traffic
+      urlPattern: /^\/api\//,
+      handler: 'NetworkOnly',
+    },
+    {
+      // External API (direct calls to Render backend)
+      urlPattern: /asr-loyalty-api/,
+      handler: 'NetworkOnly',
+    },
+    {
+      // Static assets — serve from cache immediately, revalidate in background
+      urlPattern: /\/_next\/static\/.*/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'next-static',
+        expiration: { maxAgeSeconds: 30 * 24 * 60 * 60 },
+      },
+    },
+    {
+      // Page navigations — try network first, fall back to cache when offline
+      urlPattern: /^https?.*/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        networkTimeoutSeconds: 10,
+        expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 },
+      },
+    },
+  ],
+});
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.API_URL ||
@@ -77,4 +121,4 @@ const nextConfig = {
   transpilePackages: ["react-icons"],
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);
