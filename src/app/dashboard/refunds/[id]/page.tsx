@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -190,11 +191,11 @@ export default function RefundDetailPage() {
               {cashier ? (
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {cashier.firstName?.[0]}{cashier.lastName?.[0]}
+                    {toTitleCase(cashier.firstName)?.[0]}{toTitleCase(cashier.lastName)?.[0]}
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      {cashier.firstName} {cashier.lastName}
+                      {toTitleCase(cashier.firstName)} {toTitleCase(cashier.lastName)}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{cashier.email}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Processed the QR payment</p>
@@ -332,10 +333,10 @@ export default function RefundDetailPage() {
               <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Customer</h3>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {r.user.firstName?.[0]}{r.user.lastName?.[0]}
+                  {toTitleCase(r.user.firstName)?.[0]}{toTitleCase(r.user.lastName)?.[0]}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{r.user.firstName} {r.user.lastName}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{toTitleCase(r.user.firstName)} {toTitleCase(r.user.lastName)}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{r.user.email}</p>
                 </div>
               </div>

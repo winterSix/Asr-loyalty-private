@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -129,8 +130,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        firstName: toTitleCase(user.firstName),
+        lastName: toTitleCase(user.lastName),
         email: user.email || '',
       });
     }
@@ -275,14 +276,14 @@ export default function ProfilePage() {
                   <button
                     onClick={() => {
                       setIsEditing(false);
-                      setFormData({ firstName: user?.firstName || '', lastName: user?.lastName || '', email: user?.email || '' });
+                      setFormData({ firstName: toTitleCase(user?.firstName), lastName: toTitleCase(user?.lastName), email: user?.email || '' });
                     }}
                     className="h-9 px-3 rounded-lg bg-white/80 text-gray-600 text-xs font-semibold flex items-center gap-1 transition-all hover:bg-white"
                   >
                     <FiX className="w-3.5 h-3.5" /> Cancel
                   </button>
                   <button
-                    onClick={() => updateProfileMutation.mutate(formData)}
+                    onClick={() => updateProfileMutation.mutate({ ...formData, firstName: toTitleCase(formData.firstName), lastName: toTitleCase(formData.lastName) })}
                     disabled={updateProfileMutation.isPending}
                     className="h-9 px-4 rounded-lg bg-white text-primary text-xs font-bold shadow-sm hover:shadow-md flex items-center gap-1.5 transition-all disabled:opacity-50"
                   >
@@ -300,7 +301,7 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className="relative shrink-0">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-lighter flex items-center justify-center text-white text-2xl sm:text-3xl font-bold ring-[3px] ring-white shadow-lg">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {toTitleCase(user?.firstName)?.[0]}{toTitleCase(user?.lastName)?.[0]}
                 </div>
                 {isCustomerRole && (
                   <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-md ${tierConfig.accent} ring-2 ring-white flex items-center justify-center`}>
@@ -312,7 +313,7 @@ export default function ProfilePage() {
               {/* Name & Meta */}
               <div className="flex-1 min-w-0 sm:pb-0.5">
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#E5B887] truncate leading-tight">
-                  {user?.firstName} {user?.lastName}
+                  {toTitleCase(user?.firstName)} {toTitleCase(user?.lastName)}
                 </h1>
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                   {isCustomerRole && (
@@ -432,7 +433,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="h-11 px-3.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center">
-                          <span className="text-sm font-medium text-gray-900">{user?.firstName || '\u2014'}</span>
+                          <span className="text-sm font-medium text-gray-900">{toTitleCase(user?.firstName) || '\u2014'}</span>
                         </div>
                       )}
                     </div>
@@ -450,7 +451,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="h-11 px-3.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center">
-                          <span className="text-sm font-medium text-gray-900">{user?.lastName || '\u2014'}</span>
+                          <span className="text-sm font-medium text-gray-900">{toTitleCase(user?.lastName) || '\u2014'}</span>
                         </div>
                       )}
                     </div>

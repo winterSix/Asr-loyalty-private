@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -254,7 +255,7 @@ function NotificationsContent() {
       const uid = uniqueUserIds[i];
       if (uid && q.data) {
         const u = q.data as any;
-        map[uid] = { name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email || uid, email: u.email || '' };
+        map[uid] = { name: [toTitleCase(u.firstName), toTitleCase(u.lastName)].filter(Boolean).join(' ') || u.email || uid, email: u.email || '' };
       }
     });
     return map;
@@ -566,17 +567,17 @@ function NotificationsContent() {
                       {userSearchResults.length > 0 ? userSearchResults.map((u) => (
                         <button key={u.id} type="button"
                           onClick={() => {
-                            setSelectedUser({ id: u.id, name: `${u.firstName} ${u.lastName}`, email: u.email });
+                            setSelectedUser({ id: u.id, name: `${toTitleCase(u.firstName)} ${toTitleCase(u.lastName)}`, email: u.email });
                             setSendForm((f) => ({ ...f, userId: u.id }));
                             setShowUserDropdown(false);
                             setUserSearch('');
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#2D3F55] transition-colors text-left">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
-                            {u.firstName?.[0]}{u.lastName?.[0]}
+                            {toTitleCase(u.firstName)?.[0]}{toTitleCase(u.lastName)?.[0]}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 dark:text-[#F1F5F9] truncate">{u.firstName} {u.lastName}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-[#F1F5F9] truncate">{toTitleCase(u.firstName)} {toTitleCase(u.lastName)}</p>
                             <p className="text-xs text-gray-500 dark:text-[#64748B] truncate">{u.email} · {getDisplayRole(u)}</p>
                           </div>
                         </button>

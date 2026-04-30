@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
@@ -14,7 +15,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { adminService, getDisplayRole } from '@/services/admin.service';
 import { roleService } from '@/services/role.service';
 
@@ -24,6 +25,24 @@ interface Tip { label: string; top: number; left: number; }
 
 const W  = 240;
 const WC = 72;
+
+const NAV_SHORTCUTS = [
+    { label: 'Dashboard',       path: '/dashboard',                  icon: 'home' },
+    { label: 'Users',           path: '/dashboard/users',            icon: 'users' },
+    { label: 'Transactions',    path: '/dashboard/transactions',     icon: 'credit' },
+    { label: 'Wallets',         path: '/dashboard/wallets',          icon: 'wallet' },
+    { label: 'Reports',         path: '/dashboard/reports',          icon: 'chart' },
+    { label: 'Disputes',        path: '/dashboard/disputes',         icon: 'shield' },
+    { label: 'Refunds',         path: '/dashboard/refunds',          icon: 'dollar' },
+    { label: 'Rewards',         path: '/dashboard/rewards',          icon: 'gift' },
+    { label: 'Audit Logs',      path: '/dashboard/audit',            icon: 'file' },
+    { label: 'Settings',        path: '/dashboard/settings',         icon: 'settings' },
+    { label: 'Notifications',   path: '/dashboard/notifications',    icon: 'bell' },
+    { label: 'Roles',           path: '/dashboard/roles',            icon: 'layers' },
+    { label: 'Permissions',     path: '/dashboard/permissions',      icon: 'key' },
+    { label: 'Profile',         path: '/dashboard/profile',          icon: 'user' },
+    { label: 'Legal Docs',      path: '/dashboard/legal',            icon: 'file' },
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [mobileOpen,    setMobileOpen]    = useState(false);
@@ -69,25 +88,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, []);
 
     useEffect(() => { setMounted(true); }, []);
-    // ── Global Search ──────────────────────────────────────────────
-    const NAV_SHORTCUTS = [
-        { label: 'Dashboard',       path: '/dashboard',                  icon: 'home' },
-        { label: 'Users',           path: '/dashboard/users',            icon: 'users' },
-        { label: 'Transactions',    path: '/dashboard/transactions',     icon: 'credit' },
-        { label: 'Wallets',         path: '/dashboard/wallets',          icon: 'wallet' },
-        { label: 'Reports',         path: '/dashboard/reports',          icon: 'chart' },
-        { label: 'Disputes',        path: '/dashboard/disputes',         icon: 'shield' },
-        { label: 'Refunds',         path: '/dashboard/refunds',          icon: 'dollar' },
-        { label: 'Rewards',         path: '/dashboard/rewards',          icon: 'gift' },
-        { label: 'Audit Logs',      path: '/dashboard/audit',            icon: 'file' },
-        { label: 'Settings',        path: '/dashboard/settings',         icon: 'settings' },
-        { label: 'Notifications',   path: '/dashboard/notifications',    icon: 'bell' },
-        { label: 'Roles',           path: '/dashboard/roles',            icon: 'layers' },
-        { label: 'Permissions',     path: '/dashboard/permissions',      icon: 'key' },
-        { label: 'Profile',         path: '/dashboard/profile',          icon: 'user' },
-        { label: 'Legal Docs',      path: '/dashboard/legal',            icon: 'file' },
-    ];
-
     // Ctrl+K / Cmd+K to open search
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -125,9 +125,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => clearTimeout(t);
     }, [searchQuery]);
 
-    const filteredShortcuts = searchQuery.trim()
-        ? NAV_SHORTCUTS.filter(s => s.label.toLowerCase().includes(searchQuery.toLowerCase()))
-        : NAV_SHORTCUTS;
+    const filteredShortcuts = useMemo(
+        () => searchQuery.trim()
+            ? NAV_SHORTCUTS.filter(s => s.label.toLowerCase().includes(searchQuery.toLowerCase()))
+            : NAV_SHORTCUTS,
+        [searchQuery],
+    );
 
     const handleSearchNavigate = (path: string) => {
         router.push(path);
@@ -135,10 +138,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setSearchQuery('');
     };
 
-    const allSearchItems = [
+    const allSearchItems = useMemo(() => [
         ...filteredShortcuts.map(s => ({ type: 'nav', ...s })),
         ...searchResults.map(u => ({ type: 'user', label: `${u.firstName} ${u.lastName}`, sub: u.email, path: `/dashboard/users/${u.id}` })),
-    ];
+    ], [filteredShortcuts, searchResults]);
 
     const handleSearchKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') { e.preventDefault(); setSearchIndex(i => Math.min(i + 1, allSearchItems.length - 1)); }
@@ -186,10 +189,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         queryKey: ['user-permissions', user?.id],
         queryFn:  () => roleService.getMyPermissions(),
         enabled: !authLoading && !!user?.id && role === 'OTHERS',
-        staleTime: 0,   // always treat as stale so permissions refresh on every login
-        gcTime: 0,      // don't cache between sessions
+        staleTime: 5 * 60 * 1000,  // re-fetch every 5 min, not on every navigation
+        gcTime: 5 * 60 * 1000,
     });
-    const permSet = new Set((userPermissions ?? []).map(p => `${p.resource}:${p.action}`));
+    const permSet = useMemo(
+        () => new Set((userPermissions ?? []).map(p => `${p.resource}:${p.action}`)),
+        [userPermissions],
+    );
 
     // Close menus on outside click
     useEffect(() => {
@@ -250,7 +256,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, []);
     const hideTip = useCallback(() => setTip(null), []);
 
-    const getSections = (): NavSection[] => {
+    const sections = useMemo((): NavSection[] => {
         switch (role) {
             case 'CUSTOMER': return [
                 { title: 'Main', items: [
@@ -328,14 +334,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             }
             default: return [{ title: 'Main', items: [{ label: 'Dashboard', icon: <FiHome />, path: '/dashboard' }] }];
         }
-    };
-
-    const sections   = getSections();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [role, permSet, dCount, rCount]);
     const allItems   = sections.flatMap(s => s.items);
     const isActive   = (p: string) => !pathname ? false : p === '/dashboard' ? pathname === '/dashboard' : pathname === p || pathname.startsWith(p + '/');
     const pageLabel  = allItems.find(i => isActive(i.path))?.label || 'Dashboard';
     const isColl     = collapsed && !mobileOpen;
-    const initials   = () => ((user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')).toUpperCase() || 'U';
+    const initials   = () => ((toTitleCase(user?.firstName)[0] || '') + (toTitleCase(user?.lastName)[0] || '')) || 'U';
 
     const ThemeIcon = () => {
         if (!mounted)            return <FiSun     className="w-[18px] h-[18px] text-gray-400" />;
@@ -614,7 +619,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     </div>
                                     <div className="hidden lg:flex items-center gap-1.5">
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-[#F1F5F9] leading-tight">{user?.firstName} {user?.lastName}</p>
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-[#F1F5F9] leading-tight">{toTitleCase(user?.firstName)} {toTitleCase(user?.lastName)}</p>
                                             <p className="text-[11px] text-gray-400 dark:text-[#64748B] font-medium">{user ? getDisplayRole(user) : ''}</p>
                                         </div>
                                         <FiChevronDown className={`w-4 h-4 text-gray-400 dark:text-[#64748B] transition-transform duration-200 ${userMenu ? 'rotate-180' : ''}`} />
@@ -624,7 +629,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 {userMenu && (
                                     <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#263349] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 py-2 z-[36] animate-slide-down overflow-hidden">
                                         <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                                            <p className="text-sm font-bold text-gray-900 dark:text-[#F1F5F9]">{user?.firstName} {user?.lastName}</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-[#F1F5F9]">{toTitleCase(user?.firstName)} {toTitleCase(user?.lastName)}</p>
                                             <p className="text-xs text-gray-400 dark:text-[#94A3B8] truncate mt-0.5">{user?.email}</p>
                                         </div>
                                         <div className="py-1">
@@ -720,10 +725,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 onMouseEnter={() => setSearchIndex(globalIdx)}
                                                 className={"w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors " + (isSelected ? "bg-primary/10 dark:bg-indigo-500/20" : "hover:bg-gray-50 dark:hover:bg-[#263349]")}>
                                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
-                                                    {u.firstName?.[0]}{u.lastName?.[0]}
+                                                    {toTitleCase(u.firstName)?.[0]}{toTitleCase(u.lastName)?.[0]}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className={"text-sm font-medium " + (isSelected ? "text-primary dark:text-indigo-400" : "text-gray-700 dark:text-[#CBD5E1]")}>{u.firstName} {u.lastName}</p>
+                                                    <p className={"text-sm font-medium " + (isSelected ? "text-primary dark:text-indigo-400" : "text-gray-700 dark:text-[#CBD5E1]")}>{toTitleCase(u.firstName)} {toTitleCase(u.lastName)}</p>
                                                     <p className="text-xs text-gray-400 dark:text-[#64748B] truncate">{u.email} · {getDisplayRole(u)}</p>
                                                 </div>
                                                 <span className={"text-xs px-2 py-0.5 rounded-full flex-shrink-0 " + (u.status === "ACTIVE" ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-gray-100 dark:bg-[#334155] text-gray-500 dark:text-[#94A3B8]")}>{u.status}</span>

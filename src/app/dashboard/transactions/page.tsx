@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -361,7 +362,7 @@ export default function TransactionsPage() {
                                 className="text-left hover:text-primary transition-colors"
                               >
                                 <p className="font-semibold text-gray-900 text-sm whitespace-nowrap">
-                                  {tx.user.firstName} {tx.user.lastName}
+                                  {toTitleCase(tx.user.firstName)} {toTitleCase(tx.user.lastName)}
                                 </p>
                                 <p className="text-xs text-gray-400 whitespace-nowrap">{tx.user.phoneNumber || tx.user.email}</p>
                               </button>

@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -119,7 +120,7 @@ export default function UsersPage() {
       setCreatedCredentials({
         email: result.cashier.email,
         temporaryPassword: result.cashier.temporaryPassword,
-        name: `${result.cashier.firstName} ${result.cashier.lastName}`,
+        name: `${toTitleCase(result.cashier.firstName)} ${toTitleCase(result.cashier.lastName)}`,
         role: displayRole,
       });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
@@ -297,11 +298,11 @@ export default function UsersPage() {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                              {u.firstName?.[0]}{u.lastName?.[0]}
+                              {toTitleCase(u.firstName)?.[0]}{toTitleCase(u.lastName)?.[0]}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900 whitespace-nowrap">
-                                {u.firstName} {u.lastName}
+                                {toTitleCase(u.firstName)} {toTitleCase(u.lastName)}
                               </p>
                               <p className="text-xs text-gray-500 font-mono">
                                 {u.id.substring(0, 8)}...

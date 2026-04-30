@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -193,12 +194,12 @@ export default function AuditDetailPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <span className="text-primary font-bold text-sm">
-                            {auditLog.performer.firstName?.[0]}{auditLog.performer.lastName?.[0]}
+                            {toTitleCase(auditLog.performer.firstName)?.[0]}{toTitleCase(auditLog.performer.lastName)?.[0]}
                           </span>
                         </div>
                         <div>
                           <p className="text-gray-900 font-semibold">
-                            {auditLog.performer.firstName} {auditLog.performer.lastName}
+                            {toTitleCase(auditLog.performer.firstName)} {toTitleCase(auditLog.performer.lastName)}
                           </p>
                           <p className="text-gray-500 text-sm">{auditLog.performer.email}</p>
                         </div>
@@ -219,12 +220,12 @@ export default function AuditDetailPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
                           <span className="text-gray-600 font-bold text-sm">
-                            {auditLog.user.firstName?.[0]}{auditLog.user.lastName?.[0]}
+                            {toTitleCase(auditLog.user.firstName)?.[0]}{toTitleCase(auditLog.user.lastName)?.[0]}
                           </span>
                         </div>
                         <div>
                           <p className="text-gray-900 font-semibold">
-                            {auditLog.user.firstName} {auditLog.user.lastName}
+                            {toTitleCase(auditLog.user.firstName)} {toTitleCase(auditLog.user.lastName)}
                           </p>
                           <p className="text-gray-500 text-sm">{auditLog.user.email}</p>
                         </div>

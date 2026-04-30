@@ -1,5 +1,6 @@
 'use client';
 
+import { toTitleCase } from '@/utils/format';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
@@ -128,7 +129,7 @@ export default function AuditLogsPage() {
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-700 whitespace-nowrap">
                         {log.performer
-                          ? `${log.performer.firstName} ${log.performer.lastName}`
+                          ? `${toTitleCase(log.performer.firstName)} ${toTitleCase(log.performer.lastName)}`
                           : log.performerFullName || 'System'}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-500 font-mono whitespace-nowrap">
