@@ -56,23 +56,25 @@ export default function CustomSelect({
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1.5 min-w-full bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/80 z-50 overflow-hidden">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                value === option.value
-                  ? 'bg-primary/10 text-primary font-semibold'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+          <div className="max-h-60 overflow-y-auto">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                  value === option.value
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
