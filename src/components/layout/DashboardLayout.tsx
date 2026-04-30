@@ -13,6 +13,7 @@ import {
     FiSettings, FiShield, FiStar, FiSun, FiUser, FiUsers, FiWallet, FiX,
 } from '@/utils/icons';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -405,7 +406,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Nav */}
                     <nav ref={navRef} className="flex-1 overflow-y-auto overflow-x-hidden py-5 sidebar-scrollbar">
-                        {!user ? (
+                        {authLoading && !user ? (
                             <div className="space-y-2 px-3">
                                 {[...Array(6)].map((_, i) => <div key={i} className="h-9 bg-gray-100 dark:bg-[#334155] rounded-xl animate-pulse" />)}
                             </div>
@@ -426,9 +427,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 const active = isActive(item.path);
                                                 return (
                                                     <li key={item.path}>
-                                                        <button
-                                                            onClick={() => { router.push(item.path); setMobileOpen(false); }}
-                                                            onMouseEnter={e => isColl && showTip(e, item.label)}
+                                                        <Link
+                                                            href={item.path}
+                                                            onClick={() => setMobileOpen(false)}
+                                                            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => isColl && showTip(e as any, item.label)}
                                                             onMouseLeave={hideTip}
                                                             className={`
                                                                 w-full flex items-center rounded-xl transition-all duration-150 relative
@@ -460,7 +462,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                             {item.badge !== undefined && item.badge > 0 && isColl && (
                                                                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-500/40" />
                                                             )}
-                                                        </button>
+                                                        </Link>
                                                     </li>
                                                 );
                                             })}
@@ -638,11 +640,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 { label: 'Notifications', Icon: FiBell,     path: '/dashboard/notifications' },
                                                 { label: 'Settings',      Icon: FiSettings, path: '/dashboard/settings' },
                                             ]).map(({ label, Icon, path }) => (
-                                                <button key={path}
-                                                    onClick={() => { router.push(path); setUserMenu(false); }}
+                                                <Link key={path}
+                                                    href={path}
+                                                    onClick={() => setUserMenu(false)}
                                                     className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#2D3F55] hover:text-gray-900 dark:hover:text-[#F1F5F9] transition-colors">
                                                     <Icon className="w-4 h-4" /> {label}
-                                                </button>
+                                                </Link>
                                             ))}
                                         </div>
                                         <div className="border-t border-gray-100 dark:border-white/10 pt-1">
