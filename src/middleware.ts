@@ -3,6 +3,12 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken');
+  // The accessToken cookie expires after 15 minutes but the refreshToken lasts 30 days.
+  // Treat the user as authenticated if either cookie is present — the axios 401 interceptor
+  // silently refreshes the access token on the next API call, so the middleware must not
+  // redirect to login just because the short-lived accessToken cookie expired.
+  const refreshToken = request.cookies.get('refreshToken');
+  const isLoggedIn = !!accessToken || !!refreshToken;
   const userRole = request.cookies.get('userRole')?.value;
   const { pathname } = request.nextUrl;
 
@@ -28,18 +34,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !accessToken) {
+  // Redirect to login only when both tokens are absent (truly unauthenticated)
+  if (isProtectedRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Block non-admin users from admin routes — redirect to dashboard
-  if (isAdminRoute && accessToken && userRole && !adminRoles.includes(userRole)) {
+  if (isAdminRoute && isLoggedIn && userRole && !adminRoles.includes(userRole)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Redirect to dashboard if accessing auth route with token
-  if (isAuthRoute && accessToken) {
+  // Redirect to dashboard if accessing auth route while still authenticated
+  if (isAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
