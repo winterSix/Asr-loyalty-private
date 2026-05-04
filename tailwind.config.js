@@ -53,7 +53,6 @@ module.exports = {
         '3xl': '24px',
       },
       animation: {
-        'nav-progress': 'navProgress 1.2s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
         'float-slow': 'float 8s ease-in-out infinite',
         'float-delayed': 'float 6s ease-in-out infinite 2s',
@@ -136,10 +135,6 @@ module.exports = {
         morph: {
           '0%, 100%': { borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' },
           '50%': { borderRadius: '30% 60% 70% 40% / 50% 60% 30% 60%' },
-        },
-        navProgress: {
-          '0%':   { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(350%)' },
         },
       },
       boxShadow: {
