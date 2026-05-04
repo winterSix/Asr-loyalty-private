@@ -2,6 +2,7 @@
 
 import { toTitleCase } from '@/utils/format';
 import { useAuthStore } from '@/store/auth.store';
+import { refreshAccessToken } from '@/config/api';
 import { useQuery } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
 import { refundService } from '@/services/refund.service';
@@ -88,6 +89,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, []);
 
     useEffect(() => { setMounted(true); }, []);
+
+    // Keep the accessToken cookie alive while the user is on the dashboard.
+    // The cookie expires after 15 minutes; refreshing every 13 minutes ensures
+    // the middleware always sees a valid cookie and never bounces navigation to /login.
+    useEffect(() => {
+        const id = setInterval(() => { refreshAccessToken(); }, 13 * 60 * 1000);
+        const onVisible = () => { if (document.visibilityState === 'visible') refreshAccessToken(); };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible); };
+    }, []);
+
     // Ctrl+K / Cmd+K to open search
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
