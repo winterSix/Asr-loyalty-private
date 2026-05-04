@@ -54,7 +54,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [suspended,     setSuspended]     = useState(false);
     const [loggingOut,    setLoggingOut]    = useState(false);
     const [mounted,       setMounted]       = useState(false);
-    const [navigating,    setNavigating]    = useState(false);
     const [searchOpen,    setSearchOpen]    = useState(false);
     const [searchQuery,   setSearchQuery]   = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -76,8 +75,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const userMenuRef   = useRef<HTMLDivElement>(null);
     const themeRef      = useRef<HTMLDivElement>(null);
     const authInitedRef = useRef(false);
-    const navTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
     // Resolve auth on every dashboard page load. This is the single place that
     // calls checkAuth() for pages that use useAuthStore directly (not useAuthGuard).
     // Without this, isLoading stays true after rehydration and queries never fire.
@@ -136,8 +133,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
 
     const handleSearchNavigate = (path: string) => {
-        setNavigating(true);
-        navTimeoutRef.current = setTimeout(() => setNavigating(false), 5000);
         router.push(path);
         setSearchOpen(false);
         setSearchQuery('');
@@ -230,12 +225,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [mobileOpen]);
-
-    // Clear navigation indicator once the new pathname is active
-    useEffect(() => {
-        setNavigating(false);
-        clearTimeout(navTimeoutRef.current);
-    }, [pathname]);
 
     // Restore sidebar scroll
     useEffect(() => {
@@ -363,13 +352,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-[#0F172A] transition-colors duration-300">
 
-            {/* Navigation progress bar — shown while Next.js fetches a new route */}
-            {navigating && (
-                <div className="fixed top-0 left-0 right-0 z-[9999] h-[2px] overflow-hidden pointer-events-none">
-                    <div className="h-full w-1/2 animate-nav-progress" style={{ background: 'linear-gradient(90deg, transparent, #4361ee, #4895ef, #4361ee, transparent)' }} />
-                </div>
-            )}
-
             {/* Mobile backdrop */}
             {mobileOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
@@ -446,13 +428,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                     <li key={item.path}>
                                                         <Link
                                                             href={item.path}
-                                                            onClick={() => {
-                                                                setMobileOpen(false);
-                                                                if (!isActive(item.path)) {
-                                                                    setNavigating(true);
-                                                                    navTimeoutRef.current = setTimeout(() => setNavigating(false), 5000);
-                                                                }
-                                                            }}
+                                                            onClick={() => setMobileOpen(false)}
                                                             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => isColl && showTip(e as any, item.label)}
                                                             onMouseLeave={hideTip}
                                                             className={`
@@ -665,13 +641,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             ]).map(({ label, Icon, path }) => (
                                                 <Link key={path}
                                                     href={path}
-                                                    onClick={() => {
-                                                        setUserMenu(false);
-                                                        if (pathname !== path) {
-                                                            setNavigating(true);
-                                                            navTimeoutRef.current = setTimeout(() => setNavigating(false), 5000);
-                                                        }
-                                                    }}
+                                                    onClick={() => setUserMenu(false)}
                                                     className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm text-gray-600 dark:text-[#CBD5E1] hover:bg-gray-50 dark:hover:bg-[#2D3F55] hover:text-gray-900 dark:hover:text-[#F1F5F9] transition-colors">
                                                     <Icon className="w-4 h-4" /> {label}
                                                 </Link>
