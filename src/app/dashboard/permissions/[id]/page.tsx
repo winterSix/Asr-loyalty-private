@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
 import { permissionService } from '@/services/permission.service';
 import {
@@ -14,6 +15,8 @@ import {
 
 export default function PermissionDetailPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canReadPermissions = hasPermission('permission:read', 'permission:manage');
   const router = useRouter();
   const params = useParams();
   const permissionId = params?.id as string;
@@ -21,7 +24,7 @@ export default function PermissionDetailPage() {
   const { data: permission, isLoading: permissionLoading } = useQuery({
     queryKey: ['permission', permissionId],
     queryFn: () => permissionService.getPermission(permissionId),
-    enabled: !!permissionId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!permissionId && !!user && canReadPermissions,
   });
 
   if (isLoading || permissionLoading) {
