@@ -64,8 +64,6 @@ export default function TransactionDetailPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SUCCESSFUL':

@@ -58,10 +58,9 @@ export default function UsersPage() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const { hasPermission, isAdmin, isSuperAdmin } = usePermissions();
+  const { hasPermission, isAdmin } = usePermissions();
   const canReadUsers   = hasPermission('user:read');
   const canCreateUsers = hasPermission('user:create', 'user:manage');
-  const canUpdateUsers = hasPermission('user:update', 'user:manage');
 
   // Debounce search input
   useEffect(() => {

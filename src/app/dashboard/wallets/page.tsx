@@ -106,7 +106,6 @@ export default function WalletsPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
   const users = usersData?.data || [];
   const total = usersData?.total || 0;
   const totalPages = Math.ceil(total / limit);

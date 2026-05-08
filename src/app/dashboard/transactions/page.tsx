@@ -91,7 +91,6 @@ export default function TransactionsPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
   const txLoading = isAdmin ? adminTxLoading : customerTxLoading;
   const txFetching = isAdmin ? adminTxFetching : customerTxFetching;
   const transactions = isAdmin ? (adminTxData?.data || []) : (customerTxData?.data || []);
