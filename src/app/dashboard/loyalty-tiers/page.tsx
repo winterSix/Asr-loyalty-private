@@ -78,6 +78,7 @@ export default function LoyaltyTiersPage() {
   const { hasPermission } = usePermissions();
   const canReadLoyalty   = hasPermission('loyalty:read');
   const canUpdateLoyalty = hasPermission('loyalty:update', 'loyalty:manage');
+  const canSeeRewards    = hasPermission('reward:read', 'reward:create', 'reward:update');
 
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({
     queryKey: ['loyalty-tier-configs'],
@@ -194,13 +195,15 @@ export default function LoyaltyTiersPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push('/dashboard/rewards')}
-              className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
-            >
-              <FiArrowLeft className="w-4 h-4" />
-              Back to Rewards
-            </button>
+            {canSeeRewards && (
+              <button
+                onClick={() => router.push('/dashboard/rewards')}
+                className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
+              >
+                <FiArrowLeft className="w-4 h-4" />
+                Back to Rewards
+              </button>
+            )}
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
