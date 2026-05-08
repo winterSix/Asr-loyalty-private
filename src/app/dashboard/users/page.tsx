@@ -61,6 +61,7 @@ export default function UsersPage() {
   const { hasPermission, isAdmin } = usePermissions();
   const canReadUsers   = hasPermission('user:read');
   const canCreateUsers = hasPermission('user:create', 'user:manage');
+  const canReadRoles   = hasPermission('role:read', 'role:manage');
 
   // Debounce search input
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function UsersPage() {
   const { data: rolesRaw } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !isLoading && !!user && isAdmin,
+    enabled: !isLoading && !!user && canReadRoles,
   });
 
   // Only custom (non-system) RBAC roles for the role selector
