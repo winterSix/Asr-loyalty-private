@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { loyaltyService } from '@/services/loyalty.service';
@@ -29,6 +30,8 @@ const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; t
 
 export default function EditTierPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission('loyalty:update', 'loyalty:manage');
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
@@ -131,7 +134,6 @@ export default function EditTierPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
   const style = tierMeta[tierName] || tierMeta.BRONZE;
 
   if (!tierConfig && !tierLoading) {
@@ -455,8 +457,9 @@ export default function EditTierPage() {
               {/* Save Button */}
               <button
                 type="submit"
-                disabled={updateMutation.isPending}
-                className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-50"
+                disabled={!canEdit || updateMutation.isPending}
+                title={!canEdit ? 'You do not have permission to edit tier configuration' : undefined}
+                className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateMutation.isPending ? (
                   <>

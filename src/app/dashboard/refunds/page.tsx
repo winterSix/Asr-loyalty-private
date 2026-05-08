@@ -42,10 +42,8 @@ export default function RefundsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
   const { hasPermission } = usePermissions();
-  const canReadRefunds   = hasPermission('refund:read');
-  const canUpdateRefunds = hasPermission('refund:update', 'refund:manage');
+  const canReadRefunds = hasPermission('refund:read');
 
   const { data: refundsRaw, isLoading: refundsLoading } = useQuery({
     queryKey: ['refunds', statusFilter, page, limit, canReadRefunds],

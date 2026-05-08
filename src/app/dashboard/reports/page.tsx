@@ -38,8 +38,7 @@ export default function ReportsPage() {
   const breakdownLimit = 10;
 
   const { hasPermission, isAdmin } = usePermissions();
-  const canReadReports    = hasPermission('report:read');
-  const canGenerateReport = hasPermission('report:generate', 'report:manage');
+  const canReadReports = hasPermission('report:read');
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', startDate, endDate, groupBy],
