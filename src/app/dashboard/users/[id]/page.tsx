@@ -29,6 +29,7 @@ import {
 
 export default function UserDetailPage() {
   const { user, isLoading } = useAuthGuard();
+  const { hasPermission, isSuperAdmin } = usePermissions();
   const router = useRouter();
   const params = useParams();
   const userId = params?.id as string;
@@ -166,8 +167,6 @@ export default function UserDetailPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
-  const { hasPermission, isSuperAdmin } = usePermissions();
   const canUpdateStatus = hasPermission('user:update', 'user:manage');
   const canChangeRole   = isSuperAdmin;
 

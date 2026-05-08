@@ -32,7 +32,7 @@ export function usePermissions(): UsePermissionsReturn {
   });
 
   const permSet = useMemo(
-    () => new Set((rawPermissions ?? []).map((p: any) => `${p.resource}:${p.action}`)),
+    () => new Set((rawPermissions ?? []).map((p: { resource: string; action: string }) => `${p.resource}:${p.action}`)),
     [rawPermissions],
   );
 
