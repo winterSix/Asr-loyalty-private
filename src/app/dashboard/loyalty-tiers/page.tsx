@@ -195,15 +195,15 @@ export default function LoyaltyTiersPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {canSeeRewards && (
-              <button
-                onClick={() => router.push('/dashboard/rewards')}
-                className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2"
-              >
-                <FiArrowLeft className="w-4 h-4" />
-                Back to Rewards
-              </button>
-            )}
+            <button
+              onClick={() => canSeeRewards && router.push('/dashboard/rewards')}
+              disabled={!canSeeRewards}
+              title={!canSeeRewards ? 'You do not have permission to view Rewards' : undefined}
+              className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200"
+            >
+              <FiArrowLeft className="w-4 h-4" />
+              Back to Rewards
+            </button>
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}

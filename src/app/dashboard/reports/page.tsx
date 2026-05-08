@@ -37,25 +37,29 @@ export default function ReportsPage() {
   const [breakdownPage, setBreakdownPage] = useState(1);
   const breakdownLimit = 10;
 
-  const { hasPermission, isAdmin } = usePermissions();
-  const canReadReports = hasPermission('report:read');
+  const { hasPermission } = usePermissions();
+  const canReadRevenue      = hasPermission('report:read');
+  const canReadTxStats      = hasPermission('transaction:read', 'transaction:manage');
+  const canReadUserStats    = hasPermission('user:read', 'user:manage');
+  const canReadGatewayStats = hasPermission('report:read');
+  const canReadHealth       = hasPermission('report:read');
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', startDate, endDate, groupBy],
     queryFn: () => adminService.getRevenueReport({ startDate, endDate, groupBy }),
-    enabled: !isLoading && !!user && canReadReports && activeTab === 'revenue',
+    enabled: !isLoading && !!user && canReadRevenue && activeTab === 'revenue',
   });
 
   const { data: txStats, isLoading: txStatsLoading } = useQuery({
     queryKey: ['admin', 'transaction-stats'],
     queryFn: () => adminService.getTransactionStats(),
-    enabled: !isLoading && !!user && canReadReports && activeTab === 'transactions',
+    enabled: !isLoading && !!user && canReadTxStats && activeTab === 'transactions',
   });
 
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['admin', 'user-stats'],
     queryFn: () => adminService.getUserStats(),
-    enabled: !isLoading && !!user && canReadReports && activeTab === 'users',
+    enabled: !isLoading && !!user && canReadUserStats && activeTab === 'users',
   });
 
   const [gwStartDate, setGwStartDate] = useState('');
@@ -63,13 +67,13 @@ export default function ReportsPage() {
   const { data: gatewayStats, isLoading: gatewayLoading } = useQuery({
     queryKey: ['admin', 'gateway-stats', gwStartDate, gwEndDate],
     queryFn: () => adminService.getGatewayStats(gwStartDate || undefined, gwEndDate || undefined),
-    enabled: !isLoading && !!user && canReadReports && activeTab === 'gateway',
+    enabled: !isLoading && !!user && canReadGatewayStats && activeTab === 'gateway',
   });
 
   const { data: healthData, isLoading: healthLoading } = useQuery({
     queryKey: ['admin', 'health-detailed'],
     queryFn: () => healthService.getDetailedHealth(),
-    enabled: !isLoading && !!user && canReadReports && activeTab === 'health',
+    enabled: !isLoading && !!user && canReadHealth && activeTab === 'health',
   });
 
   if (isLoading) {
@@ -81,11 +85,11 @@ export default function ReportsPage() {
   }
 
   const tabs = [
-    { key: 'revenue' as const, label: 'Revenue Report', icon: <FiDollarSign className="w-4 h-4" /> },
-    { key: 'transactions' as const, label: 'Transaction Stats', icon: <FiCreditCard className="w-4 h-4" /> },
-    { key: 'users' as const, label: 'User Stats', icon: <FiUsers className="w-4 h-4" /> },
-    { key: 'gateway' as const, label: 'Gateway Stats', icon: <FiGlobe className="w-4 h-4" /> },
-    { key: 'health' as const, label: 'System Health', icon: <FiActivity className="w-4 h-4" /> },
+    { key: 'revenue' as const,      label: 'Revenue Report',     icon: <FiDollarSign className="w-4 h-4" />, allowed: canReadRevenue },
+    { key: 'transactions' as const, label: 'Transaction Stats',  icon: <FiCreditCard className="w-4 h-4" />, allowed: canReadTxStats },
+    { key: 'users' as const,        label: 'User Stats',         icon: <FiUsers className="w-4 h-4" />,      allowed: canReadUserStats },
+    { key: 'gateway' as const,      label: 'Gateway Stats',      icon: <FiGlobe className="w-4 h-4" />,      allowed: canReadGatewayStats },
+    { key: 'health' as const,       label: 'System Health',      icon: <FiActivity className="w-4 h-4" />,   allowed: canReadHealth },
   ];
 
   return (
@@ -101,20 +105,22 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* Tabs — horizontally scrollable on mobile */}
+        {/* Tabs — each gated by its own permission; restricted ones are greyed out */}
         <div className="overflow-x-auto min-w-0 mb-6">
           <div className="flex gap-1 bg-gray-100 dark:bg-[#161b22] rounded-xl p-1 w-max border border-transparent dark:border-[#21262d]">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                onClick={() => tab.allowed && setActiveTab(tab.key)}
+                disabled={!tab.allowed}
+                title={!tab.allowed ? 'You do not have permission to view this report' : undefined}
+                className={`relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
                   activeTab === tab.key
                     ? 'text-gray-900 dark:text-[#e6edf3]'
                     : 'text-gray-500 dark:text-[#8b949e] hover:text-gray-700 dark:hover:text-[#c9d1d9]'
                 }`}
               >
-                {activeTab === tab.key && (
+                {activeTab === tab.key && tab.allowed && (
                   <motion.span
                     layoutId="reports-tab-pill"
                     className="absolute inset-0 rounded-lg bg-white dark:bg-[#21262d] shadow-sm dark:border dark:border-[#30363d]"
