@@ -360,23 +360,24 @@ function NotificationsContent() {
         </div>
       </div>
 
-      {/* Tabs — visible tabs are gated by specific permissions */}
+      {/* Tabs — restricted tabs are disabled/greyed out rather than hidden */}
       {isAdmin && (
         <div className="overflow-x-auto min-w-0 mb-6">
           <div className="flex gap-1 bg-gray-100 dark:bg-[#1E293B] rounded-xl p-1 w-max">
             {([
-              { id: 'mine' as Tab,      label: 'My Notifications',    icon: FiUser,    show: true },
-              { id: 'all' as Tab,       label: 'All Notifications',   icon: FiUsers,   show: canReadAll },
-              { id: 'send' as Tab,      label: 'Send',                icon: FiSend,    show: canSend },
-              { id: 'broadcast' as Tab, label: 'Broadcast',           icon: FiGlobe,   show: canBroadcast },
-              { id: 'history' as Tab,   label: 'Broadcast History',   icon: FiClock,   show: canViewHistory },
-            ] as { id: Tab; label: string; icon: any; show: boolean }[])
-              .filter((tab) => tab.show)
+              { id: 'mine' as Tab,      label: 'My Notifications',    icon: FiUser,    allowed: true },
+              { id: 'all' as Tab,       label: 'All Notifications',   icon: FiUsers,   allowed: canReadAll },
+              { id: 'send' as Tab,      label: 'Send',                icon: FiSend,    allowed: canSend },
+              { id: 'broadcast' as Tab, label: 'Broadcast',           icon: FiGlobe,   allowed: canBroadcast },
+              { id: 'history' as Tab,   label: 'Broadcast History',   icon: FiClock,   allowed: canViewHistory },
+            ] as { id: Tab; label: string; icon: any; allowed: boolean }[])
               .map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white dark:bg-[#2D3F55] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-[#94A3B8] hover:text-gray-700 dark:hover:text-[#F1F5F9] hover:bg-white/50 dark:hover:bg-[#2D3F55]/60'}`}
+                  onClick={() => tab.allowed && setActiveTab(tab.id)}
+                  disabled={!tab.allowed}
+                  title={!tab.allowed ? 'You do not have permission to access this tab' : undefined}
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all disabled:opacity-50 disabled:cursor-not-allowed ${activeTab === tab.id ? 'bg-white dark:bg-[#2D3F55] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-[#94A3B8] hover:text-gray-700 dark:hover:text-[#F1F5F9] hover:bg-white/50 dark:hover:bg-[#2D3F55]/60'}`}
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
                   {tab.label}
