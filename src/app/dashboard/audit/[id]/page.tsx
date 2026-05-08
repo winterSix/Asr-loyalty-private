@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
 import { auditService, AuditLog } from '@/services/audit.service';
 import {
@@ -19,6 +20,8 @@ import {
 
 export default function AuditDetailPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canReadAudit = hasPermission('audit:read', 'audit:manage');
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -32,10 +35,8 @@ export default function AuditDetailPage() {
   const { data: auditLog, isLoading: detailLoading, error } = useQuery({
     queryKey: ['audit-log', id],
     queryFn: () => auditService.getAuditLog(id),
-    enabled: !isLoading && !!user && !!id && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && !!id && canReadAudit,
   });
-
-  const role = user?.role || 'CUSTOMER';
 
   const getActionColor = (action: string) => {
     if (action.includes('CREATE')) return 'bg-green-100 text-green-700 ring-green-600/20';

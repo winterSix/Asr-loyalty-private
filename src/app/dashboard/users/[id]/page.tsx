@@ -30,6 +30,9 @@ import {
 export default function UserDetailPage() {
   const { user, isLoading } = useAuthGuard();
   const { hasPermission, isSuperAdmin } = usePermissions();
+  const canReadUsers        = hasPermission('user:read', 'user:manage');
+  const canReadWallets      = hasPermission('wallet:read', 'wallet:manage');
+  const canReadTransactions = hasPermission('transaction:read', 'transaction:manage');
   const router = useRouter();
   const params = useParams();
   const userId = params?.id as string;
@@ -53,14 +56,14 @@ export default function UserDetailPage() {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['admin', 'user', userId],
     queryFn: () => adminService.getUserById(userId),
-    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && canReadUsers,
   });
 
   // Fetch user's wallets
   const { data: userWallets } = useQuery({
     queryKey: ['admin', 'user', userId, 'wallets'],
     queryFn: () => adminService.getUserWallets(userId),
-    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && canReadWallets,
   });
 
   // Fetch RBAC custom roles for the role change dropdown
@@ -77,7 +80,7 @@ export default function UserDetailPage() {
   const { data: userTransactions } = useQuery({
     queryKey: ['admin', 'user', userId, 'transactions'],
     queryFn: () => adminService.getUserTransactions(userId, { page: 1, limit: 5 }),
-    enabled: !isLoading && !!userId && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!userId && !!user && canReadTransactions,
   });
 
   // Update user status mutation

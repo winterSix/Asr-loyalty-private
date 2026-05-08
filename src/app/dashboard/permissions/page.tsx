@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { permissionService } from '@/services/permission.service';
 import {
@@ -22,6 +23,8 @@ import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function PermissionsPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canReadPermissions = hasPermission('permission:read', 'permission:manage');
   const router = useRouter();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grouped' | 'list'>('grouped');
@@ -39,25 +42,25 @@ export default function PermissionsPage() {
   const { data: permissions, isLoading: permissionsLoading } = useQuery({
     queryKey: ['permissions'],
     queryFn: () => permissionService.getAllPermissions(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadPermissions,
   });
 
   const { data: groupedPermissions } = useQuery({
     queryKey: ['permissions-grouped'],
     queryFn: () => permissionService.getGroupedPermissions(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadPermissions,
   });
 
   const { data: resources } = useQuery({
     queryKey: ['permissions-resources'],
     queryFn: () => permissionService.getResources(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadPermissions,
   });
 
   const { data: statistics } = useQuery({
     queryKey: ['permissions-stats'],
     queryFn: () => permissionService.getStatistics(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadPermissions,
   });
 
   // Initialize all groups as expanded

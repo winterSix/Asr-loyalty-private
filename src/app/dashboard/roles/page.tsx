@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleService } from '@/services/role.service';
 import {
@@ -25,6 +26,9 @@ import toast from 'react-hot-toast';
 
 export default function RolesPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canReadRoles  = hasPermission('role:read', 'role:manage');
+  const canManageRoles = hasPermission('role:manage');
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +47,7 @@ export default function RolesPage() {
   const { data: rolesRaw, isLoading: rolesLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: () => roleService.getRoles(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadRoles,
   });
 
   const roles = useMemo(() => {
@@ -64,7 +68,7 @@ export default function RolesPage() {
   const { data: permissionsRaw } = useQuery({
     queryKey: ['permissions-list'],
     queryFn: () => roleService.getPermissions(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadRoles,
   });
 
   const permissions = useMemo(() => {
