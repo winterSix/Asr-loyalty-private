@@ -48,10 +48,8 @@ export default function DisputesPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
   const { hasPermission } = usePermissions();
-  const canReadDisputes   = hasPermission('dispute:read');
-  const canUpdateDisputes = hasPermission('dispute:update', 'dispute:manage');
+  const canReadDisputes = hasPermission('dispute:read');
 
   const { data: disputesRaw, isLoading: disputesLoading } = useQuery({
     queryKey: ['disputes', statusFilter, page, limit, canReadDisputes],

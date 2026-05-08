@@ -50,7 +50,7 @@ function NotificationsContent() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const { hasPermission, isAdmin, isSuperAdmin } = usePermissions();
+  const { hasPermission, isAdmin } = usePermissions();
   const canReadAll       = hasPermission('notification:read');
   const canSend          = hasPermission('notification:send', 'notification:manage');
   const canBroadcast     = hasPermission('notification:broadcast', 'notification:manage');
