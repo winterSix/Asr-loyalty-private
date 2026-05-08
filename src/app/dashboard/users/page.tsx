@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, getDisplayRole, UserFilters, CreateCashierData } from '@/services/admin.service';
 import { roleService } from '@/services/role.service';
@@ -57,7 +58,10 @@ export default function UsersPage() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission, isAdmin, isSuperAdmin } = usePermissions();
+  const canReadUsers   = hasPermission('user:read');
+  const canCreateUsers = hasPermission('user:create', 'user:manage');
+  const canUpdateUsers = hasPermission('user:update', 'user:manage');
 
   // Debounce search input
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function UsersPage() {
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !isLoading && !!user && isAdmin,
+    enabled: !isLoading && !!user && canReadUsers,
   });
 
   const { data: rolesRaw } = useQuery({
@@ -206,8 +210,10 @@ export default function UsersPage() {
           </div>
           {isAdmin && (
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+              onClick={() => canCreateUsers && setShowCreateModal(true)}
+              disabled={!canCreateUsers}
+              title={!canCreateUsers ? 'You do not have permission to create users' : undefined}
+              className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <FiUserPlus className="w-5 h-5" />
               Create User

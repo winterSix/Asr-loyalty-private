@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   notificationService,
@@ -49,8 +50,11 @@ function NotificationsContent() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const isAdmin = !!(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS');
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const { hasPermission, isAdmin, isSuperAdmin } = usePermissions();
+  const canReadAll       = hasPermission('notification:read');
+  const canSend          = hasPermission('notification:send', 'notification:manage');
+  const canBroadcast     = hasPermission('notification:broadcast', 'notification:manage');
+  const canViewHistory   = hasPermission('notification:broadcast', 'notification:manage');
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const tab = searchParams.get('tab');
@@ -142,7 +146,7 @@ function NotificationsContent() {
   const { data: allRaw, isLoading: allLoading } = useQuery({
     queryKey: ['notifications', 'all', typeFilter, readFilter, page, limit],
     queryFn: () => notificationService.getAllNotifications({ type: typeFilter || undefined, read: readFilter === 'read' ? true : readFilter === 'unread' ? false : undefined, page, limit }),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'all',
+    enabled: !isLoading && !!user && canReadAll && activeTab === 'all',
   });
 
   const { data: unreadCount } = useQuery({
@@ -154,7 +158,7 @@ function NotificationsContent() {
   const { data: broadcastHistory, isLoading: historyLoading } = useQuery({
     queryKey: ['notifications', 'broadcast-history', historyPage],
     queryFn: () => notificationService.getBroadcastHistory(historyPage, 15),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'history',
+    enabled: !isLoading && !!user && canViewHistory && activeTab === 'history',
   });
 
   // Mutations
@@ -218,8 +222,8 @@ function NotificationsContent() {
   };
 
   // Derived data
-  const activeRaw = (isAdmin && activeTab === 'all') ? allRaw : myRaw;
-  const activeLoading = (isAdmin && activeTab === 'all') ? allLoading : myLoading;
+  const activeRaw = (canReadAll && activeTab === 'all') ? allRaw : myRaw;
+  const activeLoading = (canReadAll && activeTab === 'all') ? allLoading : myLoading;
 
   const notifications = useMemo(() => {
     if (!activeRaw) return [];
@@ -236,7 +240,7 @@ function NotificationsContent() {
   }, [notifications, debouncedSearch]);
 
   const uniqueUserIds = useMemo(() => {
-    if (!isAdmin || activeTab !== 'all') return [];
+    if (!canReadAll || activeTab !== 'all') return [];
     return [...new Set(filteredNotifications.map((n: any) => n.userId).filter(Boolean) as string[])];
   }, [filteredNotifications, isAdmin, activeTab]);
 
@@ -356,29 +360,31 @@ function NotificationsContent() {
         </div>
       </div>
 
-      {/* Tabs — admin gets 5 tabs, others get none */}
+      {/* Tabs — visible tabs are gated by specific permissions */}
       {isAdmin && (
         <div className="overflow-x-auto min-w-0 mb-6">
           <div className="flex gap-1 bg-gray-100 dark:bg-[#1E293B] rounded-xl p-1 w-max">
             {([
-              { id: 'mine' as Tab, label: 'My Notifications', icon: FiUser },
-              { id: 'all' as Tab, label: 'All Notifications', icon: FiUsers },
-              { id: 'send' as Tab, label: 'Send', icon: FiSend },
-              { id: 'broadcast' as Tab, label: 'Broadcast', icon: FiGlobe },
-              { id: 'history' as Tab, label: 'Broadcast History', icon: FiClock },
-            ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white dark:bg-[#2D3F55] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-[#94A3B8] hover:text-gray-700 dark:hover:text-[#F1F5F9] hover:bg-white/50 dark:hover:bg-[#2D3F55]/60'}`}
-              >
-                <tab.icon className="w-4 h-4 flex-shrink-0" />
-                {tab.label}
-                {tab.id === 'mine' && unread > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">{unread}</span>
-                )}
-              </button>
-            ))}
+              { id: 'mine' as Tab,      label: 'My Notifications',    icon: FiUser,    show: true },
+              { id: 'all' as Tab,       label: 'All Notifications',   icon: FiUsers,   show: canReadAll },
+              { id: 'send' as Tab,      label: 'Send',                icon: FiSend,    show: canSend },
+              { id: 'broadcast' as Tab, label: 'Broadcast',           icon: FiGlobe,   show: canBroadcast },
+              { id: 'history' as Tab,   label: 'Broadcast History',   icon: FiClock,   show: canViewHistory },
+            ] as { id: Tab; label: string; icon: any; show: boolean }[])
+              .filter((tab) => tab.show)
+              .map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-white dark:bg-[#2D3F55] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-[#94A3B8] hover:text-gray-700 dark:hover:text-[#F1F5F9] hover:bg-white/50 dark:hover:bg-[#2D3F55]/60'}`}
+                >
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  {tab.label}
+                  {tab.id === 'mine' && unread > 0 && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">{unread}</span>
+                  )}
+                </button>
+              ))}
           </div>
         </div>
       )}
@@ -406,7 +412,7 @@ function NotificationsContent() {
                 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#64748B] w-5 h-5" />
                 <input
                   type="text"
-                  placeholder={isAdmin && activeTab === 'all' ? 'Search by title, message or user ID...' : 'Search notifications...'}
+                  placeholder={canReadAll && activeTab === 'all' ? 'Search by title, message or user ID...' : 'Search notifications...'}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-[#263349] border border-gray-200 dark:border-white/10 focus:bg-white dark:focus:bg-[#2D3F55] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-[#F1F5F9] placeholder-gray-400 dark:placeholder-[#64748B]"
@@ -418,7 +424,7 @@ function NotificationsContent() {
           </div>
 
           <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden">
-            {isAdmin && activeTab === 'all' && (
+            {canReadAll && activeTab === 'all' && (
               <div className="px-5 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-[#263349]/60 flex items-center gap-2">
                 <FiUsers className="w-4 h-4 text-gray-400 dark:text-[#64748B]" />
                 <p className="text-xs font-medium text-gray-500 dark:text-[#94A3B8]">Showing notifications sent to all users across the system</p>
@@ -451,7 +457,7 @@ function NotificationsContent() {
                               </div>
                               <p className="text-xs text-gray-500 dark:text-[#64748B] line-clamp-2 mt-0.5">{notification.body}</p>
 
-                              {isAdmin && activeTab === 'all' && recipientId && (() => {
+                              {canReadAll && activeTab === 'all' && recipientId && (() => {
                                 const recipient = userMap[recipientId];
                                 const isLoadingUser = uniqueUserIds.includes(recipientId) && userQueries[uniqueUserIds.indexOf(recipientId)]?.isLoading;
                                 return (
@@ -475,7 +481,7 @@ function NotificationsContent() {
                                   <FiCheck className="w-4 h-4" />
                                 </button>
                               )}
-                              {isAdmin && activeTab === 'all' && (
+                              {canReadAll && activeTab === 'all' && (
                                 isConfirmingDelete ? (
                                   <div className="flex items-center gap-1">
                                     <button onClick={() => deleteMutation.mutate(notification.id)} disabled={deleteMutation.isPending} className="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors disabled:opacity-50">

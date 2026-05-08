@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import { paymentService } from '@/services/payment.service';
@@ -32,6 +33,9 @@ export default function TransactionDetailPage() {
   const [reverseReason, setReverseReason] = useState('');
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const canReadTx    = hasPermission('transaction:read');
+  const canReverseTx = hasPermission('transaction:update', 'transaction:manage');
 
   const reverseMutation = useMutation({
     mutationFn: () => paymentService.reversePayment(transactionId, reverseReason),
@@ -49,7 +53,7 @@ export default function TransactionDetailPage() {
   const { data: transaction, isLoading: txLoading } = useQuery({
     queryKey: ['admin', 'transaction', transactionId],
     queryFn: () => adminService.getTransactionById(transactionId),
-    enabled: !!transactionId && !!user && isAdmin,
+    enabled: !!transactionId && !!user && canReadTx,
   });
 
   if (isLoading) {
@@ -118,8 +122,10 @@ export default function TransactionDetailPage() {
             <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E5B887] mb-2">Transaction Details</h1>
             {isAdmin && transaction?.status === 'SUCCESSFUL' && (
               <button
-                onClick={() => setShowReverseModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl hover:bg-orange-100 transition-colors font-medium text-sm"
+                onClick={() => canReverseTx && setShowReverseModal(true)}
+                disabled={!canReverseTx}
+                title={!canReverseTx ? 'You do not have permission to reverse transactions' : undefined}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl hover:bg-orange-100 transition-colors font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <FiRefreshCw className="w-4 h-4" />
                 Reverse Payment

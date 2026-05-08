@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService, UserFilters } from '@/services/admin.service';
 import {
@@ -44,17 +45,20 @@ export default function WalletsPage() {
     limit,
   };
 
+  const { hasPermission } = usePermissions();
+  const canReadWallets = hasPermission('wallet:read');
+
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', 'wallets', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadWallets,
   });
 
   // Fetch all users (first page, no search) for summary stats
   const { data: allUsersData } = useQuery({
     queryKey: ['admin', 'users', 'wallets-summary'],
     queryFn: () => adminService.getUsers({ page: 1, limit: 100 }),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadWallets,
   });
 
   const handleRefresh = async () => {

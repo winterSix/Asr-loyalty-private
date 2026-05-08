@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, getDisplayRole } from '@/services/admin.service';
 import { walletService } from '@/services/wallet.service';
@@ -166,7 +167,9 @@ export default function UserDetailPage() {
   }
 
   const role = user?.role || 'CUSTOMER';
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const { hasPermission, isSuperAdmin } = usePermissions();
+  const canUpdateStatus = hasPermission('user:update', 'user:manage');
+  const canChangeRole   = isSuperAdmin;
 
   // Combine wallets from user data and dedicated wallet endpoint
   const wallets = userWallets || userData?.wallets || [];
@@ -198,22 +201,26 @@ export default function UserDetailPage() {
               <div className="flex items-center gap-3">
                 {userData.status === 'ACTIVE' ? (
                   <button
-                    onClick={() => openStatusModal('SUSPENDED')}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm"
+                    onClick={() => canUpdateStatus && openStatusModal('SUSPENDED')}
+                    disabled={!canUpdateStatus}
+                    title={!canUpdateStatus ? 'You do not have permission to suspend users' : undefined}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FiXCircle className="w-4 h-4" />
                     Suspend User
                   </button>
                 ) : (
                   <button
-                    onClick={() => openStatusModal('ACTIVE')}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm"
+                    onClick={() => canUpdateStatus && openStatusModal('ACTIVE')}
+                    disabled={!canUpdateStatus}
+                    title={!canUpdateStatus ? 'You do not have permission to activate users' : undefined}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FiCheckCircle className="w-4 h-4" />
                     Activate User
                   </button>
                 )}
-                {isSuperAdmin && (
+                {canChangeRole && (
                   <button
                     onClick={() => {
                       setSelectedRole(userData.role || '');

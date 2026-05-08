@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
 import toast from 'react-hot-toast';
@@ -91,7 +92,8 @@ export default function DisputeDetailPage() {
     rejectMutation.mutate(rejectReason);
   };
 
-  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const canManage = hasPermission('dispute:update', 'dispute:manage');
 
   if (isLoading || disputeLoading) {
     return (
