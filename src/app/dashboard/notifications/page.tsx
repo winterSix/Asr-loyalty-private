@@ -51,10 +51,10 @@ function NotificationsContent() {
   const queryClient = useQueryClient();
 
   const { hasPermission, isAdmin } = usePermissions();
-  const canReadAll       = hasPermission('notification:read');
+  const canReadAll       = hasPermission('notification:read', 'notification:manage');
   const canSend          = hasPermission('notification:send', 'notification:manage');
   const canBroadcast     = hasPermission('notification:broadcast', 'notification:manage');
-  const canViewHistory   = hasPermission('notification:broadcast', 'notification:manage');
+  const canViewHistory   = hasPermission('notification:read', 'notification:manage');
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const tab = searchParams.get('tab');
