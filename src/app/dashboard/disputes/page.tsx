@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { disputeService } from '@/services/dispute.service';
 import {
@@ -48,11 +49,14 @@ export default function DisputesPage() {
   }, [searchInput]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const canReadDisputes   = hasPermission('dispute:read');
+  const canUpdateDisputes = hasPermission('dispute:update', 'dispute:manage');
 
   const { data: disputesRaw, isLoading: disputesLoading } = useQuery({
-    queryKey: ['disputes', statusFilter, page, limit, isAdmin],
+    queryKey: ['disputes', statusFilter, page, limit, canReadDisputes],
     queryFn: () => {
-      if (isAdmin) {
+      if (canReadDisputes) {
         return disputeService.getDisputes({ status: statusFilter || undefined, page, limit });
       }
       return disputeService.getMyDisputes({ page, limit });
@@ -63,7 +67,7 @@ export default function DisputesPage() {
   const { data: statsRaw } = useQuery({
     queryKey: ['dispute-stats'],
     queryFn: () => disputeService.getStats(),
-    enabled: !isLoading && !!user && isAdmin,
+    enabled: !isLoading && !!user && canReadDisputes,
   });
 
   const disputes = useMemo(() => {
@@ -173,7 +177,7 @@ export default function DisputesPage() {
       </div>
 
       {/* Summary Cards */}
-      {isAdmin && (
+      {canReadDisputes && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {statCards.map((card) => (
             <div key={card.label} className="bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm p-5 flex items-center gap-4">
@@ -230,7 +234,7 @@ export default function DisputesPage() {
               <table className="w-full min-w-[750px]">
                 <thead>
                   <tr className="bg-gray-50/80 dark:bg-gray-700/40 border-b border-gray-100 dark:border-white/10">
-                    {isAdmin && <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">User</th>}
+                    {canReadDisputes && <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">User</th>}
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Reason</th>
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Transaction</th>
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
@@ -243,7 +247,7 @@ export default function DisputesPage() {
                     const ss = getStatusStyle(dispute.status);
                     return (
                       <tr key={dispute.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group">
-                        {isAdmin && (
+                        {canReadDisputes && (
                           <td className="py-4 px-5">
                             {dispute.user ? (
                               <div className="flex items-center gap-3">

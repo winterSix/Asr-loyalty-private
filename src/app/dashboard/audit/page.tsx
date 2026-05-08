@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
 import { auditService } from '@/services/audit.service';
 import {
@@ -29,10 +30,12 @@ export default function AuditLogsPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  const { hasPermission } = usePermissions();
+
   const { data: auditLogs, isLoading: auditLoading } = useQuery({
     queryKey: ['audit-logs', actionFilter, page],
     queryFn: () => auditService.getAuditLogs({ action: actionFilter || undefined, page, limit }),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && hasPermission('audit:read'),
   });
 
   if (isLoading || auditLoading) {

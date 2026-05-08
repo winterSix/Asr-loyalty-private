@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
 import { adminService, TransactionFilters, TransactionExportFilters } from '@/services/admin.service';
 import { transactionService } from '@/services/transaction.service';
@@ -39,7 +40,10 @@ export default function TransactionsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const limit = 10;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const isAdmin           = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const canReadTx         = hasPermission('transaction:read');
+  const canExportTx       = hasPermission('report:generate', 'report:manage');
 
   // Debounce search
   useEffect(() => {
@@ -64,7 +68,7 @@ export default function TransactionsPage() {
   const { data: adminTxData, isLoading: adminTxLoading, isFetching: adminTxFetching, refetch } = useQuery({
     queryKey: ['admin', 'transactions', adminFilters],
     queryFn: () => adminService.getTransactions(adminFilters),
-    enabled: !isLoading && !!user && isAdmin,
+    enabled: !isLoading && !!user && canReadTx,
   });
 
   // Customer query (fallback for non-admin users)
@@ -76,7 +80,7 @@ export default function TransactionsPage() {
       page,
       limit,
     }),
-    enabled: !isLoading && !!user && !isAdmin,
+    enabled: !isLoading && !!user && !canReadTx,
   });
 
   if (isLoading) {
@@ -207,9 +211,9 @@ export default function TransactionsPage() {
           <div className="flex items-center gap-2 self-start">
             <button
               onClick={handleExportPdf}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
-              title="Export as PDF"
+              disabled={isExporting || !canExportTx}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              title={!canExportTx ? 'You do not have permission to export transactions' : 'Export as PDF'}
             >
               <FiDownload className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
               <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>

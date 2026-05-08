@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { refundService } from '@/services/refund.service';
 import {
@@ -42,10 +43,13 @@ export default function RefundsPage() {
   }, [searchInput]);
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const canReadRefunds   = hasPermission('refund:read');
+  const canUpdateRefunds = hasPermission('refund:update', 'refund:manage');
 
   const { data: refundsRaw, isLoading: refundsLoading } = useQuery({
-    queryKey: ['refunds', statusFilter, page, limit, isAdmin],
-    queryFn: () => isAdmin
+    queryKey: ['refunds', statusFilter, page, limit, canReadRefunds],
+    queryFn: () => canReadRefunds
       ? refundService.getRefunds({ status: statusFilter || undefined, page, limit })
       : refundService.getMyRefunds({ page, limit }),
     enabled: !isLoading && !!user,
@@ -54,7 +58,7 @@ export default function RefundsPage() {
   const { data: statsRaw } = useQuery({
     queryKey: ['refund-stats'],
     queryFn: () => refundService.getStats(),
-    enabled: !isLoading && !!user && isAdmin,
+    enabled: !isLoading && !!user && canReadRefunds,
   });
 
   const refunds = useMemo(() => {
@@ -139,7 +143,7 @@ export default function RefundsPage() {
       </div>
 
       {/* Summary Cards */}
-      {isAdmin && (
+      {canReadRefunds && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {statCards.map((card) => (
             <div key={card.label} className="bg-white dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm p-5 flex items-center gap-4">
@@ -196,7 +200,7 @@ export default function RefundsPage() {
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr className="bg-gray-50/80 dark:bg-gray-700/40 border-b border-gray-100 dark:border-white/10">
-                    {isAdmin && <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">User</th>}
+                    {canReadRefunds && <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">User</th>}
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Amount</th>
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Reason</th>
                     <th className="text-left py-3.5 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Transaction</th>
@@ -210,7 +214,7 @@ export default function RefundsPage() {
                     const ss = getStatusStyle(refund.status);
                     return (
                       <tr key={refund.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group">
-                        {isAdmin && (
+                        {canReadRefunds && (
                           <td className="py-4 px-5">
                             {refund.user ? (
                               <div className="flex items-center gap-3">

@@ -19,7 +19,7 @@ import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { adminService, getDisplayRole } from '@/services/admin.service';
-import { roleService } from '@/services/role.service';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NavItem  { label: string; icon: React.ReactNode; path: string; badge?: number; color?: string; }
 interface NavSection { title: string; items: NavItem[]; }
@@ -71,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { theme, setTheme } = useTheme();
     const role    = user?.role || 'CUSTOMER';
     const isAdmin = !authLoading && (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS');
+    const { hasPermission } = usePermissions();
 
     const navRef        = useRef<HTMLElement>(null);
     const userMenuRef   = useRef<HTMLDivElement>(null);
@@ -194,20 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         enabled: notifOpen && notifTab === 'all' && isAdmin, staleTime: 10000,
     });
 
-    // Fetch permissions for OTHERS role users — drives the permission-based sidebar.
-    // Uses /roles/me/permissions (no user:read required) so the user can always read
-    // their own permissions regardless of what permissions they've been assigned.
-    const { data: userPermissions } = useQuery({
-        queryKey: ['user-permissions', user?.id],
-        queryFn:  () => roleService.getMyPermissions(),
-        enabled: !authLoading && !!user?.id && role === 'OTHERS',
-        staleTime: 5 * 60 * 1000,  // re-fetch every 5 min, not on every navigation
-        gcTime: 5 * 60 * 1000,
-    });
-    const permSet = useMemo(
-        () => new Set((userPermissions ?? []).map(p => `${p.resource}:${p.action}`)),
-        [userPermissions],
-    );
+    // Permissions fetched via usePermissions() above — shared cache with all page components.
 
     // Close menus on outside click
     useEffect(() => {
@@ -314,7 +302,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { label: 'Transactions',icon: <FiCreditCard />, path: '/dashboard/transactions',  color: '#6366F1' },
             ]}];
             case 'OTHERS': {
-                const has = (...perms: string[]) => perms.some(p => permSet.has(p));
+                const has = hasPermission;
                 const overviewItems: NavItem[] = [
                     { label: 'Dashboard', icon: <FiHome />, path: '/dashboard', color: '#3B82F6' },
                     ...(has('report:read', 'report:generate') ? [{ label: 'Reports', icon: <FiBarChart />, path: '/dashboard/reports', color: '#8B5CF6' }] : []),
@@ -347,7 +335,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             default: return [{ title: 'Main', items: [{ label: 'Dashboard', icon: <FiHome />, path: '/dashboard' }] }];
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [role, permSet, dCount, rCount]);
+    }, [role, hasPermission, dCount, rCount]);
     const allItems   = sections.flatMap(s => s.items);
     const isActive   = (p: string) => !pathname ? false : p === '/dashboard' ? pathname === '/dashboard' : pathname === p || pathname.startsWith(p + '/');
     const pageLabel  = allItems.find(i => isActive(i.path))?.label || 'Dashboard';

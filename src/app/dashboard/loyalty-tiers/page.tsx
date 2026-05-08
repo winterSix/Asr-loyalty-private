@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { loyaltyService, LoyaltyTierConfig } from '@/services/loyalty.service';
@@ -74,16 +75,20 @@ export default function LoyaltyTiersPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  const { hasPermission } = usePermissions();
+  const canReadLoyalty   = hasPermission('loyalty:read');
+  const canUpdateLoyalty = hasPermission('loyalty:update', 'loyalty:manage');
+
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({
     queryKey: ['loyalty-tier-configs'],
     queryFn: () => loyaltyService.getAllTierConfigs(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadLoyalty,
   });
 
   const { data: tierStats } = useQuery({
     queryKey: ['loyalty-tier-stats'],
     queryFn: () => loyaltyService.getTierStats(),
-    enabled: !isLoading && !!user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'OTHERS'),
+    enabled: !isLoading && !!user && canReadLoyalty,
   });
 
   const handleRefresh = async () => {
@@ -155,8 +160,7 @@ export default function LoyaltyTiersPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
-  const canEdit = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
+  const canEdit = canUpdateLoyalty;
 
   const benefitLabels: Record<string, string> = {
     cashback: 'Cashback',

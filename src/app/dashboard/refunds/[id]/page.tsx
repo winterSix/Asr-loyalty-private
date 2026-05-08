@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { refundService } from '@/services/refund.service';
 import toast from 'react-hot-toast';
@@ -76,7 +77,8 @@ export default function RefundDetailPage() {
     onError: (error: any) => toast.error(error.response?.data?.message || 'Failed to process refund'),
   });
 
-  const canManage = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission } = usePermissions();
+  const canManage = hasPermission('refund:update', 'refund:manage');
 
   if (isLoading || refundLoading) {
     return (

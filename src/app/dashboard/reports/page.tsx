@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery } from '@tanstack/react-query';
 import { adminService } from '@/services/admin.service';
 import { healthService } from '@/services/health.service';
@@ -36,24 +37,26 @@ export default function ReportsPage() {
   const [breakdownPage, setBreakdownPage] = useState(1);
   const breakdownLimit = 10;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
+  const { hasPermission, isAdmin } = usePermissions();
+  const canReadReports    = hasPermission('report:read');
+  const canGenerateReport = hasPermission('report:generate', 'report:manage');
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['admin', 'revenue', startDate, endDate, groupBy],
     queryFn: () => adminService.getRevenueReport({ startDate, endDate, groupBy }),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'revenue',
+    enabled: !isLoading && !!user && canReadReports && activeTab === 'revenue',
   });
 
   const { data: txStats, isLoading: txStatsLoading } = useQuery({
     queryKey: ['admin', 'transaction-stats'],
     queryFn: () => adminService.getTransactionStats(),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'transactions',
+    enabled: !isLoading && !!user && canReadReports && activeTab === 'transactions',
   });
 
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['admin', 'user-stats'],
     queryFn: () => adminService.getUserStats(),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'users',
+    enabled: !isLoading && !!user && canReadReports && activeTab === 'users',
   });
 
   const [gwStartDate, setGwStartDate] = useState('');
@@ -61,13 +64,13 @@ export default function ReportsPage() {
   const { data: gatewayStats, isLoading: gatewayLoading } = useQuery({
     queryKey: ['admin', 'gateway-stats', gwStartDate, gwEndDate],
     queryFn: () => adminService.getGatewayStats(gwStartDate || undefined, gwEndDate || undefined),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'gateway',
+    enabled: !isLoading && !!user && canReadReports && activeTab === 'gateway',
   });
 
   const { data: healthData, isLoading: healthLoading } = useQuery({
     queryKey: ['admin', 'health-detailed'],
     queryFn: () => healthService.getDetailedHealth(),
-    enabled: !isLoading && !!user && isAdmin && activeTab === 'health',
+    enabled: !isLoading && !!user && canReadReports && activeTab === 'health',
   });
 
   if (isLoading) {
