@@ -93,7 +93,7 @@ export default function DisputeDetailPage() {
   };
 
   const { hasPermission } = usePermissions();
-  const canManage = hasPermission('dispute:update', 'dispute:manage');
+  const canManage = hasPermission('dispute:update');
 
   if (isLoading || disputeLoading) {
     return (

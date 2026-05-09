@@ -30,9 +30,9 @@ import {
 export default function UserDetailPage() {
   const { user, isLoading } = useAuthGuard();
   const { hasPermission, isSuperAdmin } = usePermissions();
-  const canReadUsers        = hasPermission('user:read', 'user:manage');
-  const canReadWallets      = hasPermission('wallet:read', 'wallet:manage');
-  const canReadTransactions = hasPermission('transaction:read', 'transaction:manage');
+  const canReadUsers        = hasPermission('user:read');
+  const canReadWallets      = hasPermission('wallet:read');
+  const canReadTransactions = hasPermission('transaction:read');
   const router = useRouter();
   const params = useParams();
   const userId = params?.id as string;
@@ -170,8 +170,8 @@ export default function UserDetailPage() {
     );
   }
 
-  const canUpdateStatus  = hasPermission('user:update', 'user:manage');
-  const canFreezeWallet  = hasPermission('wallet:update', 'wallet:manage');
+  const canUpdateStatus  = hasPermission('user:update');
+  const canFreezeWallet  = hasPermission('wallet:update');
   const canChangeRole    = isSuperAdmin;
 
   // Combine wallets from user data and dedicated wallet endpoint

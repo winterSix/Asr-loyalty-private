@@ -39,9 +39,9 @@ export default function ReportsPage() {
 
   const { hasPermission } = usePermissions();
   const canReadRevenue      = hasPermission('report:read');
-  const canReadTxStats      = hasPermission('transaction:read', 'transaction:manage');
-  const canReadUserStats    = hasPermission('user:read', 'user:manage');
-  const canReadGatewayStats = hasPermission('report:read');
+  const canReadTxStats      = hasPermission('transaction:read');
+  const canReadUserStats    = hasPermission('user:read');
+  const canReadGatewayStats = hasPermission('transaction:read');
   const canReadHealth       = hasPermission('report:read');
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({

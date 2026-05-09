@@ -27,8 +27,10 @@ import toast from 'react-hot-toast';
 export default function RolesPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadRoles  = hasPermission('role:read', 'role:manage');
-  const canManageRoles = hasPermission('role:manage');
+  const canReadRoles   = hasPermission('role:read');
+  const canCreateRoles = hasPermission('role:create');
+  const canUpdateRoles = hasPermission('role:update');
+  const canDeleteRoles = hasPermission('role:delete');
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -226,9 +228,9 @@ export default function RolesPage() {
               <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
-              onClick={() => canManageRoles && setShowCreateModal(true)}
-              disabled={!canManageRoles}
-              title={!canManageRoles ? 'You do not have permission to create roles' : undefined}
+              onClick={() => canCreateRoles && setShowCreateModal(true)}
+              disabled={!canCreateRoles}
+              title={!canCreateRoles ? 'You do not have permission to create roles' : undefined}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiPlus className="w-4 h-4" />
@@ -318,9 +320,9 @@ export default function RolesPage() {
                       {/* Edit: role managers only, not on SUPER_ADMIN role itself */}
                       {roleItem.name !== 'SUPER_ADMIN' && (
                         <button
-                          onClick={() => canManageRoles && router.push(`/dashboard/roles/${roleItem.id}`)}
-                          disabled={!canManageRoles}
-                          title={!canManageRoles ? 'You do not have permission to edit roles' : undefined}
+                          onClick={() => canUpdateRoles && router.push(`/dashboard/roles/${roleItem.id}`)}
+                          disabled={!canUpdateRoles}
+                          title={!canUpdateRoles ? 'You do not have permission to edit roles' : undefined}
                           className="px-3 py-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-medium flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary/5"
                         >
                           <FiEdit className="w-4 h-4" />
@@ -330,9 +332,9 @@ export default function RolesPage() {
                       {/* Delete: custom roles only */}
                       {!roleItem.isSystem && (
                         <button
-                          onClick={() => canManageRoles && setDeleteConfirm(roleItem.id)}
-                          disabled={!canManageRoles}
-                          title={!canManageRoles ? 'You do not have permission to delete roles' : undefined}
+                          onClick={() => canDeleteRoles && setDeleteConfirm(roleItem.id)}
+                          disabled={!canDeleteRoles}
+                          title={!canDeleteRoles ? 'You do not have permission to delete roles' : undefined}
                           className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
                         >
                           <FiTrash2 className="w-4 h-4" />
@@ -548,7 +550,7 @@ export default function RolesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || !canManageRoles}
+                  disabled={createMutation.isPending || !canCreateRoles}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all flex items-center gap-2 disabled:opacity-60"
                 >
                   {createMutation.isPending ? (

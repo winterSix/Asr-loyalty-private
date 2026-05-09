@@ -51,10 +51,10 @@ function NotificationsContent() {
   const queryClient = useQueryClient();
 
   const { hasPermission, isAdmin } = usePermissions();
-  const canReadAll       = hasPermission('notification:read', 'notification:manage');
-  const canSend          = hasPermission('notification:send', 'notification:manage');
-  const canBroadcast     = hasPermission('notification:broadcast', 'notification:manage');
-  const canViewHistory   = hasPermission('notification:read', 'notification:manage');
+  const canReadAll       = hasPermission('notification:read');
+  const canSend          = hasPermission('notification:send');
+  const canBroadcast     = hasPermission('notification:broadcast');
+  const canViewHistory   = hasPermission('notification:read');
 
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const tab = searchParams.get('tab');
@@ -114,7 +114,7 @@ function NotificationsContent() {
   }, [searchInput]);
 
   // Debounced user search for Send tab — only fires when user has send + user:read permission
-  const canSearchUsers = hasPermission('user:read', 'user:manage');
+  const canSearchUsers = hasPermission('user:read');
   useEffect(() => {
     if (!canSend || !canSearchUsers || !userSearch.trim() || userSearch.length < 2) { setUserSearchResults([]); return; }
     const t = setTimeout(async () => {

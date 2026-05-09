@@ -77,7 +77,7 @@ export default function LoyaltyTiersPage() {
 
   const { hasPermission } = usePermissions();
   const canReadLoyalty   = hasPermission('loyalty:read');
-  const canUpdateLoyalty = hasPermission('loyalty:update', 'loyalty:manage');
+  const canUpdateLoyalty = hasPermission('loyalty:update');
   const canSeeRewards    = hasPermission('reward:read', 'reward:create', 'reward:update');
 
   const { data: tiersRaw, isLoading: tiersLoading } = useQuery({

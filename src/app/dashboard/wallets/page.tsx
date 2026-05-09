@@ -46,8 +46,8 @@ export default function WalletsPage() {
   };
 
   const { hasPermission } = usePermissions();
-  const canReadWallets = hasPermission('wallet:read', 'wallet:manage');
-  const canReadUsers   = hasPermission('user:read', 'user:manage');
+  const canReadWallets = hasPermission('wallet:read');
+  const canReadUsers   = hasPermission('user:read');
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', 'wallets', filters],

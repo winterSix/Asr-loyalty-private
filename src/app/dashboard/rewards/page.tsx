@@ -74,9 +74,9 @@ function AdminRewardsView() {
   const queryClient = useQueryClient();
   const { user, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadRewards = hasPermission('reward:read', 'reward:manage');
-  const canReadLoyalty = hasPermission('loyalty:read', 'loyalty:manage');
-  const canReadUsers   = hasPermission('user:read', 'user:manage');
+  const canReadRewards = hasPermission('reward:read');
+  const canReadLoyalty = hasPermission('loyalty:read');
+  const canReadUsers   = hasPermission('user:read');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
@@ -739,7 +739,7 @@ export default function RewardsPage() {
     );
   }
 
-  const canSeeAdminView = hasPermission('reward:read', 'reward:manage');
+  const canSeeAdminView = hasPermission('reward:read');
 
   return canSeeAdminView ? (
     <AdminRewardsView />
