@@ -16,7 +16,7 @@ import {
 export default function PermissionDetailPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadPermissions = hasPermission('permission:read', 'permission:manage');
+  const canReadPermissions = hasPermission('permission:read');
   const router = useRouter();
   const params = useParams();
   const permissionId = params?.id as string;

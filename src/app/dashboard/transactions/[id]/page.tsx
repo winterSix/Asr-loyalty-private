@@ -35,7 +35,7 @@ export default function TransactionDetailPage() {
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
   const { hasPermission } = usePermissions();
   const canReadTx    = hasPermission('transaction:read');
-  const canReverseTx = hasPermission('transaction:update', 'transaction:manage');
+  const canReverseTx = hasPermission('transaction:update');
 
   const reverseMutation = useMutation({
     mutationFn: () => paymentService.reversePayment(transactionId, reverseReason),

@@ -31,7 +31,7 @@ const tierMeta: Record<string, { gradient: string; shadow: string; bg: string; t
 export default function EditTierPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canEdit = hasPermission('loyalty:update', 'loyalty:manage');
+  const canEdit = hasPermission('loyalty:update');
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();

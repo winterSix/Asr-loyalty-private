@@ -21,7 +21,7 @@ import {
 export default function AuditDetailPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadAudit = hasPermission('audit:read', 'audit:manage');
+  const canReadAudit = hasPermission('audit:read');
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;

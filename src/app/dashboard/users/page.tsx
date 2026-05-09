@@ -60,8 +60,8 @@ export default function UsersPage() {
 
   const { hasPermission, isAdmin } = usePermissions();
   const canReadUsers   = hasPermission('user:read');
-  const canCreateUsers = hasPermission('user:create', 'user:manage');
-  const canReadRoles   = hasPermission('role:read', 'role:manage');
+  const canCreateUsers = hasPermission('user:create');
+  const canReadRoles   = hasPermission('role:read');
 
   // Debounce search input
   useEffect(() => {

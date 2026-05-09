@@ -20,7 +20,7 @@ import {
 export default function RoleDetailPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadRoles = hasPermission('role:read', 'role:manage');
+  const canReadRoles = hasPermission('role:read');
   const router = useRouter();
   const params = useParams();
   const roleId = params?.id as string;

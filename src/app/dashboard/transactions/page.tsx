@@ -42,7 +42,7 @@ export default function TransactionsPage() {
 
   const { hasPermission } = usePermissions();
   const canReadTx   = hasPermission('transaction:read');
-  const canExportTx = hasPermission('report:generate', 'report:manage');
+  const canExportTx = hasPermission('report:generate');
 
   // Debounce search
   useEffect(() => {

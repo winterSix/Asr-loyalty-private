@@ -24,7 +24,7 @@ import CustomSelect from '@/components/ui/CustomSelect';
 export default function PermissionsPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const canReadPermissions = hasPermission('permission:read', 'permission:manage');
+  const canReadPermissions = hasPermission('permission:read');
   const router = useRouter();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'grouped' | 'list'>('grouped');

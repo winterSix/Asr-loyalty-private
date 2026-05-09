@@ -78,7 +78,7 @@ export default function RefundDetailPage() {
   });
 
   const { hasPermission } = usePermissions();
-  const canManage = hasPermission('refund:update', 'refund:manage');
+  const canManage = hasPermission('refund:update');
 
   if (isLoading || refundLoading) {
     return (
