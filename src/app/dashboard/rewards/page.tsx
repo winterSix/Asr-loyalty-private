@@ -4,6 +4,7 @@ import { toTitleCase } from '@/utils/format';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { rewardService } from '@/services/reward.service';
 import { rewardConfigurationService } from '@/services/reward-configuration.service';
@@ -71,6 +72,11 @@ const getTierStyle = (tier: string) => tierMeta[tier] || tierMeta.BRONZE;
 function AdminRewardsView() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
+  const canReadRewards = hasPermission('reward:read', 'reward:manage');
+  const canReadLoyalty = hasPermission('loyalty:read', 'loyalty:manage');
+  const canReadUsers   = hasPermission('user:read', 'user:manage');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersPage, setUsersPage] = useState(1);
   const [usersSearch, setUsersSearch] = useState('');
@@ -89,16 +95,19 @@ function AdminRewardsView() {
   const { data: activeConfig } = useQuery({
     queryKey: ['reward-config', 'active'],
     queryFn: () => rewardConfigurationService.getActiveRewardConfiguration(),
+    enabled: !isLoading && !!user && canReadRewards,
   });
 
   const { data: tierConfigs } = useQuery({
     queryKey: ['loyalty-tier-configs'],
     queryFn: () => loyaltyService.getAllTierConfigs(),
+    enabled: !isLoading && !!user && canReadLoyalty,
   });
 
   const { data: tierStats } = useQuery({
     queryKey: ['loyalty-tier-stats'],
     queryFn: () => loyaltyService.getTierStats(),
+    enabled: !isLoading && !!user && canReadLoyalty,
   });
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -108,6 +117,7 @@ function AdminRewardsView() {
       limit: usersLimit,
       ...(debouncedSearch && { search: debouncedSearch }),
     }),
+    enabled: !isLoading && !!user && canReadUsers,
   });
 
   const handleRefresh = async () => {
@@ -712,6 +722,7 @@ function CustomerRewardsView({ userId }: { userId: string }) {
 // ─── Main Page ──────────────────────────────────────────────────────────
 export default function RewardsPage() {
   const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { hasPermission } = usePermissions();
   const router = useRouter();
 
   useEffect(() => {
@@ -728,10 +739,9 @@ export default function RewardsPage() {
     );
   }
 
-  const role = user?.role || 'CUSTOMER';
-  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OTHERS';
+  const canSeeAdminView = hasPermission('reward:read', 'reward:manage');
 
-  return isAdmin ? (
+  return canSeeAdminView ? (
     <AdminRewardsView />
   ) : (
     <CustomerRewardsView userId={user?.id || ''} />

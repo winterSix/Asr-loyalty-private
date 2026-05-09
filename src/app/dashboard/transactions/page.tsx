@@ -41,9 +41,8 @@ export default function TransactionsPage() {
   const limit = 10;
 
   const { hasPermission } = usePermissions();
-  const isAdmin           = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OTHERS';
-  const canReadTx         = hasPermission('transaction:read');
-  const canExportTx       = hasPermission('report:generate', 'report:manage');
+  const canReadTx   = hasPermission('transaction:read');
+  const canExportTx = hasPermission('report:generate', 'report:manage');
 
   // Debounce search
   useEffect(() => {
@@ -91,10 +90,10 @@ export default function TransactionsPage() {
     );
   }
 
-  const txLoading = isAdmin ? adminTxLoading : customerTxLoading;
-  const txFetching = isAdmin ? adminTxFetching : customerTxFetching;
-  const transactions = isAdmin ? (adminTxData?.data || []) : (customerTxData?.data || []);
-  const total = isAdmin ? (adminTxData?.total || 0) : (customerTxData?.total || 0);
+  const txLoading = canReadTx ? adminTxLoading : customerTxLoading;
+  const txFetching = canReadTx ? adminTxFetching : customerTxFetching;
+  const transactions = canReadTx ? (adminTxData?.data || []) : (customerTxData?.data || []);
+  const total = canReadTx ? (adminTxData?.total || 0) : (customerTxData?.total || 0);
   const totalPages = Math.ceil(total / limit);
 
   const hasActiveFilters = !!(debouncedSearch || statusFilter || typeFilter || startDate || endDate || periodFilter);
@@ -114,7 +113,7 @@ export default function TransactionsPage() {
     setIsExporting(true);
     try {
       let blob: Blob;
-      if (isAdmin) {
+      if (canReadTx) {
         const filters: TransactionExportFilters = {
           ...(typeFilter && { type: typeFilter }),
           ...(statusFilter && { status: statusFilter }),
@@ -202,7 +201,7 @@ export default function TransactionsPage() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-[#E5B887]">Transactions</h1>
               <p className="text-gray-500 text-sm">
-                {isAdmin ? 'Manage all transactions' : 'View your transaction history'}
+                {canReadTx ? 'Manage all transactions' : 'View your transaction history'}
                 {total > 0 && <span className="text-gray-400"> &middot; {total.toLocaleString()} total</span>}
               </p>
             </div>
@@ -218,7 +217,7 @@ export default function TransactionsPage() {
               <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
             </button>
             <button
-              onClick={() => isAdmin ? refetch?.() : customerRefetch?.()}
+              onClick={() => canReadTx ? refetch?.() : customerRefetch?.()}
               className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
               title="Refresh transactions"
             >
@@ -235,7 +234,7 @@ export default function TransactionsPage() {
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder={isAdmin ? 'Search by reference...' : 'Search transactions...'}
+                placeholder={canReadTx ? 'Search by reference...' : 'Search transactions...'}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
@@ -263,7 +262,7 @@ export default function TransactionsPage() {
                     ]}
                   />
                 </div>
-                {!isAdmin && (
+                {!canReadTx && (
                   <div>
                     <label className="text-xs font-medium text-gray-500 block mb-1.5">Period</label>
                     <CustomSelect
@@ -273,7 +272,7 @@ export default function TransactionsPage() {
                     />
                   </div>
                 )}
-                {isAdmin && (
+                {canReadTx && (
                   <>
                     <div>
                       <label className="text-xs font-medium text-gray-500 block mb-1.5">Type</label>
@@ -336,7 +335,7 @@ export default function TransactionsPage() {
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-white/5">
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[180px]">Reference</th>
-                      {isAdmin && (
+                      {canReadTx && (
                         <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[180px]">User</th>
                       )}
                       <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-[#94A3B8] whitespace-nowrap min-w-[160px]">Type</th>
@@ -357,7 +356,7 @@ export default function TransactionsPage() {
                             {tx.reference?.substring(0, 22)}...
                           </p>
                         </td>
-                        {isAdmin && (
+                        {canReadTx && (
                           <td className="py-3.5 px-4">
                             {tx.user ? (
                               <button

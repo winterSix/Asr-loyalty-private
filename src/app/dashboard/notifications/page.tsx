@@ -113,9 +113,10 @@ function NotificationsContent() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Debounced user search for Send tab
+  // Debounced user search for Send tab — only fires when user has send + user:read permission
+  const canSearchUsers = hasPermission('user:read', 'user:manage');
   useEffect(() => {
-    if (!userSearch.trim() || userSearch.length < 2) { setUserSearchResults([]); return; }
+    if (!canSend || !canSearchUsers || !userSearch.trim() || userSearch.length < 2) { setUserSearchResults([]); return; }
     const t = setTimeout(async () => {
       setUserSearchLoading(true);
       try {
@@ -125,7 +126,7 @@ function NotificationsContent() {
       finally { setUserSearchLoading(false); }
     }, 300);
     return () => clearTimeout(t);
-  }, [userSearch]);
+  }, [userSearch, canSend, canSearchUsers]);
 
   // Close user search dropdown on outside click
   useEffect(() => {
