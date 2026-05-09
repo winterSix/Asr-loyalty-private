@@ -170,8 +170,9 @@ export default function UserDetailPage() {
     );
   }
 
-  const canUpdateStatus = hasPermission('user:update', 'user:manage');
-  const canChangeRole   = isSuperAdmin;
+  const canUpdateStatus  = hasPermission('user:update', 'user:manage');
+  const canFreezeWallet  = hasPermission('wallet:update', 'wallet:manage');
+  const canChangeRole    = isSuperAdmin;
 
   // Combine wallets from user data and dedicated wallet endpoint
   const wallets = userWallets || userData?.wallets || [];
@@ -378,15 +379,19 @@ export default function UserDetailPage() {
                           <p className="text-xs text-white/60 mt-1 mb-3">{wallet.currency}</p>
                           {isFrozen ? (
                             <button
-                              onClick={() => openFreezeModal('unfreeze', wType)}
-                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+                              onClick={() => canFreezeWallet && openFreezeModal('unfreeze', wType)}
+                              disabled={!canFreezeWallet}
+                              title={!canFreezeWallet ? 'You do not have permission to unfreeze wallets' : undefined}
+                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <FiUnlock className="w-3.5 h-3.5" /> Unfreeze Wallet
                             </button>
                           ) : (
                             <button
-                              onClick={() => openFreezeModal('freeze', wType)}
-                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
+                              onClick={() => canFreezeWallet && openFreezeModal('freeze', wType)}
+                              disabled={!canFreezeWallet}
+                              title={!canFreezeWallet ? 'You do not have permission to freeze wallets' : undefined}
+                              className="flex items-center gap-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <FiLock className="w-3.5 h-3.5" /> Freeze Wallet
                             </button>

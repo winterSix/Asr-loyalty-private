@@ -46,19 +46,20 @@ export default function WalletsPage() {
   };
 
   const { hasPermission } = usePermissions();
-  const canReadWallets = hasPermission('wallet:read');
+  const canReadWallets = hasPermission('wallet:read', 'wallet:manage');
+  const canReadUsers   = hasPermission('user:read', 'user:manage');
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin', 'users', 'wallets', filters],
     queryFn: () => adminService.getUsers(filters),
-    enabled: !isLoading && !!user && canReadWallets,
+    enabled: !isLoading && !!user && canReadWallets && canReadUsers,
   });
 
   // Fetch all users (first page, no search) for summary stats
   const { data: allUsersData } = useQuery({
     queryKey: ['admin', 'users', 'wallets-summary'],
     queryFn: () => adminService.getUsers({ page: 1, limit: 100 }),
-    enabled: !isLoading && !!user && canReadWallets,
+    enabled: !isLoading && !!user && canReadWallets && canReadUsers,
   });
 
   const handleRefresh = async () => {
