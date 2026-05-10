@@ -11,6 +11,7 @@ import {
   Notification,
   NotificationType,
   BroadcastResult,
+  BroadcastFailure,
 } from '@/services/notification.service';
 import { adminService, getDisplayRole } from '@/services/admin.service';
 import CustomSelect from '@/components/ui/CustomSelect';
@@ -657,6 +658,25 @@ function NotificationsContent() {
                       <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{s.sent} sent{s.failed > 0 && <span className="text-red-500 ml-2">/ {s.failed} failed</span>}</span>
                     </div>
                   ))}
+                </div>
+              )}
+              {(broadcastResult.stats?.failures?.length ?? 0) > 0 && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-2">Failed Deliveries</p>
+                  <div className="rounded-xl border border-red-100 dark:border-red-500/20 overflow-hidden divide-y divide-red-50 dark:divide-red-500/10">
+                    {broadcastResult.stats.failures.map((f: BroadcastFailure, i: number) => (
+                      <div key={i} className="px-4 py-3 bg-red-50/50 dark:bg-red-500/5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-800 dark:text-[#F1F5F9] truncate">{f.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-[#94A3B8] truncate">{f.email || f.phoneNumber || f.userId}</p>
+                          </div>
+                          <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-500/15 text-red-600 dark:text-red-400">{f.channel}</span>
+                        </div>
+                        <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 break-words">{f.error}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <button onClick={() => { setBroadcastResult(null); setBroadcastForm({ title: '', body: '', priority: 'normal' }); setSelectedChannels(['IN_APP']); setSelectedRoles([]); setSelectedTiers([]); }} className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-[#CBD5E1] font-medium hover:bg-gray-50 dark:hover:bg-[#263349] transition-colors text-sm">
