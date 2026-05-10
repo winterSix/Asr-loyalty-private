@@ -52,6 +52,15 @@ export interface BroadcastNotificationDto {
   priority?: string;
 }
 
+export interface BroadcastFailure {
+  userId: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  channel: string;
+  error: string;
+}
+
 export interface BroadcastResult {
   success: boolean;
   message: string;
@@ -60,6 +69,7 @@ export interface BroadcastResult {
     notificationsSent: number;
     byChannel: Record<string, { sent: number; failed: number }>;
     failureCount: number;
+    failures: BroadcastFailure[];
   };
 }
 
