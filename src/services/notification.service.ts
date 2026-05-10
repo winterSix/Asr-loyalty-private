@@ -199,7 +199,12 @@ class NotificationService {
     const response = await apiClient.get<any>('/notifications/broadcast/history', {
       params: { page, limit },
     });
-    return unwrapResponse<BroadcastHistoryResponse>(response.data);
+    const raw = response.data;
+    const inner = raw?.data ?? raw;
+    return {
+      announcements: inner?.announcements ?? [],
+      pagination: inner?.pagination ?? raw?.pagination ?? { page, limit, total: 0, totalPages: 0 },
+    };
   }
 }
 
