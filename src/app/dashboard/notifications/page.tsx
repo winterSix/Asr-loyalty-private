@@ -193,6 +193,8 @@ function NotificationsContent() {
     onSuccess: () => {
       toast.success('Notification sent successfully');
       setSendForm({ userId: '', type: 'IN_APP', title: '', body: '', priority: 'normal' });
+      setSelectedUser(null);
+      setUserSearch('');
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to send notification'),
