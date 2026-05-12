@@ -270,68 +270,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     { label: 'QR Pay',  icon: <FiQrCode />, path: '/dashboard/qr-pay',  color: '#8B5CF6' },
                 ]},
             ];
+            case 'SUPER_ADMIN':
             case 'ADMIN':
-            case 'SUPER_ADMIN': return [
-                { title: 'Overview', items: [
-                    { label: 'Dashboard',  icon: <FiHome />,     path: '/dashboard',        color: '#3B82F6' },
-                    { label: 'Reports',    icon: <FiBarChart />, path: '/dashboard/reports', color: '#8B5CF6' },
-                    { label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit',   color: '#F97316' },
-                ]},
-                { title: 'Management', items: [
-                    { label: 'Users',        icon: <FiUsers />,      path: '/dashboard/users',        color: '#14B8A6' },
-                    { label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions', color: '#6366F1' },
-                    { label: 'Wallets',      icon: <FiWallet />,     path: '/dashboard/wallets',      color: '#10B981' },
-                    { label: 'Roles',        icon: <FiLayers />,     path: '/dashboard/roles',        color: '#7C3AED' },
-                    { label: 'Permissions',  icon: <FiKey />,        path: '/dashboard/permissions',  color: '#F59E0B' },
-                ]},
-                { title: 'Loyalty & Rewards', items: [
-                    { label: 'Rewards', icon: <FiGift />, path: '/dashboard/rewards', color: '#EAB308' },
-                ]},
-                { title: 'Support', items: [
-                    { label: 'Disputes',      icon: <FiShield />,    path: '/dashboard/disputes',      badge: dCount > 0 ? dCount : undefined, color: '#EF4444' },
-                    { label: 'Refunds',       icon: <FiDollarSign />,path: '/dashboard/refunds',       badge: rCount > 0 ? rCount : undefined, color: '#22C55E' },
-                    { label: 'Notifications', icon: <FiBell />,      path: '/dashboard/notifications',                                         color: '#06B6D4' },
-                ]},
-                { title: 'Content', items: [
-                    { label: 'Legal Docs', icon: <FiBookOpen />, path: '/dashboard/legal', color: '#64748B' },
-                ]},
-            ];
-            case 'CASHIER': return [{ title: 'Main', items: [
-                { label: 'Dashboard',    icon: <FiHome />,       path: '/dashboard',              color: '#3B82F6' },
-                { label: 'QR Scanner',  icon: <FiQrCode />,     path: '/dashboard/qr-scanner',   color: '#8B5CF6' },
-                { label: 'Transactions',icon: <FiCreditCard />, path: '/dashboard/transactions',  color: '#6366F1' },
-            ]}];
             case 'OTHERS': {
+                // All admin-class roles use the same permission-filtered template.
+                // SUPER_ADMIN: permSet.has('ALL') = true → sees every item.
+                // ADMIN: sees items their DB role grants.
+                // OTHERS (MD, Finance, etc.): sees items their assigned role grants.
+                if (authLoading) return [];
                 const has = hasPermission;
                 const overviewItems: NavItem[] = [
                     { label: 'Dashboard', icon: <FiHome />, path: '/dashboard', color: '#3B82F6' },
-                    ...(has('report:read', 'report:generate') ? [{ label: 'Reports', icon: <FiBarChart />, path: '/dashboard/reports', color: '#8B5CF6' }] : []),
-                    ...(has('audit:read') ? [{ label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit', color: '#F97316' }] : []),
+                    ...(has('report:read', 'report:generate') ? [{ label: 'Reports',    icon: <FiBarChart />, path: '/dashboard/reports', color: '#8B5CF6' }] : []),
+                    ...(has('audit:read')                     ? [{ label: 'Audit Logs', icon: <FiFileText />, path: '/dashboard/audit',    color: '#F97316' }] : []),
                 ];
                 const mgmtItems: NavItem[] = [
-                    ...(has('user:read', 'user:update', 'user:delete') ? [{ label: 'Users', icon: <FiUsers />, path: '/dashboard/users', color: '#14B8A6' }] : []),
-                    ...(has('transaction:read') ? [{ label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions', color: '#6366F1' }] : []),
-                    ...(has('wallet:read', 'wallet:update') ? [{ label: 'Wallets', icon: <FiWallet />, path: '/dashboard/wallets', color: '#10B981' }] : []),
-                    ...(has('role:read', 'role:create', 'role:update') ? [{ label: 'Roles', icon: <FiLayers />, path: '/dashboard/roles', color: '#7C3AED' }] : []),
-                    ...(has('permission:read') ? [{ label: 'Permissions', icon: <FiKey />, path: '/dashboard/permissions', color: '#F59E0B' }] : []),
+                    ...(has('user:read', 'user:update', 'user:delete')     ? [{ label: 'Users',        icon: <FiUsers />,      path: '/dashboard/users',        color: '#14B8A6' }] : []),
+                    ...(has('transaction:read')                             ? [{ label: 'Transactions', icon: <FiCreditCard />, path: '/dashboard/transactions', color: '#6366F1' }] : []),
+                    ...(has('wallet:read', 'wallet:update')                 ? [{ label: 'Wallets',      icon: <FiWallet />,     path: '/dashboard/wallets',      color: '#10B981' }] : []),
+                    ...(has('role:read', 'role:create', 'role:update')      ? [{ label: 'Roles',        icon: <FiLayers />,     path: '/dashboard/roles',        color: '#7C3AED' }] : []),
+                    ...(has('permission:read')                              ? [{ label: 'Permissions',  icon: <FiKey />,        path: '/dashboard/permissions',  color: '#F59E0B' }] : []),
                 ];
                 const loyaltyItems: NavItem[] = [
-                    ...(has('reward:read', 'reward:create', 'reward:update') ? [{ label: 'Rewards', icon: <FiGift />, path: '/dashboard/rewards', color: '#EAB308' }] : []),
-                    ...(has('loyalty:read') ? [{ label: 'Loyalty Tiers', icon: <FiStar />, path: '/dashboard/loyalty-tiers', color: '#F59E0B' }] : []),
-                    ...(has('reward:update') ? [{ label: 'Reward Config', icon: <FiSettings />, path: '/dashboard/reward-config', color: '#8B5CF6' }] : []),
+                    ...(has('reward:read', 'reward:create', 'reward:update') ? [{ label: 'Rewards',      icon: <FiGift />,     path: '/dashboard/rewards',      color: '#EAB308' }] : []),
+                    ...(has('loyalty:read')                                  ? [{ label: 'Loyalty Tiers',icon: <FiStar />,     path: '/dashboard/loyalty-tiers',color: '#F59E0B' }] : []),
+                    ...(has('reward:update')                                 ? [{ label: 'Reward Config',icon: <FiSettings />, path: '/dashboard/reward-config',color: '#8B5CF6' }] : []),
                 ];
                 const supportItems: NavItem[] = [
-                    ...(has('dispute:read', 'dispute:update') ? [{ label: 'Disputes', icon: <FiShield />, path: '/dashboard/disputes', badge: dCount > 0 ? dCount : undefined, color: '#EF4444' }] : []),
-                    ...(has('refund:read', 'refund:update') ? [{ label: 'Refunds', icon: <FiDollarSign />, path: '/dashboard/refunds', badge: rCount > 0 ? rCount : undefined, color: '#22C55E' }] : []),
-                    ...(has('notification:send', 'notification:broadcast') ? [{ label: 'Notifications', icon: <FiBell />, path: '/dashboard/notifications', color: '#06B6D4' }] : []),
+                    ...(has('dispute:read', 'dispute:update')               ? [{ label: 'Disputes',      icon: <FiShield />,     path: '/dashboard/disputes',      badge: dCount > 0 ? dCount : undefined, color: '#EF4444' }] : []),
+                    ...(has('refund:read', 'refund:update')                  ? [{ label: 'Refunds',       icon: <FiDollarSign />, path: '/dashboard/refunds',       badge: rCount > 0 ? rCount : undefined, color: '#22C55E' }] : []),
+                    ...(has('notification:send', 'notification:broadcast')  ? [{ label: 'Notifications', icon: <FiBell />,       path: '/dashboard/notifications',                                         color: '#06B6D4' }] : []),
+                ];
+                const contentItems: NavItem[] = [
+                    { label: 'Legal Docs', icon: <FiBookOpen />, path: '/dashboard/legal', color: '#64748B' },
                 ];
                 return [
-                    { title: 'Overview', items: overviewItems },
-                    ...(mgmtItems.length    ? [{ title: 'Management',       items: mgmtItems }]    : []),
+                    { title: 'Overview',          items: overviewItems },
+                    ...(mgmtItems.length    ? [{ title: 'Management',        items: mgmtItems }]    : []),
                     ...(loyaltyItems.length ? [{ title: 'Loyalty & Rewards', items: loyaltyItems }] : []),
                     ...(supportItems.length ? [{ title: 'Support',           items: supportItems }] : []),
+                    { title: 'Content', items: contentItems },
                 ];
             }
+            case 'CASHIER': return [{ title: 'Main', items: [
+                { label: 'Dashboard',    icon: <FiHome />,       path: '/dashboard',             color: '#3B82F6' },
+                { label: 'QR Scanner',  icon: <FiQrCode />,     path: '/dashboard/qr-scanner',  color: '#8B5CF6' },
+                { label: 'Transactions',icon: <FiCreditCard />, path: '/dashboard/transactions', color: '#6366F1' },
+            ]}];
             default: return [{ title: 'Main', items: [{ label: 'Dashboard', icon: <FiHome />, path: '/dashboard' }] }];
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -89,6 +89,9 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
+          if (resolvedUser) {
+            authService.setUser(resolvedUser);
+          }
           set({ user: resolvedUser, isAuthenticated: true, isLoading: false });
         } catch {
           authService.clearTokens();
@@ -98,6 +101,8 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      version: 2,
+      migrate: () => ({ user: null, isAuthenticated: false, isLoading: true }),
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
