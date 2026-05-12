@@ -277,7 +277,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 // SUPER_ADMIN: permSet.has('ALL') = true → sees every item.
                 // ADMIN: sees items their DB role grants.
                 // OTHERS (MD, Finance, etc.): sees items their assigned role grants.
-                if (authLoading) return [];
+                // Sidebar renders immediately from rehydrated Zustand data (no blank flash).
+                // The skeleton below handles the genuinely-unauthenticated case.
                 const has = hasPermission;
                 const overviewItems: NavItem[] = [
                     { label: 'Dashboard', icon: <FiHome />, path: '/dashboard', color: '#3B82F6' },
